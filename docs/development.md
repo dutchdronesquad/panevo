@@ -38,15 +38,15 @@ Packaging may require network access because Electron Forge can download Electro
 
 ## Development Priorities
 
-During Phase 2C, development should prioritize:
+During Phase 2D, development should prioritize:
 
-1. Hardware validation for ONVIF probe, preset sync, and PTZ control.
-2. Operator safety when switching between VISCA and ONVIF control routes.
-3. Clear configuration, credential, and error states.
-4. Documentation that reflects tested behavior.
-5. Assisted setup and discovery only after configured-camera ONVIF behavior is stable.
+1. Hardware regression for VISCA live control with ONVIF sync enabled.
+2. Operator safety and responsiveness during PTZ, zoom, focus, and preset workflows.
+3. Responsive UI behavior across realistic desktop and laptop window sizes.
+4. Clear configuration, credential, and error states.
+5. Documentation that reflects tested behavior.
 
-Avoid implementing production integrations or preview features until Phase 2C discovery and camera capability work has a stable direction.
+Avoid implementing production integrations or preview features until Phase 2D stabilizes the current camera-control workflow.
 
 ## Process Boundaries
 

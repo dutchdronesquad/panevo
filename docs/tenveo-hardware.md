@@ -38,13 +38,16 @@ The following items should be checked only after testing against a real Tenveo c
 - [x] Presets can be renamed.
 - [x] Presets can be called.
 - [x] ONVIF endpoint is exposed on port `8080`.
-- [ ] ONVIF pan controls work.
-- [ ] ONVIF tilt controls work.
-- [ ] ONVIF diagonal movement works.
-- [ ] ONVIF zoom controls work.
-- [ ] ONVIF stop behavior is safe across repeated tests.
-- [ ] ONVIF preset recall works with numeric Panevo preset entries.
-- [ ] ONVIF preset store works with numeric Panevo preset entries.
+- [x] ONVIF pan controls work.
+- [x] ONVIF tilt controls work.
+- [x] ONVIF diagonal movement works.
+- [x] ONVIF zoom controls work.
+- [x] ONVIF stop behavior is safe across repeated tests.
+- [x] ONVIF preset recall works with numeric Panevo preset entries.
+- [x] ONVIF preset store works with numeric Panevo preset entries.
+- [x] VISCA live control works while ONVIF sync is enabled.
+- [x] ONVIF preset sync rebuilds numeric preset entries after app restart.
+- [x] ONVIF `RemovePreset` removes camera-native presets when `syncProtocol` is `onvif`.
 
 ## Open Questions
 
@@ -61,6 +64,17 @@ The following items should be checked only after testing against a real Tenveo c
 ## Hardware Test Log
 
 Add dated test notes here.
+
+### 2026-05-11
+
+- Camera model: Tenveo PTZ camera.
+- Firmware: not recorded.
+- Network setup: local network, VISCA UDP on `52381`, ONVIF on `8080`.
+- Panevo version or commit: Phase 2D stabilization branch/worktree.
+- Tested commands: VISCA PTZ, zoom, focus, stop, emergency stop, ONVIF probe, ONVIF startup sync, ONVIF numeric preset import/store/remove.
+- Results: VISCA remains the preferred live control route. ONVIF is suitable for discovery, credentials-backed startup sync, numeric preset synchronization, and camera-native preset removal.
+- Issues: ONVIF PTZ movement works but feels less native/direct than VISCA on this camera, so it remains optional for live control.
+- Follow-up: retry `npm run package` with working network access and record firmware/model details when available.
 
 ### YYYY-MM-DD
 

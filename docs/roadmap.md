@@ -223,7 +223,31 @@ Follow-up before promoting ONVIF control:
 - Decide whether the `onvif` package remains acceptable or should be replaced with Panevo-owned SOAP calls.
 - Move ONVIF password storage out of plain local JSON.
 
-### Phase 2D: VISCA Compatibility
+### Phase 2D: Stabilization and Release Readiness
+
+Status: active.
+
+Phase 2D is focused on making the current PTZ/operator workflow dependable before adding larger new features. The goal is to reduce regressions, validate the protocol split, and make the UI usable across realistic desktop window sizes.
+
+Scope:
+
+- Hardware regression for VISCA live control with ONVIF sync enabled.
+- ONVIF preset add, store, import, startup sync, and camera-native remove validation.
+- Responsive UI validation across large desktop, laptop, tablet-width, and narrow test windows.
+- Operator status copy and error-state polish.
+- Packaging smoke test.
+- Documentation updates based on verified behavior.
+
+Exit criteria:
+
+- VISCA live control remains responsive while ONVIF sync is enabled.
+- Background health checks do not block or disrupt PTZ commands.
+- Preset remove behaves as documented for ONVIF sync and local-only modes.
+- Camera management, control, and settings views remain usable at common window sizes.
+- `npm run typecheck`, `npm run lint`, and packaging smoke checks pass.
+- `tenveo-hardware.md`, `testing.md`, and `mvp-checklist.md` reflect the latest validation.
+
+### Phase 2E: VISCA Compatibility
 
 - Vendor-specific VISCA compatibility options.
 - VISCA npm package evaluation.

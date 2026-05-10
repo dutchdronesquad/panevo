@@ -28,16 +28,16 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is Phase 2C: Camera Discovery and ONVIF.
+The active phase is Phase 2D: Stabilization and Release Readiness.
 
 Current priority:
 
-1. Validate ONVIF probe, preset sync, and PTZ control against real camera hardware.
-2. Validate whether Tenveo ONVIF preset tokens match Panevo's numeric preset entries.
-3. Decide whether the current `onvif` package remains acceptable or should be replaced behind the adapter.
-4. Move ONVIF credential storage out of plain JSON before production-quality ONVIF support.
-5. Add assisted setup only after probe and control behavior are stable.
-6. Keep manual VISCA IP/port setup available.
+1. Validate VISCA live control with ONVIF sync enabled.
+2. Validate ONVIF preset add, store, startup sync, and camera-native remove behavior.
+3. Confirm background health checks do not block or disrupt PTZ commands.
+4. Validate responsive layouts across realistic desktop and laptop window sizes.
+5. Run packaging smoke checks.
+6. Keep docs aligned with hardware observations.
 
 Still deferred:
 

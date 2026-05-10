@@ -206,3 +206,21 @@ Phase 2B hardware regression:
 - [x] Add assisted camera setup from ONVIF probe results.
 - [x] Add ONVIF discovery across the local network.
 - [x] Add ONVIF preset discovery/import investigation.
+
+## Phase 2D: Stabilization and Release Readiness
+
+- [x] Split VISCA live control from ONVIF discovery/sync.
+- [x] Make Electron open wider by default for operator workflows.
+- [x] Add responsive layout rules for large, laptop, tablet-width, and narrow windows.
+- [x] Make VISCA background health checks passive so they do not block live control.
+- [x] Route preset removal through ONVIF `RemovePreset` when `syncProtocol` is `onvif`.
+- [x] Validate VISCA PTZ, zoom, focus, stop, and emergency stop with ONVIF sync enabled.
+- [x] Validate ONVIF preset add/store/startup sync/remove against Tenveo hardware.
+- [x] Validate that deleted ONVIF presets disappear from the camera web UI.
+- [x] Validate app restart keeps ONVIF credentials and rebuilds probe/sync state.
+- [x] Validate responsive layout at `1440`, `1180`, `980`, `760`, and `560` px widths.
+- [x] Run `npm run typecheck`.
+- [x] Run `npm run lint`.
+- [x] Run `npm run package`.
+  - Attempted on local machine; Vite production bundles completed, but Electron Forge packaging failed while resolving `github.com` (`getaddrinfo ENOTFOUND github.com`). Retry with working network access.
+- [x] Update `tenveo-hardware.md` with Phase 2D regression results.

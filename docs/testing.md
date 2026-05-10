@@ -85,14 +85,30 @@ Validate:
 
 ## Regression Checklist
 
-Run this before marking a Phase 1 subphase complete:
+Run this before marking an active phase complete:
 
 - [ ] `npm run typecheck`
+- [ ] `npm run lint`
 - [ ] App launches in development mode.
-- [ ] Mock mode test connection works.
-- [ ] Mock PTZ movement logs commands.
-- [ ] Mock stop logs command.
-- [ ] Mock zoom logs commands.
 - [ ] Config persists after restart.
+- [ ] Active camera can be selected without false disconnect state.
 - [ ] Real camera moves and stops safely, when hardware is available.
+- [ ] Zoom and focus controls stop correctly.
+- [ ] Preset recall, store, and remove behavior matches the active protocol/sync mode.
+- [ ] Camera table, control page, and settings remain usable at large, laptop, and narrow test widths.
 - [ ] Relevant docs and checklist are updated.
+
+## Phase 2D Validation
+
+Phase 2D focuses on stabilizing the current operator workflow.
+
+Validate:
+
+- VISCA live control remains responsive with ONVIF sync enabled.
+- Background health checks do not block movement, stop, zoom, focus, or preset commands.
+- ONVIF startup sync refreshes numeric presets without changing live control protocol.
+- ONVIF `RemovePreset` deletes camera-native presets when `syncProtocol` is `onvif`.
+- Local-only preset removal stays local when `syncProtocol` is `none`.
+- Electron opens at the intended default window size.
+- The UI remains usable around `1440`, `1180`, `980`, `760`, and `560` px widths.
+- Packaging smoke test succeeds before a release candidate.
