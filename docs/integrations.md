@@ -103,6 +103,27 @@ Possible preview routes:
 
 Preview should not block camera control startup. If preview fails, PTZ control should still work.
 
+Current direction:
+
+- Preview is moving into Phase 3 as the next major capability after Phase 2E VISCA compatibility decisions.
+- The first implementation should be an active-camera confidence preview, not a full multi-camera monitoring wall.
+- Preview source configuration should live on the camera profile, but preview services must remain separate from VISCA and ONVIF control services.
+- The renderer should display preview state and errors, but protocol handling, transcoding, or native helpers should be owned by the main process or a dedicated helper boundary.
+
+First transport decision:
+
+- Chromium/Electron cannot play raw RTSP directly in a normal `<video>` element.
+- If the camera exposes MJPEG, HLS, WebRTC, or another browser-compatible preview route, that should be tested first because it avoids native transcoding.
+- If the only useful camera feed is RTSP, Panevo needs a helper/transcoding strategy before rendering it reliably.
+- NDI should remain deferred until licensing, packaging, and runtime dependency impact are understood.
+
+Preview acceptance rules:
+
+- PTZ, stop, preset, and camera configuration must keep working when preview fails.
+- Preview should be easy to disable per camera.
+- Preview errors must be visible but not modal during live operation.
+- Preview work should be validated for CPU/load impact during movement commands.
+
 ## ONVIF
 
 ONVIF is an active Phase 2C camera capability. It should remain isolated from VISCA internals and exposed through Panevo-level camera actions. ONVIF is the default route for discovery, metadata, capability probing, and preset sync. VISCA is the default live control route for the tested Tenveo workflow because its movement behavior is more operator-friendly.

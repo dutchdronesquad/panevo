@@ -225,7 +225,7 @@ Follow-up before promoting ONVIF control:
 
 ### Phase 2D: Stabilization and Release Readiness
 
-Status: active.
+Status: complete.
 
 Phase 2D is focused on making the current PTZ/operator workflow dependable before adding larger new features. The goal is to reduce regressions, validate the protocol split, and make the UI usable across realistic desktop window sizes.
 
@@ -249,12 +249,50 @@ Exit criteria:
 
 ### Phase 2E: VISCA Compatibility
 
+Status: active.
+
+Phase 2E keeps camera control reliable while preparing for broader camera support. This phase should stay focused on command behavior, vendor variation, and protocol decisions.
+
 - Vendor-specific VISCA compatibility options.
 - VISCA npm package evaluation.
 - Optional TCP VISCA support.
 - Safer preset overwrite flows.
 
-## Phase 3: Production Integrations
+Exit criteria:
+
+- Decide whether a third-party VISCA package is worth adopting or whether Panevo should keep the local VISCA implementation.
+- Document known Tenveo VISCA quirks and any camera-profile compatibility flags.
+- Decide whether TCP VISCA is useful for the tested Tenveo camera.
+- Keep VISCA live control stable while ONVIF remains the sync/discovery route.
+
+## Phase 3: Preview and Monitoring
+
+Panevo should gain an operator confidence preview after PTZ control is stable. Preview must remain separate from camera control so failed video does not block movement, stop, presets, or configuration.
+
+Likely first scope:
+
+- Single active-camera preview panel.
+- Preview source stored per camera profile.
+- Preview status/error state.
+- Clear fallback when no preview source is configured.
+- RTSP feasibility spike.
+- Browser-compatible preview route investigation such as MJPEG, HLS, WebRTC, or a local helper/transcoder.
+
+Not first scope:
+
+- NDI implementation.
+- Multi-camera preview grid.
+- Recording/streaming.
+- OBS preview dependency as the only preview path.
+
+Exit criteria:
+
+- Decide the first supported preview transport.
+- Keep preview optional and non-blocking.
+- Document packaging impact and native dependency risk.
+- Validate CPU/load impact during PTZ operation.
+
+## Phase 4: Production Integrations
 
 - OBS scene and source integration
 - RotorHazard race state integration
@@ -262,13 +300,6 @@ Exit criteria:
 - Flexbar touch panel integration investigation
 - Race-aware shot presets
 - Event-triggered camera actions
-
-## Phase 4: Preview and Monitoring
-
-- RTSP preview experiments
-- NDI preview investigation
-- Multi-camera preview grid
-- Low-latency operator confidence views
 
 ## Phase 5: Automation Platform
 

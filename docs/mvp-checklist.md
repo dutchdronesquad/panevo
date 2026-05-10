@@ -222,5 +222,25 @@ Phase 2B hardware regression:
 - [x] Run `npm run typecheck`.
 - [x] Run `npm run lint`.
 - [x] Run `npm run package`.
-  - Attempted on local machine; Vite production bundles completed, but Electron Forge packaging failed while resolving `github.com` (`getaddrinfo ENOTFOUND github.com`). Retry with working network access.
+  - Phase 2D accepted; last local package attempt completed Vite production bundles but Electron Forge packaging failed while resolving `github.com` (`getaddrinfo ENOTFOUND github.com`). Retry with working network access before release distribution.
 - [x] Update `tenveo-hardware.md` with Phase 2D regression results.
+
+## Phase 2E: VISCA Compatibility
+
+- [ ] Decide whether Panevo keeps its local VISCA implementation for now.
+- [ ] Evaluate whether a third-party VISCA package solves a real current problem.
+- [ ] Document Tenveo VISCA compatibility assumptions.
+- [ ] Decide whether TCP VISCA is useful enough to implement for the tested camera.
+- [ ] Identify any camera-profile compatibility flags needed before adding more camera models.
+- [ ] Keep VISCA live control stable while ONVIF remains the sync/discovery route.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+## Phase 3: Preview and Monitoring
+
+- [ ] Decide the first supported preview transport.
+- [ ] Add per-camera preview source fields after choosing the first transport.
+- [ ] Add active-camera preview panel without blocking PTZ control.
+- [ ] Show preview unavailable/configuration/error states.
+- [ ] Document packaging and CPU impact.
+- [ ] Defer NDI until packaging/licensing impact is understood.

@@ -38,15 +38,15 @@ Packaging may require network access because Electron Forge can download Electro
 
 ## Development Priorities
 
-During Phase 2D, development should prioritize:
+During Phase 2E, development should prioritize:
 
-1. Hardware regression for VISCA live control with ONVIF sync enabled.
-2. Operator safety and responsiveness during PTZ, zoom, focus, and preset workflows.
-3. Responsive UI behavior across realistic desktop and laptop window sizes.
-4. Clear configuration, credential, and error states.
+1. VISCA compatibility decisions.
+2. Camera-profile compatibility flags only when they are backed by tested behavior.
+3. Keeping VISCA live control stable while ONVIF remains the sync/discovery route.
+4. Preview architecture planning without coupling preview to PTZ control.
 5. Documentation that reflects tested behavior.
 
-Avoid implementing production integrations or preview features until Phase 2D stabilizes the current camera-control workflow.
+Avoid implementing production integrations until Phase 2E decisions are stable. Preview work may start as a focused Phase 3 foundation only after the first preview transport is selected.
 
 ## Process Boundaries
 

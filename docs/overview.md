@@ -81,7 +81,7 @@ MVP success means a single configured Tenveo camera can be controlled reliably e
 
 ## Current Product State
 
-Phase 1, Phase 2A, Phase 2B, and the main Phase 2C ONVIF discovery/sync implementation are complete. The active phase is Phase 2D: Stabilization and Release Readiness.
+Phase 1, Phase 2A, Phase 2B, Phase 2C, and Phase 2D stabilization are complete. The active phase is Phase 2E: VISCA Compatibility.
 
 The application now includes:
 
