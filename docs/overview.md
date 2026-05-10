@@ -89,6 +89,7 @@ The application now includes:
 - Active camera selection with health checking.
 - Per-camera preset entries.
 - VISCA PTZ, zoom, focus, and preset control.
+- ONVIF endpoint probing, preset sync, and ONVIF PTZ control.
 - Connection status that distinguishes verified camera response from transport-only fallback.
 - Import and export for local camera configuration.
 
@@ -100,7 +101,7 @@ Excluded from the MVP:
 - RotorHazard integration
 - Stream Deck or Companion plugins
 - Flexbar integration
-- Camera autodiscovery
+- Broad camera autodiscovery
 - Automation workflow editor
 - User accounts or cloud sync
 

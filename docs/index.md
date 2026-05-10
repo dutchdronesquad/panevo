@@ -11,6 +11,7 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 - `visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
 - `ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
 - `integrations.md`: future OBS, RotorHazard, operator-surface, preview, and automation integrations.
+- `onvif.md`: ONVIF package decision, probing scope, authentication notes, and failure modes.
 - `development.md`: local development workflow, commands, conventions, and repo practices.
 - `testing.md`: manual and technical validation strategy for the MVP.
 - `tenveo-hardware.md`: Tenveo-specific hardware validation notes and open questions.
@@ -31,11 +32,12 @@ The active phase is Phase 2C: Camera Discovery and ONVIF.
 
 Current priority:
 
-1. Research ONVIF package options and packaging impact.
-2. Add an isolated main-process ONVIF service boundary.
-3. Probe configured cameras for ONVIF device information and PTZ capabilities.
-4. Normalize discovery/probe results into Panevo-level camera records.
-5. Keep manual VISCA IP/port setup available.
+1. Validate ONVIF probe, preset sync, and PTZ control against real camera hardware.
+2. Validate whether Tenveo ONVIF preset tokens match Panevo's numeric preset entries.
+3. Decide whether the current `onvif` package remains acceptable or should be replaced behind the adapter.
+4. Move ONVIF credential storage out of plain JSON before production-quality ONVIF support.
+5. Add assisted setup only after probe and control behavior are stable.
+6. Keep manual VISCA IP/port setup available.
 
 Still deferred:
 

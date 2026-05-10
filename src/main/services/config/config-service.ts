@@ -8,6 +8,11 @@ const DEFAULT_CAMERA: CameraProfile = {
   label: 'Camera 1',
   ipAddress: '',
   port: 52381,
+  onvifPort: 8080,
+  onvifUsername: '',
+  onvifPassword: '',
+  controlProtocol: 'visca',
+  syncProtocol: 'onvif',
   protocol: 'udp',
   healthCheckMode: 'visca-inquiry',
   presets: [],
@@ -49,11 +54,6 @@ export class ConfigService {
 
   async saveConfig(config: CameraConfig): Promise<PanevoResult<CameraConfig>> {
     const normalized = this.normalizeConfig(config);
-    const activeCamera = this.getActiveCamera(normalized);
-
-    if (activeCamera.ipAddress.length === 0) {
-      return failure('INVALID_CONFIG', 'Camera IP address is required.');
-    }
 
     try {
       await mkdir(dirname(this.configPath), { recursive: true });
@@ -92,8 +92,8 @@ export class ConfigService {
     }
   }
 
-  getActiveCamera(config: CameraConfig): CameraProfile {
-    return config.cameras.find((camera) => camera.id === config.activeCameraId) ?? config.cameras[0] ?? DEFAULT_CAMERA;
+  getActiveCamera(config: CameraConfig): CameraProfile | null {
+    return config.cameras.find((camera) => camera.id === config.activeCameraId) ?? config.cameras[0] ?? null;
   }
 
   async getActiveCameraConfig(): Promise<PanevoResult<CameraProfile>> {
@@ -102,32 +102,34 @@ export class ConfigService {
       return configResult;
     }
 
-    return success(this.getActiveCamera(configResult.data));
+    const activeCamera = this.getActiveCamera(configResult.data);
+    if (!activeCamera) {
+      return failure('NO_ACTIVE_CAMERA', 'No camera profile is configured.');
+    }
+
+    return success(activeCamera);
   }
 
   private normalizeConfig(config: Partial<CameraConfig> & Partial<CameraProfile> & { presetLabels?: unknown }): CameraConfig {
     const cameras = this.normalizeCameras(config);
     const requestedActiveCameraId = typeof config.activeCameraId === 'string' ? config.activeCameraId.trim() : '';
-    const activeCamera = cameras.find((camera) => camera.id === requestedActiveCameraId) ?? cameras[0];
+    const activeCamera = cameras.find((camera) => camera.id === requestedActiveCameraId) ?? cameras[0] ?? null;
 
     return {
-      activeCameraId: activeCamera.id,
+      activeCameraId: activeCamera?.id ?? '',
       cameras,
     };
   }
 
   private normalizeCameras(config: Partial<CameraConfig> & Partial<CameraProfile> & { presetLabels?: unknown }): CameraProfile[] {
-    if (Array.isArray(config.cameras) && config.cameras.length > 0) {
-      const cameras = config.cameras
+    if (Array.isArray(config.cameras)) {
+      return config.cameras
         .map((camera, index) => this.normalizeCamera(camera, index + 1))
         .filter((camera): camera is CameraProfile => Boolean(camera));
-
-      if (cameras.length > 0) {
-        return cameras;
-      }
     }
 
-    return [this.normalizeCamera(config, 1) ?? DEFAULT_CAMERA];
+    const migratedCamera = this.normalizeCamera(config, 1);
+    return migratedCamera ? [migratedCamera] : [];
   }
 
   private normalizeCamera(camera: Partial<CameraProfile> & { presetLabels?: unknown }, fallbackNumber: number): CameraProfile | null {
@@ -144,15 +146,20 @@ export class ConfigService {
       label,
       ipAddress: typeof camera.ipAddress === 'string' ? camera.ipAddress.trim() : DEFAULT_CAMERA.ipAddress,
       port: this.clampPort(camera.port),
+      onvifPort: this.clampPort(camera.onvifPort, DEFAULT_CAMERA.onvifPort),
+      onvifUsername: typeof camera.onvifUsername === 'string' ? camera.onvifUsername.trim().slice(0, 80) : '',
+      onvifPassword: typeof camera.onvifPassword === 'string' ? camera.onvifPassword : '',
+      controlProtocol: camera.controlProtocol === 'onvif' ? 'onvif' : 'visca',
+      syncProtocol: camera.syncProtocol === 'none' ? 'none' : 'onvif',
       protocol: camera.protocol === 'tcp' ? 'tcp' : 'udp',
       healthCheckMode: camera.healthCheckMode === 'transport-only' ? 'transport-only' : 'visca-inquiry',
       presets: this.normalizePresets(camera),
     };
   }
 
-  private clampPort(port: unknown): number {
+  private clampPort(port: unknown, fallback = DEFAULT_CAMERA.port): number {
     if (typeof port !== 'number' || Number.isNaN(port)) {
-      return DEFAULT_CAMERA.port;
+      return fallback;
     }
     return Math.min(65535, Math.max(1, Math.round(port)));
   }

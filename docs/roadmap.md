@@ -175,8 +175,13 @@ Exit criteria:
 
 Status: active.
 
+- Initial ONVIF support through an isolated main-process service.
+- ONVIF device information probing for a configured camera.
+- ONVIF PTZ capability probing for a configured camera.
+- Protocol-agnostic camera control boundary with VISCA as the default live route and ONVIF as an optional live adapter.
+- Separate ONVIF sync route for discovery, identity, capability probing, and numeric preset synchronization.
+- ONVIF PTZ control adapter for compatible cameras.
 - Camera discovery and assisted setup.
-- ONVIF support investigation.
 - ONVIF preset discovery/import.
 - ONVIF camera capability discovery where supported.
 - Camera-native preset management.
@@ -190,12 +195,14 @@ Entry criteria:
 
 Recommended order:
 
-1. Research ONVIF support strategy and candidate Node.js packages.
-2. Add an isolated `services/onvif` boundary in the main process.
-3. Probe configured cameras for ONVIF device information and PTZ capabilities.
-4. Design discovered-camera records without coupling them to VISCA profiles.
-5. Add assisted camera setup only after ONVIF probing is stable.
-6. Add preset discovery/import only after capability and auth handling are understood.
+1. Research ONVIF support strategy and candidate Node.js packages. Done.
+2. Add an isolated `services/onvif` boundary in the main process. Done.
+3. Probe configured cameras for ONVIF device information and PTZ capabilities. Done.
+4. Design discovered-camera records without coupling them to VISCA profiles. Initial probe result shape, transient per-camera UI state, table status, and camera-management result dialog exist.
+5. Route live camera actions through `CameraControlService` so VISCA and ONVIF PTZ adapters share one Panevo action surface. Done.
+6. Add ONVIF PTZ, zoom, stop, focus, and preset control behind the same Panevo action surface. Done.
+7. Add assisted camera setup only after ONVIF probing is stable.
+8. Add preset discovery/import only after capability and auth handling are understood.
 
 Exit criteria:
 
@@ -204,6 +211,17 @@ Exit criteria:
 - Discovery results are normalized into Panevo-level camera records.
 - Manual IP/port camera setup remains available.
 - ONVIF auth, timeout, and failure states are documented.
+- Camera-management UI can show latest ONVIF probe state without persisting probe data as profile truth.
+- Live control remains protocol-agnostic in IPC/renderer code.
+- `visca` is the default live control adapter for new camera profiles.
+- `onvif` is the default sync adapter for new camera profiles.
+- `onvif` remains available as an optional live control adapter.
+
+Follow-up before promoting ONVIF control:
+
+- Validate ONVIF pan, tilt, zoom, stop, and presets against the Tenveo camera.
+- Decide whether the `onvif` package remains acceptable or should be replaced with Panevo-owned SOAP calls.
+- Move ONVIF password storage out of plain local JSON.
 
 ### Phase 2D: VISCA Compatibility
 

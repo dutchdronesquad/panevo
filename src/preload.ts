@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { CameraConfig, CameraProfile, FocusMode, PanevoApi } from './shared/types';
+import type { CameraConfig, CameraProfile, FocusMode, OnvifDiscoveryInput, OnvifProbeInput, PanevoApi } from './shared/types';
 
 const panevo: PanevoApi = {
   getConfig: () => ipcRenderer.invoke('panevo:get-config'),
@@ -9,6 +9,8 @@ const panevo: PanevoApi = {
   testConnection: () => ipcRenderer.invoke('panevo:test-connection'),
   testCameraConfig: (camera: CameraProfile) => ipcRenderer.invoke('panevo:test-camera-config', camera),
   checkCameraHealth: () => ipcRenderer.invoke('panevo:check-camera-health'),
+  probeOnvifCamera: (input: OnvifProbeInput) => ipcRenderer.invoke('panevo:probe-onvif-camera', input),
+  discoverOnvifCameras: (input?: OnvifDiscoveryInput) => ipcRenderer.invoke('panevo:discover-onvif-cameras', input),
   panLeft: (speed: number) => ipcRenderer.invoke('panevo:pan-left', speed),
   panRight: (speed: number) => ipcRenderer.invoke('panevo:pan-right', speed),
   tiltUp: (speed: number) => ipcRenderer.invoke('panevo:tilt-up', speed),
@@ -28,7 +30,8 @@ const panevo: PanevoApi = {
   focusOut: (speed: number) => ipcRenderer.invoke('panevo:focus-out', speed),
   focusStop: () => ipcRenderer.invoke('panevo:focus-stop'),
   recallPreset: (presetNumber: number) => ipcRenderer.invoke('panevo:recall-preset', presetNumber),
-  storePreset: (presetNumber: number) => ipcRenderer.invoke('panevo:store-preset', presetNumber),
+  storePreset: (presetNumber: number, presetLabel?: string) => ipcRenderer.invoke('panevo:store-preset', presetNumber, presetLabel),
+  removePreset: (presetNumber: number) => ipcRenderer.invoke('panevo:remove-preset', presetNumber),
 };
 
 contextBridge.exposeInMainWorld('panevo', panevo);

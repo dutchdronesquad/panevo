@@ -1,7 +1,7 @@
 import { dialog, ipcMain } from 'electron';
 import type { CameraConfig, CameraConnectionStatus, CameraProfile, CommandResponse, ConfigFileResponse, FocusMode, PanevoResult } from '../../shared/types';
+import { CameraControlService } from '../services/camera-control/camera-control-service';
 import { ConfigService } from '../services/config/config-service';
-import { ViscaClient } from '../services/visca/visca-client';
 
 const failure = <T = never>(code: string, message: string): PanevoResult<T> => ({
   ok: false,
@@ -29,6 +29,13 @@ const normalizeCameraInput = (camera: Partial<CameraProfile>): PanevoResult<Came
     label: typeof camera.label === 'string' && camera.label.trim().length > 0 ? camera.label.trim().slice(0, 40) : 'Camera',
     ipAddress,
     port,
+    onvifPort: typeof camera.onvifPort === 'number' && Number.isFinite(camera.onvifPort)
+      ? Math.min(65535, Math.max(1, Math.round(camera.onvifPort)))
+      : 8080,
+    onvifUsername: typeof camera.onvifUsername === 'string' ? camera.onvifUsername.trim().slice(0, 80) : '',
+    onvifPassword: typeof camera.onvifPassword === 'string' ? camera.onvifPassword : '',
+    controlProtocol: camera.controlProtocol === 'onvif' ? 'onvif' : 'visca',
+    syncProtocol: camera.syncProtocol === 'none' ? 'none' : 'onvif',
     protocol: camera.protocol === 'tcp' ? 'tcp' : 'udp',
     healthCheckMode: camera.healthCheckMode === 'transport-only' ? 'transport-only' : 'visca-inquiry',
     presets: Array.isArray(camera.presets) ? camera.presets : [],
@@ -37,22 +44,17 @@ const normalizeCameraInput = (camera: Partial<CameraProfile>): PanevoResult<Came
 
 export const registerCameraIpc = (): void => {
   const configService = new ConfigService();
-  const viscaClient = new ViscaClient();
+  const cameraControlService = new CameraControlService();
 
   const withClient = async (
-    command: () => Promise<PanevoResult<CommandResponse>>,
+    command: (camera: CameraProfile) => Promise<PanevoResult<CommandResponse>>,
   ): Promise<PanevoResult<CommandResponse>> => {
     const cameraResult = await configService.getActiveCameraConfig();
     if (!cameraResult.ok) {
       return cameraResult;
     }
 
-    const connectResult = await viscaClient.ensureConnected(cameraResult.data);
-    if (!connectResult.ok) {
-      return failure(connectResult.error.code, connectResult.error.message);
-    }
-
-    return command();
+    return command(cameraResult.data);
   };
 
   ipcMain.handle('panevo:get-config', async (): Promise<PanevoResult<CameraConfig>> => {
@@ -68,14 +70,20 @@ export const registerCameraIpc = (): void => {
       const savedCamera = saved.ok ? configService.getActiveCamera(saved.data) : null;
       const connectionChanged =
         Boolean(previousCamera) &&
-        Boolean(savedCamera) &&
-        (previousCamera?.id !== savedCamera?.id ||
+        (!savedCamera ||
+          previousCamera?.id !== savedCamera?.id ||
           previousCamera?.ipAddress !== savedCamera?.ipAddress ||
           previousCamera?.port !== savedCamera?.port ||
-          previousCamera?.protocol !== savedCamera?.protocol);
+          previousCamera?.onvifPort !== savedCamera?.onvifPort ||
+          previousCamera?.onvifUsername !== savedCamera?.onvifUsername ||
+          previousCamera?.onvifPassword !== savedCamera?.onvifPassword ||
+          previousCamera?.controlProtocol !== savedCamera?.controlProtocol ||
+          previousCamera?.syncProtocol !== savedCamera?.syncProtocol ||
+          previousCamera?.protocol !== savedCamera?.protocol ||
+          previousCamera?.healthCheckMode !== savedCamera?.healthCheckMode);
 
       if (connectionChanged) {
-        viscaClient.disconnect();
+        cameraControlService.disconnect();
       }
       return saved;
     },
@@ -92,7 +100,7 @@ export const registerCameraIpc = (): void => {
       return failure('CONFIG_IMPORT_CANCELED', 'Config import canceled.');
     }
 
-    viscaClient.disconnect();
+    cameraControlService.disconnect();
     return configService.importConfig(result.filePaths[0]);
   });
 
@@ -115,7 +123,7 @@ export const registerCameraIpc = (): void => {
     if (!cameraResult.ok) {
       return cameraResult;
     }
-    return viscaClient.healthCheck(cameraResult.data);
+    return cameraControlService.healthCheck(cameraResult.data);
   });
 
   ipcMain.handle(
@@ -126,7 +134,7 @@ export const registerCameraIpc = (): void => {
         return cameraResult;
       }
 
-      return viscaClient.healthCheck(cameraResult.data);
+      return cameraControlService.healthCheck(cameraResult.data);
     },
   );
 
@@ -136,41 +144,46 @@ export const registerCameraIpc = (): void => {
       return cameraResult;
     }
 
-    return viscaClient.healthCheck(cameraResult.data);
+    return cameraControlService.passiveHealthCheck(cameraResult.data);
   });
 
-  ipcMain.handle('panevo:pan-left', async (_event, speed: number) => withClient(() => viscaClient.panLeft(speed)));
-  ipcMain.handle('panevo:pan-right', async (_event, speed: number) => withClient(() => viscaClient.panRight(speed)));
-  ipcMain.handle('panevo:tilt-up', async (_event, speed: number) => withClient(() => viscaClient.tiltUp(speed)));
-  ipcMain.handle('panevo:tilt-down', async (_event, speed: number) => withClient(() => viscaClient.tiltDown(speed)));
+  ipcMain.handle('panevo:pan-left', async (_event, speed: number) => withClient((camera) => cameraControlService.panLeft(camera, speed)));
+  ipcMain.handle('panevo:pan-right', async (_event, speed: number) => withClient((camera) => cameraControlService.panRight(camera, speed)));
+  ipcMain.handle('panevo:tilt-up', async (_event, speed: number) => withClient((camera) => cameraControlService.tiltUp(camera, speed)));
+  ipcMain.handle('panevo:tilt-down', async (_event, speed: number) => withClient((camera) => cameraControlService.tiltDown(camera, speed)));
   ipcMain.handle('panevo:move-up-left', async (_event, panSpeed: number, tiltSpeed: number) =>
-    withClient(() => viscaClient.moveUpLeft(panSpeed, tiltSpeed)),
+    withClient((camera) => cameraControlService.moveUpLeft(camera, panSpeed, tiltSpeed)),
   );
   ipcMain.handle('panevo:move-up-right', async (_event, panSpeed: number, tiltSpeed: number) =>
-    withClient(() => viscaClient.moveUpRight(panSpeed, tiltSpeed)),
+    withClient((camera) => cameraControlService.moveUpRight(camera, panSpeed, tiltSpeed)),
   );
   ipcMain.handle('panevo:move-down-left', async (_event, panSpeed: number, tiltSpeed: number) =>
-    withClient(() => viscaClient.moveDownLeft(panSpeed, tiltSpeed)),
+    withClient((camera) => cameraControlService.moveDownLeft(camera, panSpeed, tiltSpeed)),
   );
   ipcMain.handle('panevo:move-down-right', async (_event, panSpeed: number, tiltSpeed: number) =>
-    withClient(() => viscaClient.moveDownRight(panSpeed, tiltSpeed)),
+    withClient((camera) => cameraControlService.moveDownRight(camera, panSpeed, tiltSpeed)),
   );
-  ipcMain.handle('panevo:zoom-in', async (_event, speed: number) => withClient(() => viscaClient.zoomIn(speed)));
-  ipcMain.handle('panevo:zoom-out', async (_event, speed: number) => withClient(() => viscaClient.zoomOut(speed)));
-  ipcMain.handle('panevo:stop', async () => withClient(() => viscaClient.stop()));
-  ipcMain.handle('panevo:zoom-stop', async () => withClient(() => viscaClient.zoomStop()));
-  ipcMain.handle('panevo:set-focus-mode', async (_event, mode: FocusMode) => withClient(() => viscaClient.setFocusMode(mode)));
-  ipcMain.handle('panevo:focus-in', async (_event, speed: number) => withClient(() => viscaClient.focusIn(speed)));
-  ipcMain.handle('panevo:focus-out', async (_event, speed: number) => withClient(() => viscaClient.focusOut(speed)));
-  ipcMain.handle('panevo:focus-stop', async () => withClient(() => viscaClient.focusStop()));
+  ipcMain.handle('panevo:zoom-in', async (_event, speed: number) => withClient((camera) => cameraControlService.zoomIn(camera, speed)));
+  ipcMain.handle('panevo:zoom-out', async (_event, speed: number) => withClient((camera) => cameraControlService.zoomOut(camera, speed)));
+  ipcMain.handle('panevo:stop', async () => withClient((camera) => cameraControlService.stop(camera)));
+  ipcMain.handle('panevo:zoom-stop', async () => withClient((camera) => cameraControlService.zoomStop(camera)));
+  ipcMain.handle('panevo:set-focus-mode', async (_event, mode: FocusMode) =>
+    withClient((camera) => cameraControlService.setFocusMode(camera, mode)),
+  );
+  ipcMain.handle('panevo:focus-in', async (_event, speed: number) => withClient((camera) => cameraControlService.focusIn(camera, speed)));
+  ipcMain.handle('panevo:focus-out', async (_event, speed: number) => withClient((camera) => cameraControlService.focusOut(camera, speed)));
+  ipcMain.handle('panevo:focus-stop', async () => withClient((camera) => cameraControlService.focusStop(camera)));
   ipcMain.handle('panevo:recall-preset', async (_event, presetNumber: number) =>
-    withClient(() => viscaClient.recallPreset(presetNumber)),
+    withClient((camera) => cameraControlService.recallPreset(camera, presetNumber)),
   );
-  ipcMain.handle('panevo:store-preset', async (_event, presetNumber: number) =>
-    withClient(() => viscaClient.storePreset(presetNumber)),
+  ipcMain.handle('panevo:store-preset', async (_event, presetNumber: number, presetLabel?: string) =>
+    withClient((camera) => cameraControlService.storePreset(camera, presetNumber, presetLabel)),
+  );
+  ipcMain.handle('panevo:remove-preset', async (_event, presetNumber: number) =>
+    withClient((camera) => cameraControlService.removePreset(camera, presetNumber)),
   );
 
   process.on('exit', () => {
-    viscaClient.disconnect();
+    cameraControlService.disconnect();
   });
 };

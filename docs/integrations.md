@@ -105,7 +105,7 @@ Preview should not block camera control startup. If preview fails, PTZ control s
 
 ## ONVIF
 
-ONVIF should be considered a future camera capability rather than a production integration like OBS or RotorHazard.
+ONVIF is an active Phase 2C camera capability. It should remain isolated from VISCA internals and exposed through Panevo-level camera actions. ONVIF is the default route for discovery, metadata, capability probing, and preset sync. VISCA is the default live control route for the tested Tenveo workflow because its movement behavior is more operator-friendly.
 
 Potential features:
 
@@ -114,15 +114,47 @@ Potential features:
 - Preset list discovery.
 - Preset import/sync into Panevo's local preset entries.
 - Optional ONVIF PTZ control path for compatible cameras.
+- ONVIF focus support through the Imaging service where cameras expose it.
 
 ONVIF support should be implemented as a main-process service and exposed through Panevo-level IPC actions. Renderer components should not depend directly on ONVIF tokens, SOAP details, or vendor-specific response shapes.
+
+Current implementation:
+
+- Uses the `onvif` npm package behind `OnvifService`.
+- Uses `OnvifPtzClient` behind `CameraControlService` for live ONVIF control.
+- Exposes `window.panevo.probeOnvifCamera(input)` through preload.
+- Exposes `window.panevo.discoverOnvifCameras(input)` through preload.
+- Supports local-network ONVIF WS-Discovery from the camera-management view.
+- Connects to a configured ONVIF endpoint using the camera profile's `onvifPort`.
+- New camera profiles default to ONVIF port `8080` because that is the observed port on the tested Tenveo camera.
+- Supports ONVIF identity authentication with stored username and password fields in the local camera profile.
+- Returns normalized device information, capability flags, media profile summaries, preset summaries, and PTZ node count.
+- Keeps the latest ONVIF probe result as transient renderer state for table status and the probe dialog.
+- Supports assisted camera setup from discovery/probe results while still validating the connection before saving.
+- Supports operator-initiated import of numeric ONVIF preset tokens into Panevo's local preset list.
+- Can use ONVIF for live PTZ movement when the camera profile's `controlProtocol` is set to `onvif`.
+
+Control architecture:
+
+- Live camera actions route through `CameraControlService`.
+- Camera profiles include `controlProtocol` for live movement and `syncProtocol` for camera metadata/preset sync.
+- `visca` is the default live control adapter for new camera profiles.
+- `onvif` is the default sync adapter for new camera profiles.
+- ONVIF remains available as an optional live control adapter.
+- ONVIF metadata/probing can enrich setup while VISCA remains the selected live control route.
 
 Important constraints:
 
 - ONVIF support varies by camera and firmware.
 - Authentication may be required.
 - Preset tokens and names may not map cleanly to VISCA preset numbers.
-- Sync should be operator-initiated, not automatic during live operation.
+- ONVIF preset sync runs during add/probe/startup when `syncProtocol` is `onvif`; it should not run in the middle of a live movement command.
+- Preset removal uses ONVIF `RemovePreset` when `syncProtocol` is `onvif`, even if live control stays on VISCA.
+- Panevo imports only numeric ONVIF preset tokens for now. Opaque ONVIF tokens need an explicit mapping model before automatic control can be trusted.
+- A successful ONVIF probe does not automatically switch a camera from VISCA to ONVIF control.
+- The active control protocol determines which health check and control adapter are used.
+- ONVIF passwords are stored in local plain JSON during Phase 2C so probing/control survive restart. Production hardening should move them to OS keychain or encrypted storage.
+- The current `onvif` npm package remains behind adapters so it can be replaced with Panevo-owned SOAP calls later.
 
 ## Automation
 
