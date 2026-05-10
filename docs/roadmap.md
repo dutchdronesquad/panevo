@@ -175,8 +175,13 @@ Exit criteria:
 
 Status: active.
 
+- Initial ONVIF support through an isolated main-process service.
+- ONVIF device information probing for a configured camera.
+- ONVIF PTZ capability probing for a configured camera.
+- Protocol-agnostic camera control boundary with VISCA as the default live route and ONVIF as an optional live adapter.
+- Separate ONVIF sync route for discovery, identity, capability probing, and numeric preset synchronization.
+- ONVIF PTZ control adapter for compatible cameras.
 - Camera discovery and assisted setup.
-- ONVIF support investigation.
 - ONVIF preset discovery/import.
 - ONVIF camera capability discovery where supported.
 - Camera-native preset management.
@@ -190,12 +195,14 @@ Entry criteria:
 
 Recommended order:
 
-1. Research ONVIF support strategy and candidate Node.js packages.
-2. Add an isolated `services/onvif` boundary in the main process.
-3. Probe configured cameras for ONVIF device information and PTZ capabilities.
-4. Design discovered-camera records without coupling them to VISCA profiles.
-5. Add assisted camera setup only after ONVIF probing is stable.
-6. Add preset discovery/import only after capability and auth handling are understood.
+1. Research ONVIF support strategy and candidate Node.js packages. Done.
+2. Add an isolated `services/onvif` boundary in the main process. Done.
+3. Probe configured cameras for ONVIF device information and PTZ capabilities. Done.
+4. Design discovered-camera records without coupling them to VISCA profiles. Initial probe result shape, transient per-camera UI state, table status, and camera-management result dialog exist.
+5. Route live camera actions through `CameraControlService` so VISCA and ONVIF PTZ adapters share one Panevo action surface. Done.
+6. Add ONVIF PTZ, zoom, stop, focus, and preset control behind the same Panevo action surface. Done.
+7. Add assisted camera setup only after ONVIF probing is stable.
+8. Add preset discovery/import only after capability and auth handling are understood.
 
 Exit criteria:
 
@@ -204,15 +211,88 @@ Exit criteria:
 - Discovery results are normalized into Panevo-level camera records.
 - Manual IP/port camera setup remains available.
 - ONVIF auth, timeout, and failure states are documented.
+- Camera-management UI can show latest ONVIF probe state without persisting probe data as profile truth.
+- Live control remains protocol-agnostic in IPC/renderer code.
+- `visca` is the default live control adapter for new camera profiles.
+- `onvif` is the default sync adapter for new camera profiles.
+- `onvif` remains available as an optional live control adapter.
 
-### Phase 2D: VISCA Compatibility
+Follow-up before promoting ONVIF control:
+
+- Validate ONVIF pan, tilt, zoom, stop, and presets against the Tenveo camera.
+- Decide whether the `onvif` package remains acceptable or should be replaced with Panevo-owned SOAP calls.
+- Move ONVIF password storage out of plain local JSON.
+
+### Phase 2D: Stabilization and Release Readiness
+
+Status: complete.
+
+Phase 2D is focused on making the current PTZ/operator workflow dependable before adding larger new features. The goal is to reduce regressions, validate the protocol split, and make the UI usable across realistic desktop window sizes.
+
+Scope:
+
+- Hardware regression for VISCA live control with ONVIF sync enabled.
+- ONVIF preset add, store, import, startup sync, and camera-native remove validation.
+- Responsive UI validation across large desktop, laptop, tablet-width, and narrow test windows.
+- Operator status copy and error-state polish.
+- Packaging smoke test.
+- Documentation updates based on verified behavior.
+
+Exit criteria:
+
+- VISCA live control remains responsive while ONVIF sync is enabled.
+- Background health checks do not block or disrupt PTZ commands.
+- Preset remove behaves as documented for ONVIF sync and local-only modes.
+- Camera management, control, and settings views remain usable at common window sizes.
+- `npm run typecheck`, `npm run lint`, and packaging smoke checks pass.
+- `tenveo-hardware.md`, `testing.md`, and `mvp-checklist.md` reflect the latest validation.
+
+### Phase 2E: VISCA Compatibility
+
+Status: active.
+
+Phase 2E keeps camera control reliable while preparing for broader camera support. This phase should stay focused on command behavior, vendor variation, and protocol decisions.
 
 - Vendor-specific VISCA compatibility options.
 - VISCA npm package evaluation.
 - Optional TCP VISCA support.
 - Safer preset overwrite flows.
 
-## Phase 3: Production Integrations
+Exit criteria:
+
+- Decide whether a third-party VISCA package is worth adopting or whether Panevo should keep the local VISCA implementation.
+- Document known Tenveo VISCA quirks and any camera-profile compatibility flags.
+- Decide whether TCP VISCA is useful for the tested Tenveo camera.
+- Keep VISCA live control stable while ONVIF remains the sync/discovery route.
+
+## Phase 3: Preview and Monitoring
+
+Panevo should gain an operator confidence preview after PTZ control is stable. Preview must remain separate from camera control so failed video does not block movement, stop, presets, or configuration.
+
+Likely first scope:
+
+- Single active-camera preview panel.
+- Preview source stored per camera profile.
+- Preview status/error state.
+- Clear fallback when no preview source is configured.
+- RTSP feasibility spike.
+- Browser-compatible preview route investigation such as MJPEG, HLS, WebRTC, or a local helper/transcoder.
+
+Not first scope:
+
+- NDI implementation.
+- Multi-camera preview grid.
+- Recording/streaming.
+- OBS preview dependency as the only preview path.
+
+Exit criteria:
+
+- Decide the first supported preview transport.
+- Keep preview optional and non-blocking.
+- Document packaging impact and native dependency risk.
+- Validate CPU/load impact during PTZ operation.
+
+## Phase 4: Production Integrations
 
 - OBS scene and source integration
 - RotorHazard race state integration
@@ -220,13 +300,6 @@ Exit criteria:
 - Flexbar touch panel integration investigation
 - Race-aware shot presets
 - Event-triggered camera actions
-
-## Phase 4: Preview and Monitoring
-
-- RTSP preview experiments
-- NDI preview investigation
-- Multi-camera preview grid
-- Low-latency operator confidence views
 
 ## Phase 5: Automation Platform
 

@@ -25,8 +25,14 @@ export const AppSidebar = ({ activeView, activeCamera, status, error, onViewChan
     ? <CheckCircle2 size={10} />
     : <CircleOff size={10} />;
 
+  const controlEndpoint = activeCamera.controlProtocol === 'onvif'
+    ? `ONVIF · ${activeCamera.onvifPort}`
+    : `VISCA ${activeCamera.protocol.toUpperCase()} · ${activeCamera.port}`;
+  const syncEndpoint = activeCamera.syncProtocol === 'onvif'
+    ? `Sync ONVIF · ${activeCamera.onvifPort}`
+    : 'Sync local only';
   const tooltipText = activeCamera.ipAddress
-    ? `${activeCamera.ipAddress} · ${activeCamera.protocol.toUpperCase()} · ${activeCamera.port}`
+    ? `${activeCamera.ipAddress} · ${controlEndpoint} · ${syncEndpoint}`
     : 'No address configured';
 
   const navBtn = (view: AppView, icon: React.ReactNode, label: string) => (

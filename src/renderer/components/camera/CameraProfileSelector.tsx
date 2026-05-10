@@ -27,6 +27,7 @@ export const CameraProfileSelector = ({
   onExport,
 }: CameraProfileSelectorProps) => {
   const activeCamera = cameras.find((c) => c.id === activeCameraId) ?? cameras[0];
+  const hasActiveCamera = Boolean(activeCamera);
 
   return (
     <div className="card">
@@ -34,9 +35,9 @@ export const CameraProfileSelector = ({
       <div className="form-stack">
         <div className="field">
           <Label htmlFor="active-camera" className="field-label">Active camera</Label>
-          <Select value={activeCamera.id} onValueChange={onSelect}>
+          <Select value={activeCamera?.id ?? ''} onValueChange={onSelect} disabled={!hasActiveCamera}>
             <SelectTrigger id="active-camera" className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="No cameras configured" />
             </SelectTrigger>
             <SelectContent>
               {cameras.map((camera) => (
@@ -52,9 +53,14 @@ export const CameraProfileSelector = ({
           <Label htmlFor="camera-label" className="field-label">Camera label</Label>
           <Input
             id="camera-label"
-            value={activeCamera.label}
+            value={activeCamera?.label ?? ''}
             maxLength={40}
-            onChange={(e) => onRename(activeCamera.id, e.target.value)}
+            disabled={!hasActiveCamera}
+            onChange={(e) => {
+              if (activeCamera) {
+                onRename(activeCamera.id, e.target.value);
+              }
+            }}
           />
         </div>
 
@@ -63,7 +69,7 @@ export const CameraProfileSelector = ({
             <Plus size={15} />
             Add
           </Button>
-          <Button variant="destructive" disabled={cameras.length <= 1} onClick={() => onDelete(activeCamera.id)}>
+          <Button variant="destructive" disabled={!activeCamera} onClick={() => activeCamera && onDelete(activeCamera.id)}>
             <Trash2 size={15} />
             Remove
           </Button>

@@ -38,15 +38,15 @@ Packaging may require network access because Electron Forge can download Electro
 
 ## Development Priorities
 
-During the Phase 2B to Phase 2C transition, development should prioritize:
+During Phase 2E, development should prioritize:
 
-1. Hardware regression for multi-camera profiles, health checks, and focus controls.
-2. Operator safety after camera switching.
-3. Clear configuration and error states.
-4. Documentation that reflects tested behavior.
-5. Discovery and ONVIF investigation only after the current implementation is snapshotted.
+1. VISCA compatibility decisions.
+2. Camera-profile compatibility flags only when they are backed by tested behavior.
+3. Keeping VISCA live control stable while ONVIF remains the sync/discovery route.
+4. Preview architecture planning without coupling preview to PTZ control.
+5. Documentation that reflects tested behavior.
 
-Avoid implementing production integrations or preview features until Phase 2C discovery and camera capability work has a stable direction.
+Avoid implementing production integrations until Phase 2E decisions are stable. Preview work may start as a focused Phase 3 foundation only after the first preview transport is selected.
 
 ## Process Boundaries
 
@@ -85,9 +85,9 @@ Main process:
 
 Panevo stores local configuration in Electron's `userData` directory as JSON.
 
-The current config model stores camera profiles, one active camera id, per-camera preset entries, and camera health-check mode. Keep this model local-first and explicit. Future versions can expand it into operator workspaces, integration credentials, or discovered camera metadata, but those additions should remain behind clear schema changes.
+The current config model stores camera profiles, one active camera id, per-camera preset entries, internal camera health-check state, ONVIF endpoint settings, and ONVIF credentials. Keep this model local-first and explicit. Future versions can expand it into operator workspaces, integration credentials, or discovered camera metadata, but those additions should remain behind clear schema changes.
 
-Do not store secrets in the config file unless a future integration requires them and the project has a secure storage strategy.
+ONVIF passwords are currently stored in local JSON only to keep Phase 2C probing, preset sync, and ONVIF control usable after restart. This is not the final production model. Move camera credentials to OS keychain storage, encrypted local storage, or a documented opt-in plain-config mode before treating ONVIF support as release-quality.
 
 ## Dependency Strategy
 

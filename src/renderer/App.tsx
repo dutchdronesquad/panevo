@@ -6,21 +6,36 @@ import { MainLayout } from './layouts/MainLayout';
 import { CamerasView } from './views/CamerasView';
 import { ControlView } from './views/ControlView';
 import { SettingsView, type Theme } from './views/SettingsView';
-import type { CameraConfig, CameraConnectionStatus, CameraPreset, CameraProfile, CommandResponse, FocusMode, PanevoResult } from './types/camera';
+import type {
+  CameraConfig,
+  CameraConnectionStatus,
+  CameraPreset,
+  CameraProfile,
+  CommandResponse,
+  FocusMode,
+  OnvifProbeState,
+  OnvifProbeResult,
+  PanevoResult,
+} from './types/camera';
 
 const fallbackCamera: CameraProfile = {
   id: 'camera-default',
   label: 'Camera 1',
   ipAddress: '',
   port: 52381,
+  onvifPort: 8080,
+  onvifUsername: '',
+  onvifPassword: '',
+  controlProtocol: 'visca',
+  syncProtocol: 'onvif',
   protocol: 'udp',
   healthCheckMode: 'visca-inquiry',
   presets: [],
 };
 
 const fallbackConfig: CameraConfig = {
-  activeCameraId: fallbackCamera.id,
-  cameras: [fallbackCamera],
+  activeCameraId: '',
+  cameras: [],
 };
 
 const HEALTH_CHECK_INTERVAL_MS = 15_000;
@@ -40,6 +55,42 @@ const updateCameraProfile = (config: CameraConfig, camera: CameraProfile): Camer
   cameras: config.cameras.map((item) => (item.id === camera.id ? camera : item)),
 });
 
+const syncPresetEntriesFromOnvif = (camera: CameraProfile, result: OnvifProbeResult): CameraPreset[] => {
+  const existingByNumber = new Map(camera.presets.map((preset) => [preset.cameraPreset, preset]));
+
+  return result.presets
+    .filter((preset) => preset.numericPreset !== undefined)
+    .map((preset, index) => {
+      const cameraPreset = preset.numericPreset as number;
+      const existingPreset = existingByNumber.get(cameraPreset);
+
+      return {
+        id: existingPreset?.id ?? `preset-onvif-${camera.id}-${preset.token.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}-${index}`,
+        label: (preset.name || `Preset ${cameraPreset}`).trim().slice(0, 32),
+        cameraPreset,
+      };
+    })
+    .sort((a, b) => a.cameraPreset - b.cameraPreset);
+};
+
+const presetsChanged = (current: CameraPreset[], next: CameraPreset[]): boolean => {
+  if (current.length !== next.length) {
+    return true;
+  }
+
+  return current.some((preset, index) => {
+    const nextPreset = next[index];
+    return !nextPreset || preset.label !== nextPreset.label || preset.cameraPreset !== nextPreset.cameraPreset;
+  });
+};
+
+const shouldAutoProbeOnvif = (camera: CameraProfile): boolean => {
+  return (
+    camera.ipAddress.trim().length > 0 &&
+    camera.syncProtocol === 'onvif'
+  );
+};
+
 export const App = () => {
   const [config, setConfig] = useState<CameraConfig>(fallbackConfig);
   const [status, setStatus] = useState<CameraConnectionStatus>({
@@ -53,18 +104,81 @@ export const App = () => {
   const [, setLastCommand] = useState<CommandResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<AppView>('control');
+  const [onvifProbeStates, setOnvifProbeStates] = useState<Record<string, OnvifProbeState>>({});
   const activeCamera = useMemo(() => getActiveCamera(config), [config]);
+  const hasActiveCamera = config.cameras.length > 0;
 
   const saveConfigState = useCallback(async (nextConfig: CameraConfig) => {
     setConfig(nextConfig);
     const result = await window.panevo.saveConfig(nextConfig);
     if (!result.ok) {
       setError(`${result.error.code}: ${result.error.message}`);
-      return;
+      return result;
     }
 
     setConfig(result.data);
     setError(null);
+    return result;
+  }, []);
+
+  const probeOnvifCamera = useCallback(async (
+    camera: CameraProfile,
+    auth?: { username?: string; password?: string },
+    options: { showError?: boolean } = {},
+  ): Promise<{ ok: boolean; error?: string; result?: OnvifProbeResult }> => {
+    if (camera.ipAddress.trim().length === 0) {
+      const message = 'Camera IP address is required for ONVIF probing.';
+      setOnvifProbeStates((current) => ({
+        ...current,
+        [camera.id]: {
+          status: 'failed',
+          checkedAt: new Date().toISOString(),
+          error: message,
+        },
+      }));
+      return { ok: false, error: message };
+    }
+
+    const result = await window.panevo.probeOnvifCamera({
+      ipAddress: camera.ipAddress,
+      port: camera.onvifPort,
+      username: auth?.username?.trim() || camera.onvifUsername || undefined,
+      password: auth?.password || camera.onvifPassword || undefined,
+      timeoutMs: 5000,
+    });
+
+    if (!result.ok) {
+      const message = `${result.error.code}: ${result.error.message}`;
+      setOnvifProbeStates((current) => ({
+        ...current,
+        [camera.id]: {
+          status: 'failed',
+          checkedAt: new Date().toISOString(),
+          error: message,
+        },
+      }));
+
+      if (options.showError) {
+        setError(message);
+      }
+
+      return { ok: false, error: message };
+    }
+
+    setOnvifProbeStates((current) => ({
+      ...current,
+      [camera.id]: {
+        status: 'verified',
+        checkedAt: result.data.checkedAt,
+        result: result.data,
+      },
+    }));
+
+    if (options.showError) {
+      setError(null);
+    }
+
+    return { ok: true, result: result.data };
   }, []);
 
   useEffect(() => {
@@ -77,6 +191,15 @@ export const App = () => {
       const camera = getActiveCamera(configResult.data);
       setConfig(configResult.data);
 
+      if (configResult.data.cameras.length === 0) {
+        setStatus({
+          connected: false,
+          protocol: 'udp',
+          message: 'No camera configured',
+        });
+        return;
+      }
+
       // Query real connection state from main process — survives renderer hot reload
       const statusResult = await window.panevo.testConnection();
       setStatus(
@@ -88,6 +211,15 @@ export const App = () => {
   }, []);
 
   useEffect(() => {
+    if (!hasActiveCamera) {
+      setStatus({
+        connected: false,
+        protocol: 'udp',
+        message: 'No camera configured',
+      });
+      return;
+    }
+
     if (!activeCamera.ipAddress) {
       setStatus({
         connected: false,
@@ -130,10 +262,80 @@ export const App = () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeCamera.id, activeCamera.ipAddress, activeCamera.port, activeCamera.protocol]);
+  }, [
+    activeCamera.controlProtocol,
+    activeCamera.id,
+    activeCamera.ipAddress,
+    activeCamera.onvifPassword,
+    activeCamera.onvifPort,
+    activeCamera.onvifUsername,
+    activeCamera.port,
+    activeCamera.protocol,
+    hasActiveCamera,
+  ]);
+
+  useEffect(() => {
+    const candidates = config.cameras.filter((camera) => shouldAutoProbeOnvif(camera) && !onvifProbeStates[camera.id]);
+    if (candidates.length === 0) {
+      return;
+    }
+
+    let cancelled = false;
+    const checkedAt = new Date().toISOString();
+
+    setOnvifProbeStates((current) => {
+      const next = { ...current };
+      for (const camera of candidates) {
+        next[camera.id] = {
+          status: 'unknown',
+          checkedAt,
+        };
+      }
+      return next;
+    });
+
+    void (async () => {
+      let workingConfig = config;
+      for (const camera of candidates) {
+        if (cancelled) {
+          return;
+        }
+
+        const result = await probeOnvifCamera(camera);
+        if (!result.ok || !result.result || camera.syncProtocol !== 'onvif') {
+          continue;
+        }
+
+        const nextPresets = syncPresetEntriesFromOnvif(camera, result.result);
+        if (presetsChanged(camera.presets, nextPresets)) {
+          workingConfig = updateCameraProfile(workingConfig, { ...camera, presets: nextPresets });
+          await saveConfigState(workingConfig);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [config, onvifProbeStates, probeOnvifCamera, saveConfigState]);
 
   const saveCameraProfile = useCallback((camera: CameraProfile) => {
-    void saveConfigState(updateCameraProfile(config, camera));
+    const previousCamera = config.cameras.find((item) => item.id === camera.id);
+    const shouldClearOnvifState =
+      previousCamera &&
+      (previousCamera.ipAddress !== camera.ipAddress ||
+        previousCamera.onvifPort !== camera.onvifPort ||
+        previousCamera.onvifUsername !== camera.onvifUsername ||
+        previousCamera.onvifPassword !== camera.onvifPassword ||
+        previousCamera.syncProtocol !== camera.syncProtocol);
+
+    if (shouldClearOnvifState) {
+      setOnvifProbeStates((current) => {
+        const next = { ...current };
+        delete next[camera.id];
+        return next;
+      });
+    }
 
     if (camera.id === config.activeCameraId) {
       setStatus({
@@ -142,7 +344,11 @@ export const App = () => {
         message: 'Disconnected',
       });
     }
-  }, [config, saveConfigState]);
+
+    void (async () => {
+      await saveConfigState(updateCameraProfile(config, camera));
+    })();
+  }, [config, probeOnvifCamera, saveConfigState]);
 
   const testCamera = useCallback(async (cameraId: string) => {
     const camera = config.cameras.find((item) => item.id === cameraId);
@@ -235,10 +441,14 @@ export const App = () => {
   }, []);
 
   const stopAll = useCallback(() => {
+    if (!hasActiveCamera) {
+      return;
+    }
+
     void handleResult(window.panevo.stop());
     void handleResult(window.panevo.zoomStop());
     void handleResult(window.panevo.focusStop());
-  }, [handleResult]);
+  }, [handleResult, hasActiveCamera]);
 
   useEffect(() => {
     const stopOnVisibilityLoss = () => {
@@ -288,43 +498,84 @@ export const App = () => {
       focusStop: () => handleResult(window.panevo.focusStop()),
       stopAll,
       recallPreset: (preset: number) => handleResult(window.panevo.recallPreset(preset)),
-      storePreset: (preset: number) => handleResult(window.panevo.storePreset(preset)),
+      storePreset: (preset: number, label?: string) => handleResult(window.panevo.storePreset(preset, label)),
       addPreset: () => {
-        if (activeCamera.presets.length >= 9) return;
-        const usedNumbers = new Set(activeCamera.presets.map((preset) => preset.cameraPreset));
-        let cameraPreset = 1;
-        while (usedNumbers.has(cameraPreset) && cameraPreset <= 9) {
-          cameraPreset += 1;
-        }
+        void (async () => {
+          if (activeCamera.presets.length >= 9) return;
+          const usedNumbers = new Set(activeCamera.presets.map((preset) => preset.cameraPreset));
+          let cameraPreset = 1;
+          while (usedNumbers.has(cameraPreset) && cameraPreset <= 9) {
+            cameraPreset += 1;
+          }
 
-        const nextPreset: CameraPreset = {
-          id: `preset-${Date.now()}`,
-          label: `Preset ${cameraPreset}`,
-          cameraPreset,
-        };
+          const nextPreset: CameraPreset = {
+            id: `preset-${Date.now()}`,
+            label: `Preset ${cameraPreset}`,
+            cameraPreset,
+          };
 
-        void saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: [...activeCamera.presets, nextPreset] }));
+          const storeResult = await window.panevo.storePreset(nextPreset.cameraPreset, nextPreset.label);
+          if (!storeResult.ok) {
+            setError(`${storeResult.error.code}: ${storeResult.error.message}`);
+            return;
+          }
+
+          setLastCommand(storeResult.data);
+          await saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: [...activeCamera.presets, nextPreset] }));
+        })();
       },
       updatePreset: (id: string, updates: Partial<Pick<CameraPreset, 'label' | 'cameraPreset'>>) => {
-        void saveConfigState(
-          updateActiveCamera(config, {
-            ...activeCamera,
-            presets: activeCamera.presets.map((preset) =>
-            preset.id === id
-              ? {
-                  ...preset,
-                  ...updates,
-                  label: updates.label !== undefined ? updates.label.trim().slice(0, 32) || `Preset ${preset.cameraPreset}` : preset.label,
-                  cameraPreset:
-                    updates.cameraPreset !== undefined ? Math.min(255, Math.max(1, Math.round(updates.cameraPreset))) : preset.cameraPreset,
-                }
-              : preset,
-            ),
-          }),
-        );
+        void (async () => {
+          const currentPreset = activeCamera.presets.find((preset) => preset.id === id);
+          if (!currentPreset) return;
+
+          const nextPreset: CameraPreset = {
+            ...currentPreset,
+            ...updates,
+            label: updates.label !== undefined
+              ? updates.label.trim().slice(0, 32) || `Preset ${currentPreset.cameraPreset}`
+              : currentPreset.label,
+            cameraPreset:
+              updates.cameraPreset !== undefined ? Math.min(255, Math.max(1, Math.round(updates.cameraPreset))) : currentPreset.cameraPreset,
+          };
+
+          if (nextPreset.label !== currentPreset.label || nextPreset.cameraPreset !== currentPreset.cameraPreset) {
+            const storeResult = await window.panevo.storePreset(nextPreset.cameraPreset, nextPreset.label);
+            if (!storeResult.ok) {
+              setError(`${storeResult.error.code}: ${storeResult.error.message}`);
+              return;
+            }
+
+            setLastCommand(storeResult.data);
+          }
+
+          await saveConfigState(
+            updateActiveCamera(config, {
+              ...activeCamera,
+              presets: activeCamera.presets.map((preset) => (preset.id === id ? nextPreset : preset)),
+            }),
+          );
+        })();
       },
       deletePreset: (id: string) => {
-        void saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: activeCamera.presets.filter((preset) => preset.id !== id) }));
+        void (async () => {
+          const preset = activeCamera.presets.find((item) => item.id === id);
+          if (!preset) return;
+
+          if (activeCamera.controlProtocol === 'visca' && activeCamera.syncProtocol !== 'onvif') {
+            await saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: activeCamera.presets.filter((item) => item.id !== id) }));
+            return;
+          }
+
+          const removeResult = await window.panevo.removePreset(preset.cameraPreset);
+          if (!removeResult.ok) {
+            setError(`${removeResult.error.code}: ${removeResult.error.message}`);
+            return;
+          }
+
+          setLastCommand(removeResult.data);
+          await saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: activeCamera.presets.filter((item) => item.id !== id) }));
+        })();
       },
     }),
     [activeCamera, config, handleResult, saveConfigState, speed, stopAll, zoomSpeed],
@@ -336,7 +587,7 @@ export const App = () => {
         void selectCamera(cameraId);
       },
       addCamera: async (camera: CameraProfile): Promise<{ ok: boolean; error?: string }> => {
-        const nextCamera: CameraProfile = {
+        let nextCamera: CameraProfile = {
           ...camera,
           id: `camera-${Date.now()}`,
           presets: [],
@@ -361,6 +612,33 @@ export const App = () => {
             ok: false,
             error: `${testResult.error.code}: ${testResult.error.message}`,
           };
+        }
+
+        if (nextCamera.syncProtocol === 'onvif') {
+          const probeResult = await window.panevo.probeOnvifCamera({
+            ipAddress: nextCamera.ipAddress,
+            port: nextCamera.onvifPort,
+            username: nextCamera.onvifUsername || undefined,
+            password: nextCamera.onvifPassword || undefined,
+            timeoutMs: 5000,
+          });
+
+          if (probeResult.ok) {
+            nextCamera = {
+              ...nextCamera,
+              label: [probeResult.data.device?.manufacturer, probeResult.data.device?.model].filter(Boolean).join(' ').trim() || nextCamera.label,
+              presets: syncPresetEntriesFromOnvif(nextCamera, probeResult.data),
+            };
+
+            setOnvifProbeStates((current) => ({
+              ...current,
+              [nextCamera.id]: {
+                status: 'verified',
+                checkedAt: probeResult.data.checkedAt,
+                result: probeResult.data,
+              },
+            }));
+          }
         }
 
         const nextConfig: CameraConfig = {
@@ -397,6 +675,46 @@ export const App = () => {
           error: `${reconnectResult.error.code}: ${reconnectResult.error.message}`,
         };
       },
+      probeOnvif: async (
+        cameraId: string,
+        auth?: { username?: string; password?: string },
+      ): Promise<{ ok: boolean; error?: string; result?: OnvifProbeResult }> => {
+        const camera = config.cameras.find((item) => item.id === cameraId);
+        if (!camera) {
+          return { ok: false, error: 'Camera profile not found.' };
+        }
+
+        const result = await probeOnvifCamera(camera, auth, { showError: true });
+        if (result.ok && result.result && camera.syncProtocol === 'onvif') {
+          const nextPresets = syncPresetEntriesFromOnvif(camera, result.result);
+          if (presetsChanged(camera.presets, nextPresets)) {
+            await saveConfigState(updateCameraProfile(config, { ...camera, presets: nextPresets }));
+          }
+        }
+
+        return result;
+      },
+      importOnvifPresets: (cameraId: string, result: OnvifProbeResult) => {
+        const camera = config.cameras.find((item) => item.id === cameraId);
+        if (!camera) {
+          setError('Camera profile not found.');
+          return;
+        }
+
+        const importedPresets = syncPresetEntriesFromOnvif(camera, result);
+
+        if (importedPresets.length === 0) {
+          setError('No numeric ONVIF presets found to sync.');
+          return;
+        }
+
+        void saveConfigState(
+          updateCameraProfile(config, {
+            ...camera,
+            presets: importedPresets,
+          }),
+        );
+      },
       renameCamera: (cameraId: string, label: string) => {
         void saveConfigState({
           ...config,
@@ -411,13 +729,21 @@ export const App = () => {
         });
       },
       deleteCamera: (cameraId: string) => {
-        if (config.cameras.length <= 1) {
-          return;
-        }
-
         const nextCameras = config.cameras.filter((camera) => camera.id !== cameraId);
+        const activeCameraRemoved = config.activeCameraId === cameraId;
+        const nextActiveCameraId = activeCameraRemoved ? nextCameras[0]?.id ?? '' : config.activeCameraId;
+        setOnvifProbeStates((current) => {
+          const next = { ...current };
+          delete next[cameraId];
+          return next;
+        });
+        setStatus({
+          connected: false,
+          protocol: nextCameras[0]?.protocol ?? 'udp',
+          message: nextCameras.length > 0 ? 'Disconnected' : 'No camera configured',
+        });
         void saveConfigState({
-          activeCameraId: nextCameras[0].id,
+          activeCameraId: nextActiveCameraId,
           cameras: nextCameras,
         });
       },
@@ -432,10 +758,11 @@ export const App = () => {
 
         const camera = getActiveCamera(result.data);
         setConfig(result.data);
+        setOnvifProbeStates({});
         setStatus({
           connected: false,
-          protocol: camera.protocol,
-          message: 'Disconnected',
+          protocol: result.data.cameras.length > 0 ? camera.protocol : 'udp',
+          message: result.data.cameras.length > 0 ? 'Disconnected' : 'No camera configured',
         });
         setError(null);
       },
@@ -451,7 +778,7 @@ export const App = () => {
         setError(null);
       },
     }),
-    [config, saveConfigState, selectCamera],
+    [config, probeOnvifCamera, saveConfigState, selectCamera],
   );
 
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('panevo-theme') as Theme | null) ?? 'dark');
@@ -461,7 +788,11 @@ export const App = () => {
     localStorage.setItem('panevo-theme', theme);
   }, [theme]);
 
-  const viewTitle = activeView === 'control' ? activeCamera.label : activeView === 'cameras' ? 'Camera Profiles' : 'Settings';
+  const viewTitle = activeView === 'control'
+    ? hasActiveCamera ? activeCamera.label : 'Control'
+    : activeView === 'cameras'
+    ? 'Camera Profiles'
+    : 'Settings';
 
   return (
     <TooltipProvider>
@@ -476,23 +807,30 @@ export const App = () => {
           />
 
           <div className="workspace">
-            <WorkspaceHeader title={viewTitle} onEmergencyStop={stopAll} />
+            <WorkspaceHeader
+              title={viewTitle}
+              emergencyStopDisabled={!hasActiveCamera}
+              onEmergencyStop={stopAll}
+            />
 
             {activeView === 'control' && (
               <ControlView
                 activeCamera={activeCamera}
+                hasActiveCamera={hasActiveCamera}
                 actions={actions}
                 speed={speed}
                 zoomSpeed={zoomSpeed}
                 focusMode={focusMode}
                 onSpeedChange={setSpeed}
                 onZoomSpeedChange={setZoomSpeed}
+                onOpenCameras={() => setActiveView('cameras')}
               />
             )}
             {activeView === 'cameras' && (
               <CamerasView
                 config={config}
                 activeCamera={activeCamera}
+                onvifProbeStates={onvifProbeStates}
                 cameraProfileActions={cameraProfileActions}
                 onCameraSave={saveCameraProfile}
                 onTestCamera={testCamera}

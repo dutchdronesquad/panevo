@@ -1,3 +1,5 @@
+import { Camera } from 'lucide-react';
+import { Button } from '@/renderer/components/ui/button';
 import { FocusControls } from '../components/controls/FocusControls';
 import { PtzControls } from '../components/controls/PtzControls';
 import { SpeedSelector } from '../components/controls/SpeedSelector';
@@ -23,7 +25,7 @@ interface ControlActions {
   focusOut: () => void;
   focusStop: () => void;
   recallPreset: (preset: number) => void;
-  storePreset: (preset: number) => void;
+  storePreset: (preset: number, label?: string) => void;
   addPreset: () => void;
   updatePreset: (id: string, updates: Partial<Pick<CameraPreset, 'label' | 'cameraPreset'>>) => void;
   deletePreset: (id: string) => void;
@@ -31,23 +33,46 @@ interface ControlActions {
 
 interface ControlViewProps {
   activeCamera: CameraProfile;
+  hasActiveCamera: boolean;
   actions: ControlActions;
   speed: number;
   zoomSpeed: number;
   focusMode: FocusMode;
   onSpeedChange: (speed: number) => void;
   onZoomSpeedChange: (speed: number) => void;
+  onOpenCameras: () => void;
 }
 
 export const ControlView = ({
   activeCamera,
+  hasActiveCamera,
   actions,
   speed,
   zoomSpeed,
   focusMode,
   onSpeedChange,
   onZoomSpeedChange,
+  onOpenCameras,
 }: ControlViewProps) => {
+  if (!hasActiveCamera) {
+    return (
+      <main className="operator-surface">
+        <div className="control-empty-state">
+          <div className="control-empty-icon">
+            <Camera size={22} />
+          </div>
+          <div className="control-empty-copy">
+            <h3>No active camera</h3>
+            <p>Add and verify a camera profile before using live PTZ controls.</p>
+          </div>
+          <Button type="button" onClick={onOpenCameras}>
+            Open cameras
+          </Button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="operator-surface">
       <div className="control-grid">
@@ -78,7 +103,12 @@ export const ControlView = ({
         </div>
 
         <div className="presets-column">
-          <PresetGrid presets={activeCamera.presets} actions={actions} />
+          <PresetGrid
+            presets={activeCamera.presets}
+            controlProtocol={activeCamera.controlProtocol}
+            syncProtocol={activeCamera.syncProtocol}
+            actions={actions}
+          />
         </div>
 
       </div>

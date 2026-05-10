@@ -29,12 +29,15 @@ const clampInteger = (value: number, min: number, max: number): number => {
   return Math.min(max, Math.max(min, Math.round(value)));
 };
 
-const HEALTH_CHECK_TIMEOUT_MS = 900;
+const HEALTH_CHECK_TIMEOUT_MS = 2_000;
+const HEALTH_CHECK_FAILURE_THRESHOLD = 3;
 
 export class ViscaClient {
   private config: CameraProfile | null = null;
   private socket: dgram.Socket | null = null;
   private connected = false;
+  private consecutiveHealthInquiryFailures = 0;
+  private healthResponseVerified = false;
   private readonly queue = new ViscaQueue();
 
   async connect(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
@@ -44,6 +47,8 @@ export class ViscaClient {
     }
 
     this.config = validation.data;
+    this.consecutiveHealthInquiryFailures = 0;
+    this.healthResponseVerified = false;
 
     if (this.config.protocol === 'tcp') {
       return failure('TCP_NOT_IMPLEMENTED', 'TCP VISCA is reserved for future support. Use UDP for the MVP.');
@@ -62,6 +67,7 @@ export class ViscaClient {
       return success({
         connected: true,
         protocol: 'udp',
+        controlProtocol: 'visca',
         message: `UDP transport ready for ${this.config.ipAddress}:${this.config.port}`,
       });
     } catch (error) {
@@ -82,6 +88,7 @@ export class ViscaClient {
       return success({
         connected: true,
         protocol: activeConfig.protocol,
+        controlProtocol: 'visca',
         message: 'Connected',
       });
     }
@@ -99,36 +106,78 @@ export class ViscaClient {
       return success({
         connected: true,
         protocol: connectionResult.data.protocol,
+        controlProtocol: 'visca',
         message: 'Transport ready; camera response not verified.',
         checkedAt: new Date().toISOString(),
         responseVerified: false,
       });
     }
 
-    const inquiryResult = await this.queue.enqueue(
+    const inquiryResult = await this.queue.enqueue<CameraConnectionStatus>(
       'health-check',
       async () => {
         await this.sendInquiry(buildFocusModeInquiryCommand(), HEALTH_CHECK_TIMEOUT_MS);
+        this.consecutiveHealthInquiryFailures = 0;
+        this.healthResponseVerified = true;
 
         return {
           connected: true,
           protocol: connectionResult.data.protocol,
+          controlProtocol: 'visca',
           message: 'Camera responded to VISCA health inquiry.',
           checkedAt: new Date().toISOString(),
           responseVerified: true,
         };
       },
+      { logFailures: false },
     );
 
     if (!inquiryResult.ok) {
-      return failure('HEALTH_CHECK_FAILED', 'Camera did not respond to VISCA health inquiry.');
+      this.consecutiveHealthInquiryFailures += 1;
+      this.healthResponseVerified = false;
+
+      if (this.consecutiveHealthInquiryFailures < HEALTH_CHECK_FAILURE_THRESHOLD) {
+        return success({
+          connected: true,
+          protocol: connectionResult.data.protocol,
+          controlProtocol: 'visca',
+          message: `VISCA transport ready; camera response not verified (${this.consecutiveHealthInquiryFailures}/${HEALTH_CHECK_FAILURE_THRESHOLD}).`,
+          checkedAt: new Date().toISOString(),
+          responseVerified: false,
+        });
+      }
+
+      return failure(
+        'HEALTH_CHECK_FAILED',
+        `Camera did not respond to ${this.consecutiveHealthInquiryFailures} consecutive VISCA health inquiries.`,
+      );
     }
 
     return inquiryResult;
   }
 
+  async passiveHealthCheck(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+    const connectionResult = await this.ensureConnected(config);
+    if (!connectionResult.ok) {
+      return connectionResult;
+    }
+
+    return success({
+      connected: true,
+      protocol: connectionResult.data.protocol,
+      controlProtocol: 'visca',
+      message: this.consecutiveHealthInquiryFailures === 0
+        ? this.healthResponseVerified ? 'VISCA transport ready; camera response was verified.' : 'VISCA transport ready; camera response not verified.'
+        : `VISCA transport ready; last verified inquiry missed (${this.consecutiveHealthInquiryFailures}/${HEALTH_CHECK_FAILURE_THRESHOLD}).`,
+      checkedAt: new Date().toISOString(),
+      responseVerified: this.healthResponseVerified,
+    });
+  }
+
   disconnect(): void {
     this.connected = false;
+    this.consecutiveHealthInquiryFailures = 0;
+    this.healthResponseVerified = false;
     this.queue.clear();
     this.disconnectSocket();
   }
@@ -308,6 +357,13 @@ export class ViscaClient {
       label: config.label,
       ipAddress: config.ipAddress.trim(),
       port: Number.isFinite(roundedPort) ? Math.min(65535, Math.max(1, roundedPort)) : 52381,
+      onvifPort: Number.isFinite(config.onvifPort)
+        ? Math.min(65535, Math.max(1, Math.round(config.onvifPort)))
+        : 8080,
+      onvifUsername: typeof config.onvifUsername === 'string' ? config.onvifUsername.trim().slice(0, 80) : '',
+      onvifPassword: typeof config.onvifPassword === 'string' ? config.onvifPassword : '',
+      controlProtocol: config.controlProtocol === 'onvif' ? 'onvif' : 'visca',
+      syncProtocol: config.syncProtocol === 'none' ? 'none' : 'onvif',
       protocol: config.protocol === 'tcp' ? 'tcp' : 'udp',
       healthCheckMode: config.healthCheckMode === 'transport-only' ? 'transport-only' : 'visca-inquiry',
       presets: config.presets,

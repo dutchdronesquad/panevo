@@ -40,6 +40,7 @@ stop()
 zoomStop()
 recallPreset(presetNumber)
 storePreset(presetNumber)
+removePreset(presetNumber)
 ```
 
 This API represents user intent. It is intentionally not a generic `sendPacket` API.
@@ -140,16 +141,21 @@ Focus controls:
 - Tenveo hardware should be checked to confirm whether the in/out direction feels correct. If it is reversed, the mapping should be changed in `visca-commands.ts`, not in renderer code.
 - Panevo does not currently read the camera's actual focus mode back from hardware.
 
-Panevo's MVP exposes dynamic local preset entries. Each Panevo preset entry maps a local label to a camera preset number.
+Panevo treats presets as camera-native references where the active protocol can support that operation. Each Panevo preset entry maps a UI label to a camera preset number, but Panevo should not silently pretend a camera-native operation succeeded when the protocol cannot perform it.
 
-Current preset assumptions:
+Current VISCA preset assumptions:
 
-- Panevo can add, edit, and remove local preset entries.
+- Panevo can recall VISCA presets.
+- Panevo can store the current camera position into a VISCA preset number.
+- Adding a preset from the operator UI stores the current camera position before the local preset entry is added.
 - New Panevo configurations start with no preset placeholders.
 - UI preset numbers are currently sent as direct VISCA preset values.
-- Preset labels are local Panevo metadata, not camera-native preset names.
-- Removing a preset entry from Panevo does not delete the preset from the camera.
-- Camera-native add, remove, and rename behavior is deferred until broader camera preset management is designed.
+- Preset labels remain local Panevo metadata for VISCA because generic VISCA does not provide a reliable camera-native rename path.
+- VISCA does not provide a reliable generic way to import the camera's preset list or preset names.
+- Removing a preset while ONVIF sync is enabled uses ONVIF `RemovePreset` to delete the camera-native preset, even when live control is VISCA.
+- Removing a preset without ONVIF sync removes only Panevo's local mapping. The camera-native preset remains on the camera.
+- `CAM_Memory Reset` (`81 01 04 3F 00 pp FF`) was investigated for delete behavior, but did not work reliably on the tested camera and is not used.
+- Camera-native remove and rename behavior for Tenveo may exist through a vendor extension or web API, but it should be implemented behind a dedicated provider after verification.
 
 ## Discovery Strategy
 
@@ -175,28 +181,33 @@ Risks and constraints:
 
 ## ONVIF Relationship
 
-ONVIF is planned as a future camera capability alongside VISCA, not as part of the initial PTZ MVP.
+ONVIF is now an active Phase 2C camera capability alongside VISCA. It is not part of the original Phase 1 PTZ MVP, but it is implemented behind a separate service boundary so the renderer continues to call Panevo-level actions rather than VISCA or ONVIF protocol details.
 
-Expected ONVIF use cases:
+ONVIF use cases:
 
 - Discover cameras on the local network.
 - Read camera metadata.
 - Fetch camera preset lists, including names/tokens where supported.
 - Import or sync camera presets into Panevo's local preset entries.
-- Potentially provide an alternative PTZ control path for cameras where ONVIF is more reliable than VISCA.
+- Provide an ONVIF PTZ control path for cameras where ONVIF is reliable.
 
-VISCA should remain the MVP control path for Tenveo hardware. ONVIF support should be added behind a separate service boundary so renderer code continues to call Panevo-level actions rather than ONVIF or VISCA protocol details.
+ONVIF is the default sync route for new camera profiles because it can provide discovery, metadata, and preset synchronization. VISCA is the default live control path for the tested Tenveo workflow because it feels more direct during operation. ONVIF live control remains available as an alternate adapter for cameras where it performs well.
 
-Possible future structure:
+Current and possible future structure:
 
 ```text
+services/camera-control/
+  camera-control-service.ts
+  command-queue.ts
+
 services/cameras/
   preset-discovery-service.ts
   onvif-preset-provider.ts
   vendor-preset-provider.ts
 
 services/onvif/
-  onvif-client.ts
+  onvif-service.ts
+  onvif-ptz-client.ts
   onvif-types.ts
 ```
 
@@ -212,9 +223,13 @@ UDP implications:
 - Panevo separates `Verified` and `Transport` health states.
 - `Verified` means the camera responded to a non-moving VISCA focus-mode inquiry before timeout.
 - `Transport` means Panevo could prepare the UDP VISCA transport, but no camera response was verified.
-- Each camera profile has a health-check mode. `VISCA response verified` is preferred; `Transport ready fallback` is only for cameras that accept commands but do not answer useful VISCA inquiries.
-- A failed verified health check means the camera did not respond before timeout or the transport failed.
+- Periodic background health checks are passive for VISCA. They ensure the configured UDP transport is ready but do not send a VISCA inquiry during normal operation.
+- Explicit connection tests may send a non-moving VISCA inquiry to upgrade the status to `Verified`.
+- If an explicit verified inquiry misses a response, Panevo treats the status as `Transport` first. Three consecutive missed verified inquiries are treated as a failed health check.
+- Health-check strategy is internal. Operators should not have to choose between response verification and fallback modes during camera setup.
+- `VISCA response verified` is preferred. Any transport-only fallback should be treated as an internal compatibility behavior for cameras that accept commands but do not answer useful VISCA inquiries.
+- A failed verified health check means the camera did not respond repeatedly before timeout or the transport failed.
 - Failed network paths may appear only when commands have no visible camera effect.
-- Vendor support for inquiry responses can vary. Future ONVIF support should provide a stronger device-level health source where available.
+- Vendor support for inquiry responses can vary. ONVIF can provide a complementary device-level health source where available, but the selected control protocol determines which health path is used.
 
 TCP should be considered later if Tenveo hardware supports it reliably or if ACK/completion handling is easier over TCP.

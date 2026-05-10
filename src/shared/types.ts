@@ -1,4 +1,6 @@
 export type CameraProtocol = 'udp' | 'tcp';
+export type CameraControlProtocol = 'visca' | 'onvif';
+export type CameraSyncProtocol = 'none' | 'onvif';
 export type FocusMode = 'auto' | 'manual';
 export type CameraHealthCheckMode = 'visca-inquiry' | 'transport-only';
 
@@ -13,6 +15,11 @@ export interface CameraProfile {
   label: string;
   ipAddress: string;
   port: number;
+  onvifPort: number;
+  onvifUsername: string;
+  onvifPassword: string;
+  controlProtocol: CameraControlProtocol;
+  syncProtocol: CameraSyncProtocol;
   protocol: CameraProtocol;
   healthCheckMode: CameraHealthCheckMode;
   presets: CameraPreset[];
@@ -26,9 +33,73 @@ export interface CameraConfig {
 export interface CameraConnectionStatus {
   connected: boolean;
   protocol: CameraProtocol;
+  controlProtocol?: CameraControlProtocol;
   message: string;
   checkedAt?: string;
   responseVerified?: boolean;
+}
+
+export interface OnvifProbeInput {
+  ipAddress: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  timeoutMs?: number;
+}
+
+export interface OnvifDiscoveryInput {
+  timeoutMs?: number;
+}
+
+export interface OnvifDeviceInfo {
+  manufacturer?: string;
+  model?: string;
+  firmwareVersion?: string;
+  serialNumber?: string;
+  hardwareId?: string;
+}
+
+export interface OnvifCapabilitySummary {
+  device: boolean;
+  media: boolean;
+  ptz: boolean;
+  imaging: boolean;
+  events: boolean;
+}
+
+export interface OnvifProfileInfo {
+  token: string;
+  name?: string;
+  hasPtz: boolean;
+  hasVideoSource: boolean;
+  hasVideoEncoder: boolean;
+}
+
+export interface OnvifPresetInfo {
+  token: string;
+  name?: string;
+  numericPreset?: number;
+}
+
+export interface OnvifDiscoveryResult {
+  urn?: string;
+  ipAddress: string;
+  port: number;
+  path?: string;
+  xaddrs: string[];
+}
+
+export interface OnvifProbeResult {
+  reachable: boolean;
+  ipAddress: string;
+  port: number;
+  checkedAt: string;
+  message: string;
+  device?: OnvifDeviceInfo;
+  capabilities: OnvifCapabilitySummary;
+  profiles: OnvifProfileInfo[];
+  presets: OnvifPresetInfo[];
+  ptzNodeCount: number;
 }
 
 export interface PanevoError {
@@ -57,6 +128,8 @@ export interface PanevoApi {
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;
   testCameraConfig: (camera: CameraProfile) => Promise<PanevoResult<CameraConnectionStatus>>;
   checkCameraHealth: () => Promise<PanevoResult<CameraConnectionStatus>>;
+  probeOnvifCamera: (input: OnvifProbeInput) => Promise<PanevoResult<OnvifProbeResult>>;
+  discoverOnvifCameras: (input?: OnvifDiscoveryInput) => Promise<PanevoResult<OnvifDiscoveryResult[]>>;
   panLeft: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   panRight: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   tiltUp: (speed: number) => Promise<PanevoResult<CommandResponse>>;
@@ -74,5 +147,6 @@ export interface PanevoApi {
   focusOut: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   focusStop: () => Promise<PanevoResult<CommandResponse>>;
   recallPreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
-  storePreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
+  storePreset: (presetNumber: number, presetLabel?: string) => Promise<PanevoResult<CommandResponse>>;
+  removePreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
 }

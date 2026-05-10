@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { registerCameraIpc } from './main/ipc/camera-ipc';
+import { registerOnvifIpc } from './main/ipc/onvif-ipc';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -10,10 +11,10 @@ if (started) {
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 1240,
-    height: 820,
-    minWidth: 980,
-    minHeight: 680,
+    width: 1440,
+    height: 900,
+    minWidth: 720,
+    minHeight: 560,
     backgroundColor: '#090d12',
     title: 'Panevo',
     webPreferences: {
@@ -41,6 +42,7 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   registerCameraIpc();
+  registerOnvifIpc();
   createWindow();
 });
 

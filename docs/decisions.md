@@ -121,3 +121,61 @@ Implementation note:
 - `vite.preload.config.ts` removes Forge's deprecated `inlineDynamicImports` output option from the resolved preload build config.
 - The preload build explicitly uses `codeSplitting: false`, which is the Vite 8/Rolldown-compatible replacement.
 - This keeps the preload bundle single-file without carrying deprecated build warnings.
+
+## ADR-010: Use an ONVIF Package Behind a Panevo Service Adapter
+
+Status: accepted for Phase 2C.
+
+Panevo uses the `onvif` npm package for Phase 2C ONVIF probing, discovery, preset discovery, and PTZ control. The package is isolated behind Electron main-process adapters.
+
+Rationale:
+
+- ONVIF is SOAP-based and has enough vendor variation that hand-writing the first client would slow discovery work.
+- The package provides camera connection, WS-Discovery, capabilities, device information, profiles, PTZ node probing, preset discovery, ContinuousMove, Stop, and preset command helpers.
+- The installed package has a small runtime dependency footprint and no native dependency in the current install.
+- Keeping it behind a service adapter lets Panevo replace it later if packaging, compatibility, or maintenance becomes a problem.
+
+Implementation constraints:
+
+- Renderer code must not receive raw ONVIF package objects.
+- ONVIF probing and control must return Panevo-level result types.
+- ONVIF discovery must return normalized Panevo discovery records, not raw package objects.
+- ONVIF is the default sync route for new camera profiles.
+- VISCA is the default live PTZ control path for the tested Tenveo workflow.
+- ONVIF remains available as an optional live PTZ control path where camera behavior is reliable.
+- Manual VISCA camera setup remains available even if ONVIF probing fails.
+- ONVIF username and password are currently stored in the local camera profile so ONVIF probing, sync, and optional live control can authenticate after restart.
+- Plain JSON password storage is the documented Phase 2C mode. It is not production-ready for broader release; move credentials to OS keychain or encrypted storage before release-quality ONVIF support.
+- ONVIF preset import runs automatically when adding an ONVIF camera and remains available manually from the probe dialog.
+- ONVIF preset import is limited to numeric preset tokens until Panevo has a safe mapping model for opaque ONVIF tokens.
+
+Known risk:
+
+- `onvif@0.8.1` currently emits Node's `[DEP0169]` warning because it uses the deprecated `url.parse()` API internally. This is acceptable for Phase 2C investigation, but it must be reviewed before treating ONVIF support as production-polished.
+- The package should be considered replaceable. If maintenance, compatibility, or security concerns become blocking, replace the adapter internals with Panevo-owned SOAP requests while preserving `OnvifService`, `OnvifPtzClient`, IPC, and renderer-facing types.
+
+## ADR-011: Route Live Camera Actions Through a Protocol-Agnostic Control Service
+
+Status: accepted and active.
+
+Panevo uses `CameraControlService` as the main-process boundary for live camera actions. Renderer and preload APIs remain Panevo-level actions such as `panLeft`, `zoomIn`, `stop`, and `recallPreset`; they do not choose `ViscaClient`, ONVIF PTZ, or vendor-specific clients directly.
+
+Rationale:
+
+- Panevo should support both VISCA and ONVIF over time without mixing protocol details into the operator UI.
+- Live production needs one predictable selected control path per camera.
+- ONVIF is the preferred route for discovery, metadata, and preset sync where the camera supports it.
+- VISCA is the default live route for the tested Tenveo workflow because it is more responsive in operator use.
+- ONVIF remains available for cameras or workflows where ONVIF control is reliable enough.
+
+Implementation constraints:
+
+- Each camera profile has a `controlProtocol` and a `syncProtocol`.
+- Default `controlProtocol` is `visca`.
+- Default `syncProtocol` is `onvif`.
+- `onvif` routes through `OnvifPtzClient` for PTZ, zoom, stop, focus, and preset control.
+- ONVIF probe/discovery can coexist with VISCA control, but live movement commands must route through the selected control adapter.
+- Focus control routes through VISCA or ONVIF Imaging depending on the selected control adapter. ONVIF focus remains vendor-sensitive because cameras may expose PTZ without accepting Imaging focus commands.
+- Presets are treated as camera-native references where the selected adapter can support the operation. Add/store should update the camera before local Panevo state changes.
+- ONVIF preset delete is camera-native. VISCA preset delete removes only Panevo's local mapping because CAM_Memory Reset did not work on the tested camera.
+- Preset behavior must remain explicit because ONVIF preset tokens may not match Panevo's numeric preset entries.

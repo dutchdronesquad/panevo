@@ -11,6 +11,8 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 - `visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
 - `ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
 - `integrations.md`: future OBS, RotorHazard, operator-surface, preview, and automation integrations.
+- `preview.md`: preview architecture, transport strategy, non-goals, and validation rules.
+- `onvif.md`: ONVIF package decision, probing scope, authentication notes, and failure modes.
 - `development.md`: local development workflow, commands, conventions, and repo practices.
 - `testing.md`: manual and technical validation strategy for the MVP.
 - `tenveo-hardware.md`: Tenveo-specific hardware validation notes and open questions.
@@ -27,19 +29,20 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is Phase 2C: Camera Discovery and ONVIF.
+The active phase is Phase 2E: VISCA Compatibility.
 
 Current priority:
 
-1. Research ONVIF package options and packaging impact.
-2. Add an isolated main-process ONVIF service boundary.
-3. Probe configured cameras for ONVIF device information and PTZ capabilities.
-4. Normalize discovery/probe results into Panevo-level camera records.
-5. Keep manual VISCA IP/port setup available.
+1. Decide whether Panevo keeps its local VISCA implementation or evaluates a third-party VISCA package.
+2. Document Tenveo VISCA quirks and possible camera-profile compatibility flags.
+3. Decide whether TCP VISCA is useful for the tested camera.
+4. Keep VISCA live control stable while ONVIF remains the sync/discovery route.
+5. Prepare the preview architecture without coupling preview to camera control.
 
 Still deferred:
 
-- Preview systems.
+- NDI preview.
+- Multi-camera preview grid.
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, and Flexbar integrations.
