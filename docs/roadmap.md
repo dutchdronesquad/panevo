@@ -2,24 +2,139 @@
 
 Panevo should grow in deliberate phases. The first phase is intentionally narrow: reliable PTZ control with a strong architecture foundation.
 
+Use `docs/mvp-checklist.md` as the operational checklist for tracking Phase 1 progress. Use `docs/index.md` as the entrypoint to the full documentation set.
+
 ## Phase 1: PTZ MVP
 
-- Electron + React + TypeScript app foundation
-- Local camera configuration
-- VISCA over IP command transport
-- Mock mode
-- PTZ direction controls
-- Zoom controls
-- Preset recall and store
-- Command queueing foundation
-- Operator-oriented dark UI
+Phase 1 is the only active product phase until the MVP is complete. It should stay narrowly focused on one usable, reliable PTZ control workflow for a single VISCA over IP camera.
+
+### Phase 1.1: Foundation
+
+Status: mostly complete.
+
+- Electron Forge + React + Vite + TypeScript app foundation
+- Project documentation structure
+- Main/preload/renderer process separation
+- Typed preload API through `window.panevo`
+- Local JSON config storage
+- Mock mode foundation
+- Basic operator UI layout
+
+Exit criteria:
+
+- App starts in development mode.
+- TypeScript passes.
+- Mock mode can run without hardware.
+- Renderer never accesses raw Node.js networking APIs.
+
+### Phase 1.2: VISCA Hardware Validation
+
+Status: complete.
+
+- Validate Tenveo UDP VISCA control on port `52381`.
+- Confirm pan, tilt, diagonal movement, and stop.
+- Confirm zoom in, zoom out, and zoom stop.
+- Confirm preset recall and preset store.
+- Document observed Tenveo behavior and any deviations.
+- Verify preset numbering: whether UI preset `1` maps to VISCA value `1` or `0`.
+- Verify practical PTZ and zoom speed ranges.
+
+Exit criteria:
+
+- A real camera can be controlled reliably from the app.
+- Stop behavior is safe and repeatable.
+- Known Tenveo quirks are documented.
+- The app still works in mock mode.
+
+### Phase 1.3: Operator Safety Hardening
+
+Status: complete pending real-camera regression check.
+
+- Send stop on pointer cancel, pointer leave, window blur, and app visibility loss.
+- Keep an always-visible emergency stop action.
+- Clamp speed and preset inputs at IPC/service boundaries.
+- Return clear structured command errors to the renderer.
+- Make command failure state visible without blocking the operator.
+- Avoid sending commands without valid saved config.
+
+Exit criteria:
+
+- Camera movement stops when the operator releases control or the app loses focus.
+- Invalid config cannot accidentally send hardware commands.
+- Command errors are visible and recoverable.
+
+### Phase 1.4: Preset MVP Polish
+
+Status: complete.
+
+- Add dynamic local preset entries.
+- Persist preset entries locally.
+- Allow preset entries to be added, edited, and removed from Panevo.
+- Improve preset store confirmation.
+- Make recall and store visually distinct.
+- Record preset behavior assumptions in docs.
+
+Exit criteria:
+
+- Presets are usable during a livestream workflow.
+- Store actions are hard to trigger accidentally.
+- Preset entries survive app restart.
+
+### Phase 1.5: UI and Packaging Stabilization
+
+Status: complete.
+
+- Clean up MVP UI spacing, sizing, and contrast.
+- Keep PTZ controls large and touch-friendly.
+- Evaluate whether to introduce `shadcn/ui` now or defer until after MVP.
+- Run typecheck and lint.
+- Verify development start.
+- Verify package build when network/tooling allows.
+- Add first screenshots to README.
+
+Exit criteria:
+
+- MVP can be run by another contributor from README instructions.
+- UI is readable and usable in a live production environment.
+- No critical TypeScript or packaging blockers remain.
+
+### MVP Completion Criteria
+
+Status: complete.
+
+The PTZ MVP is complete when:
+
+- A single Tenveo camera can be configured manually.
+- Mock mode works without hardware.
+- Pan, tilt, diagonal movement, stop, zoom, and presets work through the UI.
+- Local settings and preset entries persist.
+- Safety stop behavior is reliable.
+- The README and docs reflect actual tested behavior.
+- Future features remain documented but unimplemented.
+
+### Explicitly Deferred Until After MVP
+
+- RTSP or NDI preview.
+- OBS control.
+- RotorHazard integration.
+- Stream Deck, Companion, or Flexbar integrations.
+- Camera autodiscovery.
+- Multi-camera profiles.
+- Automation workflows.
+- TCP VISCA, unless UDP proves insufficient for the target camera.
+- Replacing the VISCA internals with an npm package.
+- Broad UI framework migration, unless it directly resolves MVP blockers.
 
 ## Phase 2: Camera Operations
 
 - Multi-camera profiles
-- Per-camera preset labels
+- Camera discovery and assisted setup
+- Per-camera preset entries and camera-native preset management
+- ONVIF support investigation
+- ONVIF preset discovery/import
 - Camera connection health checks
 - Vendor-specific VISCA compatibility options
+- VISCA npm package evaluation
 - Optional TCP VISCA support
 - Import/export config
 - Safer preset overwrite flows
@@ -29,6 +144,7 @@ Panevo should grow in deliberate phases. The first phase is intentionally narrow
 - OBS scene and source integration
 - RotorHazard race state integration
 - Stream Deck and Companion support
+- Flexbar touch panel integration investigation
 - Race-aware shot presets
 - Event-triggered camera actions
 
@@ -55,4 +171,3 @@ Panevo should grow in deliberate phases. The first phase is intentionally narrow
 - Preview support can become complex quickly and should not block PTZ control.
 - Automation must be carefully designed to avoid dangerous camera movement during live production.
 - Too much early abstraction could slow MVP delivery.
-
