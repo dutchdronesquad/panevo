@@ -9,7 +9,7 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - When hardware behavior is verified, update `tenveo-hardware.md`.
 - When a technical direction changes, update `decisions.md`.
 - When a task becomes intentionally deferred, move or duplicate it under Explicitly Deferred with context.
-- Keep this checklist focused on Phase 1. Future features belong in `roadmap.md`.
+- Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `roadmap.md`.
 
 ## Phase 1.1: Foundation
 
@@ -106,9 +106,64 @@ Local verification:
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
 - [ ] Flexbar integration.
-- [ ] Camera autodiscovery.
-- [ ] ONVIF support.
-- [ ] Multi-camera profiles.
 - [ ] Automation workflows.
 - [ ] TCP VISCA support.
 - [ ] Replacing VISCA internals with an npm package.
+
+## Phase 2A: UI Foundation
+
+- [x] Add Tailwind CSS.
+- [x] Initialize `shadcn/ui` for Vite.
+- [x] Add shared UI primitives for common controls.
+- [x] Replace temporary `Button` primitive.
+- [x] Replace temporary `Card` primitive.
+- [x] Add dialog and alert dialog primitives.
+- [x] Add input, label, select, switch, slider, tooltip, tabs, dropdown, popover, and toast primitives.
+- [x] Migrate camera settings, speed selectors, and preset edit fields to shadcn form primitives.
+- [x] Replace native preset confirmation dialogs with shadcn alert dialogs.
+- [x] Add shadcn tooltip provider and zoom control tooltips.
+- [x] Preserve custom PTZ, zoom, dynamic preset, and connection status components.
+- [x] Define Panevo design tokens.
+- [x] Verify PTZ, zoom, settings, mock mode, and dynamic presets still work.
+- [x] Run `npm run typecheck`.
+- [x] Run `npm run lint`.
+- [x] Remove Vite 8 `inlineDynamicImports` preload warning.
+
+## Phase 2B: Camera Profiles
+
+- [x] Add camera profile config model.
+- [x] Migrate existing single-camera config to the first camera profile.
+- [x] Add active camera selection.
+- [x] Store presets per camera profile.
+- [x] Add profile create, rename, and remove actions.
+- [x] Disconnect/reconnect VISCA client when active camera connection settings change.
+- [x] Add import/export config.
+- [x] Split operator control and camera configuration into sidebar views.
+- [x] Extract shell, workspace header, and view components from `App.tsx`.
+- [x] Make live presets recall-first with edit, store, and delete behind secondary actions.
+- [x] Make the camera table a full-width management surface with per-row settings dialogs.
+- [x] Gate new camera creation behind a successful connection/probe test.
+- [x] Add basic VISCA focus controls with auto/manual mode and focus in/out.
+- [x] Add camera connection health checks.
+- [x] Distinguish verified camera response from transport-only fallback status.
+- [x] Run camera health check during active camera selection.
+- [x] Run `npm run typecheck`.
+- [x] Run `npm run lint`.
+
+Phase 2B hardware regression:
+
+- [x] Validate camera switching against real Tenveo hardware.
+- [x] Validate `VISCA response verified` health mode against real Tenveo hardware.
+- [x] Validate `Transport ready fallback` status behavior against real Tenveo hardware.
+- [x] Validate focus auto/manual/in/out against real Tenveo hardware.
+
+## Phase 2C: Camera Discovery and ONVIF
+
+- [ ] Research ONVIF package options and packaging impact.
+- [ ] Decide whether to use an ONVIF package or local SOAP client.
+- [ ] Add isolated main-process ONVIF service boundary.
+- [ ] Add ONVIF device information probe for a configured camera.
+- [ ] Add ONVIF PTZ capability probe.
+- [ ] Normalize discovery/probe results into Panevo-level camera records.
+- [ ] Document ONVIF auth requirements and failure modes.
+- [ ] Keep manual VISCA IP/port setup available.

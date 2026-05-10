@@ -45,6 +45,10 @@ Validate:
 - Movement stop.
 - Zoom in and out.
 - Zoom stop.
+- Focus auto/manual mode.
+- Focus in and out.
+- Active camera health check reports connected when the camera is reachable.
+- Active camera health check reports an error when the camera is disconnected or unreachable.
 - Preset recall.
 - Preset store.
 - Speed range.
@@ -92,4 +96,3 @@ Run this before marking a Phase 1 subphase complete:
 - [ ] Config persists after restart.
 - [ ] Real camera moves and stops safely, when hardware is available.
 - [ ] Relevant docs and checklist are updated.
-

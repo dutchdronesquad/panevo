@@ -1,4 +1,6 @@
 export type CameraProtocol = 'udp' | 'tcp';
+export type FocusMode = 'auto' | 'manual';
+export type CameraHealthCheckMode = 'visca-inquiry' | 'transport-only';
 
 export interface CameraPreset {
   id: string;
@@ -6,19 +8,27 @@ export interface CameraPreset {
   cameraPreset: number;
 }
 
-export interface CameraConfig {
+export interface CameraProfile {
+  id: string;
+  label: string;
   ipAddress: string;
   port: number;
   protocol: CameraProtocol;
-  mockMode: boolean;
+  healthCheckMode: CameraHealthCheckMode;
   presets: CameraPreset[];
+}
+
+export interface CameraConfig {
+  activeCameraId: string;
+  cameras: CameraProfile[];
 }
 
 export interface CameraConnectionStatus {
   connected: boolean;
-  mockMode: boolean;
   protocol: CameraProtocol;
   message: string;
+  checkedAt?: string;
+  responseVerified?: boolean;
 }
 
 export interface PanevoError {
@@ -35,10 +45,18 @@ export interface CommandResponse {
   queuedAt: string;
 }
 
+export interface ConfigFileResponse {
+  path: string;
+}
+
 export interface PanevoApi {
   getConfig: () => Promise<PanevoResult<CameraConfig>>;
   saveConfig: (config: CameraConfig) => Promise<PanevoResult<CameraConfig>>;
+  importConfig: () => Promise<PanevoResult<CameraConfig>>;
+  exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;
+  testCameraConfig: (camera: CameraProfile) => Promise<PanevoResult<CameraConnectionStatus>>;
+  checkCameraHealth: () => Promise<PanevoResult<CameraConnectionStatus>>;
   panLeft: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   panRight: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   tiltUp: (speed: number) => Promise<PanevoResult<CommandResponse>>;
@@ -51,6 +69,10 @@ export interface PanevoApi {
   zoomOut: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   stop: () => Promise<PanevoResult<CommandResponse>>;
   zoomStop: () => Promise<PanevoResult<CommandResponse>>;
+  setFocusMode: (mode: FocusMode) => Promise<PanevoResult<CommandResponse>>;
+  focusIn: (speed: number) => Promise<PanevoResult<CommandResponse>>;
+  focusOut: (speed: number) => Promise<PanevoResult<CommandResponse>>;
+  focusStop: () => Promise<PanevoResult<CommandResponse>>;
   recallPreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
   storePreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
 }

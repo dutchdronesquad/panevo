@@ -20,5 +20,8 @@
         "import/no-unresolved": "off"
       }
     }
-  ]
+  ],
+  "rules": {
+    "import/no-unresolved": ["error", { "ignore": ["^@/"] }]
+  }
 }

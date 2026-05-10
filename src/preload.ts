@@ -1,10 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { CameraConfig, PanevoApi } from './shared/types';
+import type { CameraConfig, CameraProfile, FocusMode, PanevoApi } from './shared/types';
 
 const panevo: PanevoApi = {
   getConfig: () => ipcRenderer.invoke('panevo:get-config'),
   saveConfig: (config: CameraConfig) => ipcRenderer.invoke('panevo:save-config', config),
+  importConfig: () => ipcRenderer.invoke('panevo:import-config'),
+  exportConfig: () => ipcRenderer.invoke('panevo:export-config'),
   testConnection: () => ipcRenderer.invoke('panevo:test-connection'),
+  testCameraConfig: (camera: CameraProfile) => ipcRenderer.invoke('panevo:test-camera-config', camera),
+  checkCameraHealth: () => ipcRenderer.invoke('panevo:check-camera-health'),
   panLeft: (speed: number) => ipcRenderer.invoke('panevo:pan-left', speed),
   panRight: (speed: number) => ipcRenderer.invoke('panevo:pan-right', speed),
   tiltUp: (speed: number) => ipcRenderer.invoke('panevo:tilt-up', speed),
@@ -19,6 +23,10 @@ const panevo: PanevoApi = {
   zoomOut: (speed: number) => ipcRenderer.invoke('panevo:zoom-out', speed),
   stop: () => ipcRenderer.invoke('panevo:stop'),
   zoomStop: () => ipcRenderer.invoke('panevo:zoom-stop'),
+  setFocusMode: (mode: FocusMode) => ipcRenderer.invoke('panevo:set-focus-mode', mode),
+  focusIn: (speed: number) => ipcRenderer.invoke('panevo:focus-in', speed),
+  focusOut: (speed: number) => ipcRenderer.invoke('panevo:focus-out', speed),
+  focusStop: () => ipcRenderer.invoke('panevo:focus-stop'),
   recallPreset: (presetNumber: number) => ipcRenderer.invoke('panevo:recall-preset', presetNumber),
   storePreset: (presetNumber: number) => ipcRenderer.invoke('panevo:store-preset', presetNumber),
 };

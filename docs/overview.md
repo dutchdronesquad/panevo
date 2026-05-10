@@ -71,6 +71,7 @@ Included:
 - Mock mode for development without hardware
 - Pan, tilt, diagonal movement, and stop
 - Zoom in, zoom out, and zoom stop
+- Focus auto/manual mode plus focus in/out controls
 - Preset recall and preset store
 - Electron IPC boundary between renderer and main process
 - Basic command queueing
@@ -78,11 +79,23 @@ Included:
 
 MVP success means a single configured Tenveo camera can be controlled reliably enough for early production testing, with mock mode still available for development without hardware.
 
+## Current Product State
+
+Phase 1, Phase 2A, and Phase 2B are complete. The active phase is Phase 2C: Camera Discovery and ONVIF.
+
+The application now includes:
+
+- Multi-camera profile management.
+- Active camera selection with health checking.
+- Per-camera preset entries.
+- VISCA PTZ, zoom, focus, and preset control.
+- Connection status that distinguishes verified camera response from transport-only fallback.
+- Import and export for local camera configuration.
+
 Excluded from the MVP:
 
 - NDI preview
 - RTSP preview
-- Multi-camera switching
 - OBS control
 - RotorHazard integration
 - Stream Deck or Companion plugins
@@ -91,15 +104,15 @@ Excluded from the MVP:
 - Automation workflow editor
 - User accounts or cloud sync
 
-## MVP Discipline
+## Product Discipline
 
-Until Phase 1 is complete, Panevo should avoid implementing adjacent platform features. Future capabilities such as preview, integrations, autodiscovery, hardware surfaces, and automation should remain documented but deferred unless they directly unblock reliable single-camera PTZ operation.
+Panevo should grow in deliberate phases. Future capabilities such as preview, integrations, hardware surfaces, and automation should remain documented but deferred unless they directly support the current roadmap phase.
 
 Progress through the MVP should be tracked in `docs/mvp-checklist.md`.
 
-MVP work should be evaluated with this question:
+Current work should be evaluated with this question:
 
-Does this make the single-camera PTZ workflow safer, more reliable, easier to test, or easier to ship?
+Does this make the operator workflow safer, more reliable, easier to test, or easier to ship for the active roadmap phase?
 
 If the answer is no, document it as future scope and defer it.
 

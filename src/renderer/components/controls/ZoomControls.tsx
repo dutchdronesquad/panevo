@@ -1,6 +1,6 @@
 import { useRef } from 'react';
-import { Minus, Plus, Square } from 'lucide-react';
-import { SpeedSelector } from './SpeedSelector';
+import { Minus, Plus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/components/ui/tooltip';
 
 interface ZoomActions {
   zoomIn: () => void;
@@ -9,19 +9,14 @@ interface ZoomActions {
 }
 
 interface ZoomControlsProps {
-  zoomSpeed: number;
-  onZoomSpeedChange: (value: number) => void;
   actions: ZoomActions;
 }
 
-export const ZoomControls = ({ zoomSpeed, onZoomSpeedChange, actions }: ZoomControlsProps) => {
+export const ZoomControls = ({ actions }: ZoomControlsProps) => {
   const activePointerId = useRef<number | null>(null);
 
   const stopIfActive = () => {
-    if (activePointerId.current === null) {
-      return;
-    }
-
+    if (activePointerId.current === null) return;
     activePointerId.current = null;
     actions.zoomStop();
   };
@@ -39,20 +34,23 @@ export const ZoomControls = ({ zoomSpeed, onZoomSpeedChange, actions }: ZoomCont
   });
 
   return (
-    <section className="zoom-panel">
-      <div className="panel-title">Zoom</div>
-      <div className="zoom-buttons">
-        <button type="button" className="zoom-button" aria-label="Zoom out" title="Zoom out" {...pressEvents(actions.zoomOut)}>
-          <Minus size={24} />
-        </button>
-        <button type="button" className="zoom-button zoom-stop" aria-label="Stop zoom" title="Stop zoom" onClick={actions.zoomStop}>
-          <Square size={20} />
-        </button>
-        <button type="button" className="zoom-button" aria-label="Zoom in" title="Zoom in" {...pressEvents(actions.zoomIn)}>
-          <Plus size={24} />
-        </button>
-      </div>
-      <SpeedSelector label="Zoom speed" value={zoomSpeed} min={1} max={8} onChange={onZoomSpeedChange} />
-    </section>
+    <div className="zoom-buttons">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" className="zoom-button" aria-label="Zoom out" {...pressEvents(actions.zoomOut)}>
+            <Minus size={22} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Zoom out</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button type="button" className="zoom-button" aria-label="Zoom in" {...pressEvents(actions.zoomIn)}>
+            <Plus size={22} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>Zoom in</TooltipContent>
+      </Tooltip>
+    </div>
   );
 };

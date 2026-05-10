@@ -1,14 +1,21 @@
 import { app } from 'electron';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { CameraConfig, CameraPreset, PanevoResult } from '../../../shared/types';
+import type { CameraConfig, CameraPreset, CameraProfile, PanevoResult } from '../../../shared/types';
 
-const DEFAULT_CONFIG: CameraConfig = {
+const DEFAULT_CAMERA: CameraProfile = {
+  id: 'camera-default',
+  label: 'Camera 1',
   ipAddress: '',
   port: 52381,
   protocol: 'udp',
-  mockMode: true,
+  healthCheckMode: 'visca-inquiry',
   presets: [],
+};
+
+const DEFAULT_CONFIG: CameraConfig = {
+  activeCameraId: DEFAULT_CAMERA.id,
+  cameras: [DEFAULT_CAMERA],
 };
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
@@ -42,9 +49,10 @@ export class ConfigService {
 
   async saveConfig(config: CameraConfig): Promise<PanevoResult<CameraConfig>> {
     const normalized = this.normalizeConfig(config);
+    const activeCamera = this.getActiveCamera(normalized);
 
-    if (!normalized.mockMode && normalized.ipAddress.length === 0) {
-      return failure('INVALID_CONFIG', 'Camera IP address is required when mock mode is disabled.');
+    if (activeCamera.ipAddress.length === 0) {
+      return failure('INVALID_CONFIG', 'Camera IP address is required.');
     }
 
     try {
@@ -57,24 +65,99 @@ export class ConfigService {
     }
   }
 
-  private normalizeConfig(config: Partial<CameraConfig>): CameraConfig {
+  async importConfig(sourcePath: string): Promise<PanevoResult<CameraConfig>> {
+    try {
+      const raw = await readFile(sourcePath, 'utf8');
+      const parsed = JSON.parse(raw) as Partial<CameraConfig>;
+      return this.saveConfig(this.normalizeConfig(parsed));
+    } catch (error) {
+      console.error('[config] Failed to import config', error);
+      return failure('CONFIG_IMPORT_FAILED', 'Unable to import Panevo configuration.');
+    }
+  }
+
+  async exportConfig(destinationPath: string): Promise<PanevoResult<{ path: string }>> {
+    const configResult = await this.getConfig();
+    if (!configResult.ok) {
+      return configResult;
+    }
+
+    try {
+      await mkdir(dirname(destinationPath), { recursive: true });
+      await writeFile(destinationPath, `${JSON.stringify(configResult.data, null, 2)}\n`, 'utf8');
+      return success({ path: destinationPath });
+    } catch (error) {
+      console.error('[config] Failed to export config', error);
+      return failure('CONFIG_EXPORT_FAILED', 'Unable to export Panevo configuration.');
+    }
+  }
+
+  getActiveCamera(config: CameraConfig): CameraProfile {
+    return config.cameras.find((camera) => camera.id === config.activeCameraId) ?? config.cameras[0] ?? DEFAULT_CAMERA;
+  }
+
+  async getActiveCameraConfig(): Promise<PanevoResult<CameraProfile>> {
+    const configResult = await this.getConfig();
+    if (!configResult.ok) {
+      return configResult;
+    }
+
+    return success(this.getActiveCamera(configResult.data));
+  }
+
+  private normalizeConfig(config: Partial<CameraConfig> & Partial<CameraProfile> & { presetLabels?: unknown }): CameraConfig {
+    const cameras = this.normalizeCameras(config);
+    const requestedActiveCameraId = typeof config.activeCameraId === 'string' ? config.activeCameraId.trim() : '';
+    const activeCamera = cameras.find((camera) => camera.id === requestedActiveCameraId) ?? cameras[0];
+
     return {
-      ipAddress: typeof config.ipAddress === 'string' ? config.ipAddress.trim() : DEFAULT_CONFIG.ipAddress,
-      port: this.clampPort(config.port),
-      protocol: config.protocol === 'tcp' ? 'tcp' : 'udp',
-      mockMode: typeof config.mockMode === 'boolean' ? config.mockMode : DEFAULT_CONFIG.mockMode,
-      presets: this.normalizePresets(config),
+      activeCameraId: activeCamera.id,
+      cameras,
+    };
+  }
+
+  private normalizeCameras(config: Partial<CameraConfig> & Partial<CameraProfile> & { presetLabels?: unknown }): CameraProfile[] {
+    if (Array.isArray(config.cameras) && config.cameras.length > 0) {
+      const cameras = config.cameras
+        .map((camera, index) => this.normalizeCamera(camera, index + 1))
+        .filter((camera): camera is CameraProfile => Boolean(camera));
+
+      if (cameras.length > 0) {
+        return cameras;
+      }
+    }
+
+    return [this.normalizeCamera(config, 1) ?? DEFAULT_CAMERA];
+  }
+
+  private normalizeCamera(camera: Partial<CameraProfile> & { presetLabels?: unknown }, fallbackNumber: number): CameraProfile | null {
+    if (!camera || typeof camera !== 'object') {
+      return null;
+    }
+
+    const fallbackId = fallbackNumber === 1 ? DEFAULT_CAMERA.id : `camera-${fallbackNumber}`;
+    const id = typeof camera.id === 'string' && camera.id.trim().length > 0 ? camera.id.trim().slice(0, 64) : fallbackId;
+    const label = typeof camera.label === 'string' && camera.label.trim().length > 0 ? camera.label.trim().slice(0, 40) : `Camera ${fallbackNumber}`;
+
+    return {
+      id,
+      label,
+      ipAddress: typeof camera.ipAddress === 'string' ? camera.ipAddress.trim() : DEFAULT_CAMERA.ipAddress,
+      port: this.clampPort(camera.port),
+      protocol: camera.protocol === 'tcp' ? 'tcp' : 'udp',
+      healthCheckMode: camera.healthCheckMode === 'transport-only' ? 'transport-only' : 'visca-inquiry',
+      presets: this.normalizePresets(camera),
     };
   }
 
   private clampPort(port: unknown): number {
     if (typeof port !== 'number' || Number.isNaN(port)) {
-      return DEFAULT_CONFIG.port;
+      return DEFAULT_CAMERA.port;
     }
     return Math.min(65535, Math.max(1, Math.round(port)));
   }
 
-  private normalizePresets(config: Partial<CameraConfig> & { presetLabels?: unknown }): CameraPreset[] {
+  private normalizePresets(config: Partial<CameraProfile> & { presetLabels?: unknown }): CameraPreset[] {
     if (Array.isArray(config.presets)) {
       const normalized = config.presets
         .map((preset, index) => this.normalizePreset(preset, index + 1))

@@ -27,23 +27,22 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is Phase 1: PTZ MVP.
+The active phase is Phase 2C: Camera Discovery and ONVIF.
 
 Current priority:
 
-1. Complete VISCA hardware validation.
-2. Harden operator safety behavior.
-3. Polish dynamic preset entries and storage.
-4. Stabilize UI and packaging.
+1. Research ONVIF package options and packaging impact.
+2. Add an isolated main-process ONVIF service boundary.
+3. Probe configured cameras for ONVIF device information and PTZ capabilities.
+4. Normalize discovery/probe results into Panevo-level camera records.
+5. Keep manual VISCA IP/port setup available.
 
-Explicitly deferred until after MVP completion:
+Still deferred:
 
 - Preview systems.
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, and Flexbar integrations.
-- Camera autodiscovery.
-- Multi-camera profiles.
 - Automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.
