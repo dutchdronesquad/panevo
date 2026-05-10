@@ -23,6 +23,22 @@ It should avoid the look and interaction model of old CCTV control panels.
 - Keep dense information readable, not noisy.
 - Make states obvious: connected, disconnected, mock mode, errors.
 - Design for future touch support.
+- Prefer direct manipulation over nested configuration.
+- Make dangerous actions visually distinct.
+- Keep common live-operation controls visible without scrolling.
+- Use concise labels and avoid explanatory text inside the main operating surface.
+
+## Operator Context
+
+Panevo may be used:
+
+- In low-light production areas.
+- On laptops with limited screen space.
+- While operators are watching race footage or OBS output.
+- With touch, mouse, trackpad, or future hardware control surfaces.
+- Under time pressure where accidental movement matters.
+
+The interface should therefore emphasize scanability, predictable hit targets, and immediate feedback.
 
 ## UI Framework Direction
 
@@ -56,11 +72,53 @@ Panevo-specific components should remain custom:
 
 - PTZ directional pad
 - Zoom controls
-- Preset grid
+- Dynamic preset list
 - Connection status surface
 - Camera bank controls
 - Operator workspaces
 - Race-aware production controls
+
+## Design Tokens
+
+Panevo should maintain its own design tokens even if `shadcn/ui` is adopted later.
+
+Token categories:
+
+- Background surfaces.
+- Elevated panels.
+- Borders and dividers.
+- Primary action color.
+- Warning and danger colors.
+- Connected, disconnected, mock, and error states.
+- Focus rings.
+- Control sizing.
+- Spacing scale.
+
+Avoid making the UI depend on one dominant color family. The app should be dark and technical, but not visually reduced to one blue or purple palette.
+
+## Component Rules
+
+Generic primitives:
+
+- Should live in `components/ui`.
+- Should be source-owned and easy to restyle.
+- Should not contain product-specific camera logic.
+
+Panevo operator components:
+
+- May use generic primitives.
+- Should own domain-specific interaction behavior.
+- Should prioritize reliability and clarity over generic reuse.
+- Should include pointer/touch behavior where relevant.
+
+Examples:
+
+- `Button` is generic.
+- `PresetButton` is product-specific.
+- `Slider` is generic.
+- `SpeedSelector` is product-specific.
+- `Dialog` is generic.
+- Preset overwrite confirmation is product-specific.
 
 ## MVP Layout
 
@@ -72,7 +130,7 @@ The MVP should provide:
 - PTZ directional pad
 - Zoom controls
 - Speed selector
-- Preset grid
+- Dynamic preset list
 
 ## Interaction Rules
 
@@ -85,6 +143,40 @@ PTZ movement buttons should behave like professional PTZ software:
 - Touch end stops movement.
 
 Preset recall should be a normal click. Preset store should be separate and require confirmation before overwrite.
+
+## Status and Feedback
+
+Connection status should distinguish:
+
+- Connected.
+- Disconnected.
+- Mock mode.
+- Transport ready but camera response unverified.
+- Command error.
+
+Command feedback should be subtle but visible. It should not block the operator unless the action is destructive or safety-critical.
+
+## Accessibility and Input
+
+The MVP should support mouse and touch interaction patterns. Future keyboard support should be considered for:
+
+- Emergency stop.
+- Preset recall.
+- Zoom stop.
+- Switching camera banks.
+
+Interactive elements should have accessible labels, visible focus states, and adequate target sizes.
+
+## MVP UI Non-Goals
+
+Do not add during Phase 1 unless required for safety or validation:
+
+- Full theme editor.
+- Complex layout editor.
+- Marketing-style landing page.
+- Video preview panels.
+- Multi-camera dashboards.
+- Automation workflow builder.
 
 ## Future UI Concepts
 

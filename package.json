@@ -1,8 +1,8 @@
 {
-  "name": "panevo-temp",
-  "productName": "panevo-temp",
-  "version": "1.0.0",
-  "description": "My Electron application description",
+  "name": "panevo",
+  "productName": "Panevo",
+  "version": "0.1.0",
+  "description": "Panevo is a modern live production and PTZ control tool designed for race broadcasts, livestream operators, and camera automation workflows.",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
@@ -10,12 +10,19 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint --ext .ts,.tsx ."
   },
-  "keywords": [],
+  "keywords": [
+    "ptz",
+    "visca",
+    "livestream",
+    "broadcast",
+    "electron"
+  ],
   "author": {
     "name": "Klaas Schoute",
-    "email": "klaas_schoute@hotmail.com"
+    "email": "hello@student-techlife.com"
   },
   "license": "MIT",
   "devDependencies": {
