@@ -118,7 +118,6 @@ The PTZ MVP is complete when:
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, or Flexbar integrations.
-- Camera autodiscovery.
 - Automation workflows.
 - TCP VISCA, unless UDP proves insufficient for the target camera.
 - Replacing the VISCA internals with an npm package.
@@ -152,7 +151,7 @@ Exit criteria:
 
 ### Phase 2B: Camera Profiles
 
-Status: complete pending hardware regression.
+Status: complete.
 
 - Multi-camera profiles.
 - Active camera selection.
@@ -174,7 +173,7 @@ Exit criteria:
 
 ### Phase 2C: Camera Discovery and ONVIF
 
-Status: next.
+Status: active.
 
 - Camera discovery and assisted setup.
 - ONVIF support investigation.
@@ -185,9 +184,26 @@ Status: next.
 
 Entry criteria:
 
-- Phase 2B receives a real-camera regression pass on Tenveo hardware.
+- Phase 2B receives a real-camera regression pass on Tenveo hardware. Done.
 - Known Tenveo behavior is recorded in `docs/tenveo-hardware.md`.
-- The current implementation is committed or otherwise snapshotted before broad discovery work begins.
+- The current implementation is committed or otherwise snapshotted before broad discovery work begins. Done.
+
+Recommended order:
+
+1. Research ONVIF support strategy and candidate Node.js packages.
+2. Add an isolated `services/onvif` boundary in the main process.
+3. Probe configured cameras for ONVIF device information and PTZ capabilities.
+4. Design discovered-camera records without coupling them to VISCA profiles.
+5. Add assisted camera setup only after ONVIF probing is stable.
+6. Add preset discovery/import only after capability and auth handling are understood.
+
+Exit criteria:
+
+- Panevo can test whether a configured camera exposes ONVIF without breaking VISCA control.
+- ONVIF code remains isolated from renderer components and VISCA internals.
+- Discovery results are normalized into Panevo-level camera records.
+- Manual IP/port camera setup remains available.
+- ONVIF auth, timeout, and failure states are documented.
 
 ### Phase 2D: VISCA Compatibility
 

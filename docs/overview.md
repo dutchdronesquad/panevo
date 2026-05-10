@@ -81,7 +81,7 @@ MVP success means a single configured Tenveo camera can be controlled reliably e
 
 ## Current Product State
 
-Phase 1 and Phase 2A are complete. Phase 2B is functionally complete and pending a real Tenveo hardware regression pass.
+Phase 1, Phase 2A, and Phase 2B are complete. The active phase is Phase 2C: Camera Discovery and ONVIF.
 
 The application now includes:
 

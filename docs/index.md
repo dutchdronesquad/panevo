@@ -27,14 +27,15 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is the transition from Phase 2B to Phase 2C.
+The active phase is Phase 2C: Camera Discovery and ONVIF.
 
 Current priority:
 
-1. Run a real Tenveo regression pass for Phase 2B behavior.
-2. Record camera switching, health-check, and focus behavior in `tenveo-hardware.md`.
-3. Snapshot the completed Phase 2B implementation.
-4. Start Phase 2C discovery and ONVIF investigation.
+1. Research ONVIF package options and packaging impact.
+2. Add an isolated main-process ONVIF service boundary.
+3. Probe configured cameras for ONVIF device information and PTZ capabilities.
+4. Normalize discovery/probe results into Panevo-level camera records.
+5. Keep manual VISCA IP/port setup available.
 
 Still deferred:
 
@@ -42,7 +43,6 @@ Still deferred:
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, and Flexbar integrations.
-- Camera autodiscovery.
 - Automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.

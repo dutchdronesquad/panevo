@@ -106,8 +106,6 @@ Local verification:
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
 - [ ] Flexbar integration.
-- [ ] Camera autodiscovery.
-- [ ] ONVIF support.
 - [ ] Automation workflows.
 - [ ] TCP VISCA support.
 - [ ] Replacing VISCA internals with an npm package.
@@ -152,9 +150,20 @@ Local verification:
 - [x] Run `npm run typecheck`.
 - [x] Run `npm run lint`.
 
-Phase 2B hardware regression still to record:
+Phase 2B hardware regression:
 
-- [ ] Validate camera switching against real Tenveo hardware.
-- [ ] Validate `VISCA response verified` health mode against real Tenveo hardware.
-- [ ] Validate `Transport ready fallback` status behavior against real Tenveo hardware.
-- [ ] Validate focus auto/manual/in/out against real Tenveo hardware.
+- [x] Validate camera switching against real Tenveo hardware.
+- [x] Validate `VISCA response verified` health mode against real Tenveo hardware.
+- [x] Validate `Transport ready fallback` status behavior against real Tenveo hardware.
+- [x] Validate focus auto/manual/in/out against real Tenveo hardware.
+
+## Phase 2C: Camera Discovery and ONVIF
+
+- [ ] Research ONVIF package options and packaging impact.
+- [ ] Decide whether to use an ONVIF package or local SOAP client.
+- [ ] Add isolated main-process ONVIF service boundary.
+- [ ] Add ONVIF device information probe for a configured camera.
+- [ ] Add ONVIF PTZ capability probe.
+- [ ] Normalize discovery/probe results into Panevo-level camera records.
+- [ ] Document ONVIF auth requirements and failure modes.
+- [ ] Keep manual VISCA IP/port setup available.
