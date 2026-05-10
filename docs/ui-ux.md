@@ -24,6 +24,44 @@ It should avoid the look and interaction model of old CCTV control panels.
 - Make states obvious: connected, disconnected, mock mode, errors.
 - Design for future touch support.
 
+## UI Framework Direction
+
+Panevo should use a small, composable UI foundation rather than a heavily opinionated application framework.
+
+The preferred direction is:
+
+- Use `shadcn/ui` selectively for generic interface primitives.
+- Prefer the `shadcn/ui` Vite setup when the project adopts it.
+- Use Base UI or Radix primitives as the accessible headless behavior layer.
+- Use Tailwind CSS or explicit Panevo design tokens for styling.
+- Continue using `lucide-react` for icons.
+- Keep Panevo-specific operator controls custom.
+
+This means `shadcn/ui` should be treated as source-owned component scaffolding, not as a visual theme to copy wholesale. Panevo should avoid the default SaaS/admin look and instead apply its own broadcast/operator styling.
+
+Good candidates for shared UI primitives:
+
+- Button
+- Dialog and Alert Dialog
+- Select
+- Switch
+- Slider
+- Tooltip
+- Tabs
+- Dropdown Menu
+- Popover
+- Toast or Sonner notifications
+
+Panevo-specific components should remain custom:
+
+- PTZ directional pad
+- Zoom controls
+- Preset grid
+- Connection status surface
+- Camera bank controls
+- Operator workspaces
+- Race-aware production controls
+
 ## MVP Layout
 
 The MVP should provide:
@@ -57,4 +95,3 @@ Preset recall should be a normal click. Preset store should be separate and requ
 - Integration status rail
 - Config import/export
 - Stream Deck style button pages
-

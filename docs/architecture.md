@@ -60,6 +60,20 @@ src/
 - Transport, queueing, and high-level camera methods belong in `ViscaClient`.
 - Config persistence belongs only in `ConfigService`.
 
+## Renderer UI Architecture
+
+The renderer should separate generic UI primitives from Panevo-specific operator components.
+
+```text
+src/renderer/components/
+  ui/          Shared primitives such as Button, Dialog, Select, Switch, Slider, Tooltip
+  camera/      Camera settings, connection status, camera profile controls
+  controls/    PTZ movement, zoom, speed, and future operator controls
+  presets/     Preset recall/store components
+```
+
+Panevo may adopt `shadcn/ui` later for the `ui/` layer, preferably with Base UI or Radix primitives underneath. Those components should be source-owned and restyled with Panevo design tokens. Product-specific components should not be forced into generic shadcn patterns when custom operator interaction is clearer.
+
 ## IPC Design
 
 The preload API exposes high-level camera operations through `window.panevo`. This keeps the renderer focused on user intent:
@@ -97,4 +111,3 @@ The service layout should support future modules without restructuring the app:
 - `services/automation`
 - `services/cameras`
 - `services/workspaces`
-
