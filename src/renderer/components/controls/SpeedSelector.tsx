@@ -1,3 +1,5 @@
+import { Slider } from '@/renderer/components/ui/slider';
+
 interface SpeedSelectorProps {
   label: string;
   value: number;
@@ -13,14 +15,16 @@ export const SpeedSelector = ({ label, value, min, max, onChange }: SpeedSelecto
         {label}
         <strong>{value}</strong>
       </span>
-      <input
-        type="range"
+      <Slider
         min={min}
         max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
+        value={[value]}
+        onValueChange={([nextValue]) => {
+          if (nextValue !== undefined) {
+            onChange(nextValue);
+          }
+        }}
       />
     </label>
   );
 };
-

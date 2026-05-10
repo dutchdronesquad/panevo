@@ -6,7 +6,7 @@ Use `docs/mvp-checklist.md` as the operational checklist for tracking Phase 1 pr
 
 ## Phase 1: PTZ MVP
 
-Phase 1 is the only active product phase until the MVP is complete. It should stay narrowly focused on one usable, reliable PTZ control workflow for a single VISCA over IP camera.
+Phase 1 was intentionally narrow: one usable, reliable PTZ control workflow for a single VISCA over IP camera.
 
 ### Phase 1.1: Foundation
 
@@ -119,25 +119,82 @@ The PTZ MVP is complete when:
 - RotorHazard integration.
 - Stream Deck, Companion, or Flexbar integrations.
 - Camera autodiscovery.
-- Multi-camera profiles.
 - Automation workflows.
 - TCP VISCA, unless UDP proves insufficient for the target camera.
 - Replacing the VISCA internals with an npm package.
 - Broad UI framework migration, unless it directly resolves MVP blockers.
 
-## Phase 2: Camera Operations
+## Phase 2: Product Foundation and Camera Operations
 
-- Multi-camera profiles
-- Camera discovery and assisted setup
-- Per-camera preset entries and camera-native preset management
-- ONVIF support investigation
-- ONVIF preset discovery/import
-- Camera connection health checks
-- Vendor-specific VISCA compatibility options
-- VISCA npm package evaluation
-- Optional TCP VISCA support
-- Import/export config
-- Safer preset overwrite flows
+Phase 2 should start by stabilizing the UI foundation before adding more camera complexity. The MVP proved the PTZ workflow; the next risk is building additional features on temporary UI primitives.
+
+### Phase 2A: UI Foundation
+
+Status: complete.
+
+- Add Tailwind CSS.
+- Initialize `shadcn/ui` for Vite.
+- Keep Panevo's dark broadcast/operator visual direction.
+- Replace temporary `Button` and `Card` primitives with source-owned shadcn-style primitives.
+- Add shared primitives for dialog, alert dialog, input, label, select, switch, slider, tooltip, tabs, dropdown menu, popover, and toast/sonner.
+- Preserve custom Panevo controls for PTZ, zoom, dynamic presets, connection status, and future operator surfaces.
+- Define Panevo design tokens for surfaces, borders, actions, status states, focus rings, and control sizing.
+- Review the main operator surface after the component migration.
+- Keep the MVP behavior unchanged during the UI migration.
+
+Exit criteria:
+
+- `npm run typecheck` passes.
+- `npm run lint` passes.
+- Existing PTZ, zoom, settings, mock mode, and dynamic preset workflows still work.
+- The app no longer relies on one-off temporary UI primitives for common controls.
+- The UI still feels like broadcast/operator tooling, not a generic SaaS dashboard.
+
+### Phase 2B: Camera Profiles
+
+Status: complete pending hardware regression.
+
+- Multi-camera profiles.
+- Active camera selection.
+- Per-camera preset entries.
+- Camera profile settings dialogs.
+- Add-camera flow gated behind a successful connection/health check.
+- Basic focus controls.
+- Import/export config.
+- Camera connection health modes: `Verified` response check and `Transport` fallback.
+
+Exit criteria:
+
+- Multiple camera profiles can be created, renamed, selected, edited, deleted, imported, and exported.
+- Selecting a camera runs a health check instead of incorrectly marking the camera disconnected.
+- The active camera status distinguishes verified camera response from transport-only fallback.
+- PTZ, zoom, focus, presets, emergency stop, and per-camera presets continue to work after switching cameras.
+- `npm run typecheck` passes.
+- `npm run lint` passes.
+
+### Phase 2C: Camera Discovery and ONVIF
+
+Status: next.
+
+- Camera discovery and assisted setup.
+- ONVIF support investigation.
+- ONVIF preset discovery/import.
+- ONVIF camera capability discovery where supported.
+- Camera-native preset management.
+- Vendor-specific discovery behavior.
+
+Entry criteria:
+
+- Phase 2B receives a real-camera regression pass on Tenveo hardware.
+- Known Tenveo behavior is recorded in `docs/tenveo-hardware.md`.
+- The current implementation is committed or otherwise snapshotted before broad discovery work begins.
+
+### Phase 2D: VISCA Compatibility
+
+- Vendor-specific VISCA compatibility options.
+- VISCA npm package evaluation.
+- Optional TCP VISCA support.
+- Safer preset overwrite flows.
 
 ## Phase 3: Production Integrations
 

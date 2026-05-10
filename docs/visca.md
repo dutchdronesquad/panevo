@@ -111,6 +111,7 @@ Known areas of variance:
 - Pan speed range.
 - Tilt speed range.
 - Zoom speed range.
+- Focus mode and focus direction mapping.
 - Preset numbering.
 - UDP versus TCP behavior.
 - ACK and completion packets.
@@ -130,6 +131,14 @@ Observed Tenveo behavior during MVP validation:
 - Zoom speed range is `1-8`.
 - Preset recall and store work.
 - The camera appears to support broader preset management, including add, remove, rename, and call operations.
+
+Focus controls:
+
+- Panevo exposes `Auto` and `Manual` focus mode controls using the standard VISCA focus mode command.
+- Manual focus exposes `Focus In` and `Focus Out` hold buttons.
+- The current implementation maps `Focus In` to Sony-style VISCA near focus and `Focus Out` to far focus.
+- Tenveo hardware should be checked to confirm whether the in/out direction feels correct. If it is reversed, the mapping should be changed in `visca-commands.ts`, not in renderer code.
+- Panevo does not currently read the camera's actual focus mode back from hardware.
 
 Panevo's MVP exposes dynamic local preset entries. Each Panevo preset entry maps a local label to a camera preset number.
 
@@ -200,8 +209,12 @@ The MVP implements UDP VISCA over IP. TCP is shown as a future protocol option i
 UDP implications:
 
 - Creating a UDP socket does not prove the camera is reachable.
-- "Test connection" can only prove local transport readiness unless a camera inquiry/response flow is implemented.
+- Panevo separates `Verified` and `Transport` health states.
+- `Verified` means the camera responded to a non-moving VISCA focus-mode inquiry before timeout.
+- `Transport` means Panevo could prepare the UDP VISCA transport, but no camera response was verified.
+- Each camera profile has a health-check mode. `VISCA response verified` is preferred; `Transport ready fallback` is only for cameras that accept commands but do not answer useful VISCA inquiries.
+- A failed verified health check means the camera did not respond before timeout or the transport failed.
 - Failed network paths may appear only when commands have no visible camera effect.
-- Operator documentation must be clear that real hardware movement is the true validation step during MVP.
+- Vendor support for inquiry responses can vary. Future ONVIF support should provide a stronger device-level health source where available.
 
 TCP should be considered later if Tenveo hardware supports it reliably or if ACK/completion handling is easier over TCP.

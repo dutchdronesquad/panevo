@@ -38,15 +38,15 @@ Packaging may require network access because Electron Forge can download Electro
 
 ## Development Priorities
 
-Until the PTZ MVP is complete, development should prioritize:
+During the Phase 2B to Phase 2C transition, development should prioritize:
 
-1. Reliable single-camera PTZ control.
-2. Operator safety.
+1. Hardware regression for multi-camera profiles, health checks, and focus controls.
+2. Operator safety after camera switching.
 3. Clear configuration and error states.
-4. Hardware-validated behavior.
-5. Documentation that reflects reality.
+4. Documentation that reflects tested behavior.
+5. Discovery and ONVIF investigation only after the current implementation is snapshotted.
 
-Avoid implementing deferred platform features during Phase 1 unless they directly unblock the MVP.
+Avoid implementing production integrations or preview features until Phase 2C discovery and camera capability work has a stable direction.
 
 ## Process Boundaries
 
@@ -83,9 +83,9 @@ Main process:
 
 ## Config Storage
 
-The MVP stores local configuration in Electron's `userData` directory as JSON.
+Panevo stores local configuration in Electron's `userData` directory as JSON.
 
-The config should remain simple during Phase 1. It currently represents one active camera target. Future versions can expand this into camera profiles and operator workspaces.
+The current config model stores camera profiles, one active camera id, per-camera preset entries, and camera health-check mode. Keep this model local-first and explicit. Future versions can expand it into operator workspaces, integration credentials, or discovered camera metadata, but those additions should remain behind clear schema changes.
 
 Do not store secrets in the config file unless a future integration requires them and the project has a secure storage strategy.
 
@@ -113,4 +113,3 @@ When changing behavior:
 - Update `mvp-checklist.md` if a checklist item is completed.
 - Add decision notes to `decisions.md` when a choice affects future architecture.
 - Add hardware notes to `tenveo-hardware.md` after real-device tests.
-

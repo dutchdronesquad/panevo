@@ -79,9 +79,9 @@ Rationale:
 
 ## ADR-007: UI Framework Will Be Adopted Selectively
 
-Status: accepted.
+Status: accepted and active for Phase 2A.
 
-Panevo may use `shadcn/ui` for generic UI primitives later, preferably with Base UI or Radix primitives underneath.
+Panevo will use `shadcn/ui` for generic UI primitives, preferably with Base UI or Radix primitives underneath where supported by the selected shadcn setup.
 
 Rationale:
 
@@ -89,14 +89,35 @@ Rationale:
 - A heavily opinionated UI framework risks making Panevo look like a generic admin tool.
 - PTZ controls, dynamic preset lists, and operator surfaces should remain custom Panevo components.
 
+Implementation constraints:
+
+- Tailwind and shadcn should be introduced before Phase 2 camera profiles.
+- Existing PTZ behavior must remain unchanged during the migration.
+- Panevo-specific controls should not be forced into generic primitives.
+- Design tokens should preserve the dark, technical, broadcast-oriented visual direction.
+- Tailwind CSS v4 is the active styling baseline.
+- shadcn components should be added through the shadcn CLI so generated component code remains aligned with the selected preset and registry.
+
 ## ADR-008: Integrations Are Deferred Until MVP Completion
 
 Status: accepted.
 
-OBS, RotorHazard, Stream Deck, Companion, Flexbar, automation, and camera discovery remain documented but not active implementation scope during Phase 1.
+OBS, RotorHazard, Stream Deck, Companion, Flexbar, and automation remain documented but not active implementation scope during Phase 2B stabilization. Camera discovery and ONVIF investigation are the next planned scope for Phase 2C after the Phase 2B hardware regression pass.
 
 Rationale:
 
 - The first product value is reliable camera control.
 - Integrations depend on stable action concepts.
 - Premature integration work can obscure hardware and safety issues.
+
+## ADR-009: Keep Vite 8 With Electron Forge Compatibility Patches
+
+Status: accepted.
+
+Panevo uses Vite 8 so the renderer and shadcn/Tailwind v4 setup stay on the current toolchain. Electron Forge's Vite plugin may still emit preload output config intended for older Vite/Rollup behavior.
+
+Implementation note:
+
+- `vite.preload.config.ts` removes Forge's deprecated `inlineDynamicImports` output option from the resolved preload build config.
+- The preload build explicitly uses `codeSplitting: false`, which is the Vite 8/Rolldown-compatible replacement.
+- This keeps the preload bundle single-file without carrying deprecated build warnings.

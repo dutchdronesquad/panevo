@@ -1,4 +1,5 @@
 import type { PanDirection, TiltDirection } from './visca-types';
+import type { FocusMode } from '../../../shared/types';
 
 const VISCA_CAMERA_ADDRESS = 0x81;
 const VISCA_TERMINATOR = 0xff;
@@ -61,6 +62,26 @@ export const buildZoomCommand = (direction: 'in' | 'out', speed: number): Buffer
 
 export const buildZoomStopCommand = (): Buffer =>
   Buffer.from([VISCA_CAMERA_ADDRESS, 0x01, 0x04, 0x07, 0x00, VISCA_TERMINATOR]);
+
+export const buildFocusModeCommand = (mode: FocusMode): Buffer => {
+  const modeByte = mode === 'auto' ? 0x02 : 0x03;
+  return Buffer.from([VISCA_CAMERA_ADDRESS, 0x01, 0x04, 0x38, modeByte, VISCA_TERMINATOR]);
+};
+
+export const buildFocusCommand = (direction: 'in' | 'out', speed: number): Buffer => {
+  const safeSpeed = clampByte(speed, 0x01, 0x08) - 1;
+  const focusByte = direction === 'in' ? 0x30 | safeSpeed : 0x20 | safeSpeed;
+
+  // Sony-style VISCA calls these Near/Far. Panevo exposes them as Focus In/Out
+  // for operator familiarity; some vendors may need this mapping swapped.
+  return Buffer.from([VISCA_CAMERA_ADDRESS, 0x01, 0x04, 0x08, focusByte, VISCA_TERMINATOR]);
+};
+
+export const buildFocusStopCommand = (): Buffer =>
+  Buffer.from([VISCA_CAMERA_ADDRESS, 0x01, 0x04, 0x08, 0x00, VISCA_TERMINATOR]);
+
+export const buildFocusModeInquiryCommand = (): Buffer =>
+  Buffer.from([VISCA_CAMERA_ADDRESS, 0x09, 0x04, 0x38, VISCA_TERMINATOR]);
 
 export const buildRecallPresetCommand = (presetNumber: number): Buffer => {
   const preset = clampByte(presetNumber, 0x00, 0xff);

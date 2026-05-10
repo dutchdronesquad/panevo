@@ -27,23 +27,22 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is Phase 1: PTZ MVP.
+The active phase is the transition from Phase 2B to Phase 2C.
 
 Current priority:
 
-1. Complete VISCA hardware validation.
-2. Harden operator safety behavior.
-3. Polish dynamic preset entries and storage.
-4. Stabilize UI and packaging.
+1. Run a real Tenveo regression pass for Phase 2B behavior.
+2. Record camera switching, health-check, and focus behavior in `tenveo-hardware.md`.
+3. Snapshot the completed Phase 2B implementation.
+4. Start Phase 2C discovery and ONVIF investigation.
 
-Explicitly deferred until after MVP completion:
+Still deferred:
 
 - Preview systems.
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, and Flexbar integrations.
 - Camera autodiscovery.
-- Multi-camera profiles.
 - Automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.

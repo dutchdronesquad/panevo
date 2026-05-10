@@ -1,6 +1,10 @@
 import dgram from 'node:dgram';
-import type { CameraConfig, CameraConnectionStatus, CommandResponse, PanevoResult } from '../../../shared/types';
+import type { CameraConnectionStatus, CameraProfile, CommandResponse, FocusMode, PanevoResult } from '../../../shared/types';
 import {
+  buildFocusCommand,
+  buildFocusModeInquiryCommand,
+  buildFocusModeCommand,
+  buildFocusStopCommand,
   buildPanTiltCommand,
   buildRecallPresetCommand,
   buildStopCommand,
@@ -25,30 +29,21 @@ const clampInteger = (value: number, min: number, max: number): number => {
   return Math.min(max, Math.max(min, Math.round(value)));
 };
 
+const HEALTH_CHECK_TIMEOUT_MS = 900;
+
 export class ViscaClient {
-  private config: CameraConfig | null = null;
+  private config: CameraProfile | null = null;
   private socket: dgram.Socket | null = null;
   private connected = false;
   private readonly queue = new ViscaQueue();
 
-  async connect(config: CameraConfig): Promise<PanevoResult<CameraConnectionStatus>> {
+  async connect(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
     const validation = this.validateConfig(config);
     if (!validation.ok) {
       return validation;
     }
 
     this.config = validation.data;
-
-    if (this.config.mockMode) {
-      this.connected = true;
-      console.info('[visca] Mock connection active');
-      return success({
-        connected: true,
-        mockMode: true,
-        protocol: this.config.protocol,
-        message: 'Mock mode active',
-      });
-    }
 
     if (this.config.protocol === 'tcp') {
       return failure('TCP_NOT_IMPLEMENTED', 'TCP VISCA is reserved for future support. Use UDP for the MVP.');
@@ -66,7 +61,6 @@ export class ViscaClient {
 
       return success({
         connected: true,
-        mockMode: false,
         protocol: 'udp',
         message: `UDP transport ready for ${this.config.ipAddress}:${this.config.port}`,
       });
@@ -76,25 +70,61 @@ export class ViscaClient {
     }
   }
 
-  async ensureConnected(config: CameraConfig): Promise<PanevoResult<CameraConnectionStatus>> {
+  async ensureConnected(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
     const activeConfig = this.config;
     const sameTarget =
       activeConfig &&
       activeConfig.ipAddress === config.ipAddress &&
       activeConfig.port === config.port &&
-      activeConfig.protocol === config.protocol &&
-      activeConfig.mockMode === config.mockMode;
+      activeConfig.protocol === config.protocol;
 
     if (this.connected && activeConfig && sameTarget) {
       return success({
         connected: true,
-        mockMode: activeConfig.mockMode,
         protocol: activeConfig.protocol,
-        message: activeConfig.mockMode ? 'Mock mode active' : 'Connected',
+        message: 'Connected',
       });
     }
 
     return this.connect(config);
+  }
+
+  async healthCheck(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+    const connectionResult = await this.ensureConnected(config);
+    if (!connectionResult.ok) {
+      return connectionResult;
+    }
+
+    if (config.healthCheckMode === 'transport-only') {
+      return success({
+        connected: true,
+        protocol: connectionResult.data.protocol,
+        message: 'Transport ready; camera response not verified.',
+        checkedAt: new Date().toISOString(),
+        responseVerified: false,
+      });
+    }
+
+    const inquiryResult = await this.queue.enqueue(
+      'health-check',
+      async () => {
+        await this.sendInquiry(buildFocusModeInquiryCommand(), HEALTH_CHECK_TIMEOUT_MS);
+
+        return {
+          connected: true,
+          protocol: connectionResult.data.protocol,
+          message: 'Camera responded to VISCA health inquiry.',
+          checkedAt: new Date().toISOString(),
+          responseVerified: true,
+        };
+      },
+    );
+
+    if (!inquiryResult.ok) {
+      return failure('HEALTH_CHECK_FAILED', 'Camera did not respond to VISCA health inquiry.');
+    }
+
+    return inquiryResult;
   }
 
   disconnect(): void {
@@ -151,6 +181,22 @@ export class ViscaClient {
     return this.sendCommand('zoom-stop', buildZoomStopCommand(), { flushPending: true });
   }
 
+  setFocusMode(mode: FocusMode): Promise<PanevoResult<CommandResponse>> {
+    return this.sendCommand(`focus-${mode}`, buildFocusModeCommand(mode));
+  }
+
+  focusIn(speed: number): Promise<PanevoResult<CommandResponse>> {
+    return this.sendCommand('focus-in', buildFocusCommand('in', this.clampFocusSpeed(speed)));
+  }
+
+  focusOut(speed: number): Promise<PanevoResult<CommandResponse>> {
+    return this.sendCommand('focus-out', buildFocusCommand('out', this.clampFocusSpeed(speed)));
+  }
+
+  focusStop(): Promise<PanevoResult<CommandResponse>> {
+    return this.sendCommand('focus-stop', buildFocusStopCommand(), { flushPending: true });
+  }
+
   recallPreset(presetNumber: number): Promise<PanevoResult<CommandResponse>> {
     const preset = this.clampPresetNumber(presetNumber);
     return this.sendCommand(`recall-preset-${preset}`, buildRecallPresetCommand(preset));
@@ -190,24 +236,11 @@ export class ViscaClient {
           throw new Error('Missing VISCA config');
         }
 
-        if (this.config.mockMode) {
-          console.info(`[visca:mock] ${name}`, packet.toString('hex').match(/.{1,2}/g)?.join(' '));
-          return this.commandResponse(name);
-        }
-
         if (!this.socket) {
           throw new Error('Missing UDP socket');
         }
 
-        await new Promise<void>((resolve, reject) => {
-          this.socket?.send(packet, this.config?.port, this.config?.ipAddress, (error) => {
-            if (error) {
-              reject(error);
-              return;
-            }
-            resolve();
-          });
-        });
+        await this.sendPacket(packet);
 
         return this.commandResponse(name);
       },
@@ -222,18 +255,66 @@ export class ViscaClient {
     };
   }
 
-  private validateConfig(config: CameraConfig): PanevoResult<CameraConfig> {
+  private sendPacket(packet: Buffer): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.config || !this.socket) {
+        reject(new Error('Missing VISCA transport'));
+        return;
+      }
+
+      this.socket.send(packet, this.config.port, this.config.ipAddress, (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+
+  private sendInquiry(packet: Buffer, timeoutMs: number): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      if (!this.config || !this.socket) {
+        reject(new Error('Missing VISCA transport'));
+        return;
+      }
+
+      const socket = this.socket;
+      const timer = setTimeout(() => {
+        socket.off('message', onMessage);
+        reject(new Error('VISCA inquiry timed out'));
+      }, timeoutMs);
+
+      const onMessage = (message: Buffer) => {
+        clearTimeout(timer);
+        resolve(message);
+      };
+
+      socket.once('message', onMessage);
+      socket.send(packet, this.config.port, this.config.ipAddress, (error) => {
+        if (error) {
+          clearTimeout(timer);
+          socket.off('message', onMessage);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  private validateConfig(config: CameraProfile): PanevoResult<CameraProfile> {
     const roundedPort = Math.round(config.port);
-    const normalized: CameraConfig = {
+    const normalized: CameraProfile = {
+      id: config.id,
+      label: config.label,
       ipAddress: config.ipAddress.trim(),
       port: Number.isFinite(roundedPort) ? Math.min(65535, Math.max(1, roundedPort)) : 52381,
       protocol: config.protocol === 'tcp' ? 'tcp' : 'udp',
-      mockMode: Boolean(config.mockMode),
+      healthCheckMode: config.healthCheckMode === 'transport-only' ? 'transport-only' : 'visca-inquiry',
       presets: config.presets,
     };
 
-    if (!normalized.mockMode && normalized.ipAddress.length === 0) {
-      return failure('INVALID_CONFIG', 'Camera IP address is required when mock mode is disabled.');
+    if (normalized.ipAddress.length === 0) {
+      return failure('INVALID_CONFIG', 'Camera IP address is required.');
     }
 
     return success(normalized);
@@ -248,6 +329,10 @@ export class ViscaClient {
   }
 
   private clampZoomSpeed(speed: number): number {
+    return clampInteger(speed, 1, 8);
+  }
+
+  private clampFocusSpeed(speed: number): number {
     return clampInteger(speed, 1, 8);
   }
 

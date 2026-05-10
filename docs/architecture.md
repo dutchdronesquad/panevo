@@ -185,7 +185,7 @@ IPC channel naming should remain stable and explicit. Avoid generic channels lik
 
 ## Config Storage
 
-Configuration is stored as local JSON in Electron's `userData` directory. The MVP stores one active camera profile, but the shape should allow future expansion to multiple cameras and operator workspaces.
+Configuration is stored as local JSON in Electron's `userData` directory. The active Phase 2 shape stores multiple camera profiles plus an `activeCameraId`. Existing single-camera configs are migrated into the first camera profile.
 
 Config data should be treated as user-editable state, not as trusted input. Main-process services must normalize and validate values before sending hardware commands.
 
@@ -227,6 +227,15 @@ Safety rules:
 - Automation and integrations must preserve manual override.
 
 These rules apply even before automation or multi-camera support exists.
+
+## Camera Health
+
+Panevo should not treat UDP socket creation as proof that a camera is online. Camera profiles define a health-check mode:
+
+- `VISCA response verified`: preferred mode. Sends a non-moving VISCA inquiry and reports `Verified` only after a camera response.
+- `Transport ready fallback`: compatibility fallback. Reports transport readiness without claiming camera response verification.
+
+The renderer should display these states differently. `Verified` is suitable for confident live operation; `Transport` means operator verification is still required.
 
 ## Future Expansion
 

@@ -1,35 +1,59 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { OctagonX, Radio, RadioReceiver, Zap } from 'lucide-react';
-import { CameraSettings } from './components/camera/CameraSettings';
-import { ConnectionStatus } from './components/camera/ConnectionStatus';
-import { PtzControls } from './components/controls/PtzControls';
-import { SpeedSelector } from './components/controls/SpeedSelector';
-import { ZoomControls } from './components/controls/ZoomControls';
-import { PresetGrid } from './components/presets/PresetGrid';
-import { Button } from './components/ui/Button';
+import { AppSidebar, type AppView } from './components/shell/AppSidebar';
+import { WorkspaceHeader } from './components/shell/WorkspaceHeader';
+import { TooltipProvider } from '@/renderer/components/ui/tooltip';
 import { MainLayout } from './layouts/MainLayout';
-import type { CameraConfig, CameraConnectionStatus, CameraPreset, CommandResponse, PanevoResult } from './types/camera';
+import { CamerasView } from './views/CamerasView';
+import { ControlView } from './views/ControlView';
+import { SettingsView, type Theme } from './views/SettingsView';
+import type { CameraConfig, CameraConnectionStatus, CameraPreset, CameraProfile, CommandResponse, FocusMode, PanevoResult } from './types/camera';
 
-const fallbackConfig: CameraConfig = {
+const fallbackCamera: CameraProfile = {
+  id: 'camera-default',
+  label: 'Camera 1',
   ipAddress: '',
   port: 52381,
   protocol: 'udp',
-  mockMode: true,
+  healthCheckMode: 'visca-inquiry',
   presets: [],
 };
+
+const fallbackConfig: CameraConfig = {
+  activeCameraId: fallbackCamera.id,
+  cameras: [fallbackCamera],
+};
+
+const HEALTH_CHECK_INTERVAL_MS = 15_000;
+
+const getActiveCamera = (config: CameraConfig): CameraProfile => {
+  return config.cameras.find((camera) => camera.id === config.activeCameraId) ?? config.cameras[0] ?? fallbackCamera;
+};
+
+const updateActiveCamera = (config: CameraConfig, camera: CameraProfile): CameraConfig => ({
+  ...config,
+  activeCameraId: camera.id,
+  cameras: config.cameras.map((item) => (item.id === camera.id ? camera : item)),
+});
+
+const updateCameraProfile = (config: CameraConfig, camera: CameraProfile): CameraConfig => ({
+  ...config,
+  cameras: config.cameras.map((item) => (item.id === camera.id ? camera : item)),
+});
 
 export const App = () => {
   const [config, setConfig] = useState<CameraConfig>(fallbackConfig);
   const [status, setStatus] = useState<CameraConnectionStatus>({
     connected: false,
-    mockMode: true,
     protocol: 'udp',
-    message: 'Mock mode ready',
+    message: 'Disconnected',
   });
   const [speed, setSpeed] = useState(10);
   const [zoomSpeed, setZoomSpeed] = useState(5);
-  const [lastCommand, setLastCommand] = useState<CommandResponse | null>(null);
+  const [focusMode, setFocusMode] = useState<FocusMode>('auto');
+  const [, setLastCommand] = useState<CommandResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<AppView>('control');
+  const activeCamera = useMemo(() => getActiveCamera(config), [config]);
 
   const saveConfigState = useCallback(async (nextConfig: CameraConfig) => {
     setConfig(nextConfig);
@@ -44,34 +68,176 @@ export const App = () => {
   }, []);
 
   useEffect(() => {
-    void window.panevo.getConfig().then((result) => {
-      if (result.ok) {
-        setConfig(result.data);
-        setStatus((current) => ({
-          ...current,
-          mockMode: result.data.mockMode,
-          protocol: result.data.protocol,
-          message: result.data.mockMode ? 'Mock mode ready' : 'Disconnected',
-        }));
+    void (async () => {
+      const configResult = await window.panevo.getConfig();
+      if (!configResult.ok) {
+        setError(configResult.error.message);
         return;
       }
-      setError(result.error.message);
-    });
+      const camera = getActiveCamera(configResult.data);
+      setConfig(configResult.data);
+
+      // Query real connection state from main process — survives renderer hot reload
+      const statusResult = await window.panevo.testConnection();
+      setStatus(
+        statusResult.ok
+          ? statusResult.data
+          : { connected: false, protocol: camera.protocol, message: 'Disconnected' },
+      );
+    })();
   }, []);
 
-  const handleResult = useCallback(async (operation: Promise<PanevoResult<CommandResponse>>) => {
-    const result = await operation;
-    if (result.ok) {
-      setLastCommand(result.data);
-      setError(null);
-    } else {
+  useEffect(() => {
+    if (!activeCamera.ipAddress) {
+      setStatus({
+        connected: false,
+        protocol: activeCamera.protocol,
+        message: 'Disconnected',
+      });
+      return;
+    }
+
+    let cancelled = false;
+
+    const checkHealth = async () => {
+      const result = await window.panevo.checkCameraHealth();
+      if (cancelled) {
+        return;
+      }
+
+      if (result.ok) {
+        setStatus(result.data);
+        setError(null);
+        return;
+      }
+
+      setStatus({
+        connected: false,
+        protocol: activeCamera.protocol,
+        message: 'Health check failed',
+        checkedAt: new Date().toISOString(),
+        responseVerified: false,
+      });
       setError(`${result.error.code}: ${result.error.message}`);
+    };
+
+    void checkHealth();
+    const interval = window.setInterval(() => {
+      void checkHealth();
+    }, HEALTH_CHECK_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [activeCamera.id, activeCamera.ipAddress, activeCamera.port, activeCamera.protocol]);
+
+  const saveCameraProfile = useCallback((camera: CameraProfile) => {
+    void saveConfigState(updateCameraProfile(config, camera));
+
+    if (camera.id === config.activeCameraId) {
+      setStatus({
+        connected: false,
+        protocol: camera.protocol,
+        message: 'Disconnected',
+      });
+    }
+  }, [config, saveConfigState]);
+
+  const testCamera = useCallback(async (cameraId: string) => {
+    const camera = config.cameras.find((item) => item.id === cameraId);
+    if (!camera) {
+      return;
+    }
+
+    const nextConfig = { ...config, activeCameraId: cameraId };
+    const saveResult = await window.panevo.saveConfig(nextConfig);
+    if (!saveResult.ok) {
+      setError(`${saveResult.error.code}: ${saveResult.error.message}`);
+      return;
+    }
+
+    setConfig(saveResult.data);
+    setStatus({
+      connected: false,
+      protocol: camera.protocol,
+      message: 'Connecting...',
+    });
+
+    const result = await window.panevo.testConnection();
+    if (result.ok) {
+      setStatus(result.data);
+      setError(null);
+      return;
+    }
+
+    setStatus({
+      connected: false,
+      protocol: camera.protocol,
+      message: 'Disconnected',
+    });
+    setError(`${result.error.code}: ${result.error.message}`);
+  }, [config]);
+
+  const selectCamera = useCallback(async (cameraId: string) => {
+    const nextCamera = config.cameras.find((camera) => camera.id === cameraId);
+    if (!nextCamera || nextCamera.id === config.activeCameraId) {
+      return;
+    }
+
+    const nextConfig = { ...config, activeCameraId: cameraId };
+    const saveResult = await window.panevo.saveConfig(nextConfig);
+    if (!saveResult.ok) {
+      setError(`${saveResult.error.code}: ${saveResult.error.message}`);
+      return;
+    }
+
+    setConfig(saveResult.data);
+    setStatus({
+      connected: false,
+      protocol: nextCamera.protocol,
+      message: 'Checking camera...',
+      checkedAt: new Date().toISOString(),
+      responseVerified: false,
+    });
+
+    const healthResult = await window.panevo.checkCameraHealth();
+    if (healthResult.ok) {
+      setStatus(healthResult.data);
+      setError(null);
+      return;
+    }
+
+    setStatus({
+      connected: false,
+      protocol: nextCamera.protocol,
+      message: 'Health check failed',
+      checkedAt: new Date().toISOString(),
+      responseVerified: false,
+    });
+    setError(`${healthResult.error.code}: ${healthResult.error.message}`);
+  }, [config]);
+
+  const handleResult = useCallback(async (operation: Promise<PanevoResult<CommandResponse>>) => {
+    try {
+      const result = await operation;
+      if (result.ok) {
+        setLastCommand(result.data);
+        setError(null);
+        return;
+      }
+
+      setError(`${result.error.code}: ${result.error.message}`);
+    } catch (unknownError) {
+      const message = unknownError instanceof Error ? unknownError.message : 'Unknown IPC error';
+      setError(`IPC_ERROR: ${message}`);
     }
   }, []);
 
   const stopAll = useCallback(() => {
     void handleResult(window.panevo.stop());
     void handleResult(window.panevo.zoomStop());
+    void handleResult(window.panevo.focusStop());
   }, [handleResult]);
 
   useEffect(() => {
@@ -104,13 +270,30 @@ export const App = () => {
       zoomIn: () => handleResult(window.panevo.zoomIn(zoomSpeed)),
       zoomOut: () => handleResult(window.panevo.zoomOut(zoomSpeed)),
       zoomStop: () => handleResult(window.panevo.zoomStop()),
+      setFocusMode: (mode: FocusMode) => {
+        void (async () => {
+          const result = await window.panevo.setFocusMode(mode);
+          if (result.ok) {
+            setFocusMode(mode);
+            setLastCommand(result.data);
+            setError(null);
+            return;
+          }
+
+          setError(`${result.error.code}: ${result.error.message}`);
+        })();
+      },
+      focusIn: () => handleResult(window.panevo.focusIn(4)),
+      focusOut: () => handleResult(window.panevo.focusOut(4)),
+      focusStop: () => handleResult(window.panevo.focusStop()),
       stopAll,
       recallPreset: (preset: number) => handleResult(window.panevo.recallPreset(preset)),
       storePreset: (preset: number) => handleResult(window.panevo.storePreset(preset)),
       addPreset: () => {
-        const usedNumbers = new Set(config.presets.map((preset) => preset.cameraPreset));
+        if (activeCamera.presets.length >= 9) return;
+        const usedNumbers = new Set(activeCamera.presets.map((preset) => preset.cameraPreset));
         let cameraPreset = 1;
-        while (usedNumbers.has(cameraPreset)) {
+        while (usedNumbers.has(cameraPreset) && cameraPreset <= 9) {
           cameraPreset += 1;
         }
 
@@ -120,15 +303,13 @@ export const App = () => {
           cameraPreset,
         };
 
-        void saveConfigState({
-          ...config,
-          presets: [...config.presets, nextPreset],
-        });
+        void saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: [...activeCamera.presets, nextPreset] }));
       },
       updatePreset: (id: string, updates: Partial<Pick<CameraPreset, 'label' | 'cameraPreset'>>) => {
-        const nextConfig: CameraConfig = {
-          ...config,
-          presets: config.presets.map((preset) =>
+        void saveConfigState(
+          updateActiveCamera(config, {
+            ...activeCamera,
+            presets: activeCamera.presets.map((preset) =>
             preset.id === id
               ? {
                   ...preset,
@@ -138,103 +319,191 @@ export const App = () => {
                     updates.cameraPreset !== undefined ? Math.min(255, Math.max(1, Math.round(updates.cameraPreset))) : preset.cameraPreset,
                 }
               : preset,
-          ),
-        };
-        void saveConfigState(nextConfig);
+            ),
+          }),
+        );
       },
       deletePreset: (id: string) => {
-        void saveConfigState({
-          ...config,
-          presets: config.presets.filter((preset) => preset.id !== id),
-        });
+        void saveConfigState(updateActiveCamera(config, { ...activeCamera, presets: activeCamera.presets.filter((preset) => preset.id !== id) }));
       },
     }),
-    [config, handleResult, saveConfigState, speed, stopAll, zoomSpeed],
+    [activeCamera, config, handleResult, saveConfigState, speed, stopAll, zoomSpeed],
   );
 
+  const cameraProfileActions = useMemo(
+    () => ({
+      selectCamera: (cameraId: string) => {
+        void selectCamera(cameraId);
+      },
+      addCamera: async (camera: CameraProfile): Promise<{ ok: boolean; error?: string }> => {
+        const nextCamera: CameraProfile = {
+          ...camera,
+          id: `camera-${Date.now()}`,
+          presets: [],
+        };
+
+        setStatus({
+          connected: false,
+          protocol: nextCamera.protocol,
+          message: 'Testing camera...',
+        });
+
+        const testResult = await window.panevo.testCameraConfig(nextCamera);
+        if (!testResult.ok) {
+          const active = getActiveCamera(config);
+          setStatus({
+            connected: false,
+            protocol: active.protocol,
+            message: 'Disconnected',
+          });
+          setError(`${testResult.error.code}: ${testResult.error.message}`);
+          return {
+            ok: false,
+            error: `${testResult.error.code}: ${testResult.error.message}`,
+          };
+        }
+
+        const nextConfig: CameraConfig = {
+          activeCameraId: nextCamera.id,
+          cameras: [...config.cameras, nextCamera],
+        };
+
+        const saveResult = await window.panevo.saveConfig(nextConfig);
+        if (!saveResult.ok) {
+          setError(`${saveResult.error.code}: ${saveResult.error.message}`);
+          return {
+            ok: false,
+            error: `${saveResult.error.code}: ${saveResult.error.message}`,
+          };
+        }
+
+        setConfig(saveResult.data);
+
+        const reconnectResult = await window.panevo.testConnection();
+        if (reconnectResult.ok) {
+          setStatus(reconnectResult.data);
+          setError(null);
+          return { ok: true };
+        }
+
+        setStatus({
+          connected: false,
+          protocol: nextCamera.protocol,
+          message: 'Disconnected',
+        });
+        setError(`${reconnectResult.error.code}: ${reconnectResult.error.message}`);
+        return {
+          ok: false,
+          error: `${reconnectResult.error.code}: ${reconnectResult.error.message}`,
+        };
+      },
+      renameCamera: (cameraId: string, label: string) => {
+        void saveConfigState({
+          ...config,
+          cameras: config.cameras.map((camera) =>
+            camera.id === cameraId
+              ? {
+                  ...camera,
+                  label: label.trim().slice(0, 40) || camera.label,
+                }
+              : camera,
+          ),
+        });
+      },
+      deleteCamera: (cameraId: string) => {
+        if (config.cameras.length <= 1) {
+          return;
+        }
+
+        const nextCameras = config.cameras.filter((camera) => camera.id !== cameraId);
+        void saveConfigState({
+          activeCameraId: nextCameras[0].id,
+          cameras: nextCameras,
+        });
+      },
+      importConfig: async () => {
+        const result = await window.panevo.importConfig();
+        if (!result.ok) {
+          if (result.error.code !== 'CONFIG_IMPORT_CANCELED') {
+            setError(`${result.error.code}: ${result.error.message}`);
+          }
+          return;
+        }
+
+        const camera = getActiveCamera(result.data);
+        setConfig(result.data);
+        setStatus({
+          connected: false,
+          protocol: camera.protocol,
+          message: 'Disconnected',
+        });
+        setError(null);
+      },
+      exportConfig: async () => {
+        const result = await window.panevo.exportConfig();
+        if (!result.ok) {
+          if (result.error.code !== 'CONFIG_EXPORT_CANCELED') {
+            setError(`${result.error.code}: ${result.error.message}`);
+          }
+          return;
+        }
+
+        setError(null);
+      },
+    }),
+    [config, saveConfigState, selectCamera],
+  );
+
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('panevo-theme') as Theme | null) ?? 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('panevo-theme', theme);
+  }, [theme]);
+
+  const viewTitle = activeView === 'control' ? activeCamera.label : activeView === 'cameras' ? 'Camera Profiles' : 'Settings';
+
   return (
-    <MainLayout>
-      <section className="topbar">
-        <div>
-          <div className="brand-row">
-            <div className="brand-mark">
-              <RadioReceiver size={22} />
-            </div>
-            <div>
-              <h1>Panevo</h1>
-              <p>Live production and PTZ control</p>
-            </div>
-          </div>
-        </div>
-        <ConnectionStatus status={status} error={error} lastCommand={lastCommand} />
-      </section>
-
-      <section className="dashboard-grid">
-        <div className="left-stack">
-          <CameraSettings
-            config={config}
-            onConfigChange={setConfig}
-            onSaved={(savedConfig) => {
-              setConfig(savedConfig);
-              setStatus({
-                connected: false,
-                mockMode: savedConfig.mockMode,
-                protocol: savedConfig.protocol,
-                message: savedConfig.mockMode ? 'Mock mode ready' : 'Disconnected',
-              });
-            }}
-            onStatusChange={setStatus}
-            onError={setError}
+    <TooltipProvider>
+      <MainLayout>
+        <div className="app-frame">
+          <AppSidebar
+            activeView={activeView}
+            activeCamera={activeCamera}
+            status={status}
+            error={error}
+            onViewChange={setActiveView}
           />
-          <div className="info-panel">
-            <div className="panel-title">
-              <Radio size={16} />
-              <span>Camera Target</span>
-            </div>
-            <dl className="target-list">
-              <div>
-                <dt>Address</dt>
-                <dd>{config.mockMode ? 'Mock transport' : config.ipAddress || 'Not configured'}</dd>
-              </div>
-              <div>
-                <dt>VISCA</dt>
-                <dd>
-                  {config.protocol.toUpperCase()} / {config.port}
-                </dd>
-              </div>
-            </dl>
+
+          <div className="workspace">
+            <WorkspaceHeader title={viewTitle} onEmergencyStop={stopAll} />
+
+            {activeView === 'control' && (
+              <ControlView
+                activeCamera={activeCamera}
+                actions={actions}
+                speed={speed}
+                zoomSpeed={zoomSpeed}
+                focusMode={focusMode}
+                onSpeedChange={setSpeed}
+                onZoomSpeedChange={setZoomSpeed}
+              />
+            )}
+            {activeView === 'cameras' && (
+              <CamerasView
+                config={config}
+                activeCamera={activeCamera}
+                cameraProfileActions={cameraProfileActions}
+                onCameraSave={saveCameraProfile}
+                onTestCamera={testCamera}
+              />
+            )}
+            {activeView === 'settings' && (
+              <SettingsView theme={theme} onThemeChange={setTheme} />
+            )}
           </div>
         </div>
-
-        <main className="operator-surface">
-          <div className="surface-header">
-            <div>
-              <span className="eyebrow">PTZ MVP</span>
-              <h2>Camera Control</h2>
-            </div>
-            <div className="surface-actions">
-              <div className="surface-badge">
-                <Zap size={15} />
-                <span>{config.mockMode ? 'Mock enabled' : 'Hardware mode'}</span>
-              </div>
-              <Button variant="danger" className="emergency-stop-button" onClick={stopAll}>
-                <OctagonX size={16} />
-                Emergency Stop
-              </Button>
-            </div>
-          </div>
-          <div className="control-grid">
-            <div className="control-card ptz-card">
-              <PtzControls actions={actions} />
-              <SpeedSelector label="PTZ speed" value={speed} min={1} max={24} onChange={setSpeed} />
-            </div>
-            <div className="control-card side-controls">
-              <ZoomControls zoomSpeed={zoomSpeed} onZoomSpeedChange={setZoomSpeed} actions={actions} />
-              <PresetGrid presets={config.presets} actions={actions} />
-            </div>
-          </div>
-        </main>
-      </section>
-    </MainLayout>
+      </MainLayout>
+    </TooltipProvider>
   );
 };
