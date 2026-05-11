@@ -140,7 +140,6 @@ export class ConfigService {
     const fallbackId = fallbackNumber === 1 ? DEFAULT_CAMERA.id : `camera-${fallbackNumber}`;
     const id = typeof camera.id === 'string' && camera.id.trim().length > 0 ? camera.id.trim().slice(0, 64) : fallbackId;
     const label = typeof camera.label === 'string' && camera.label.trim().length > 0 ? camera.label.trim().slice(0, 40) : `Camera ${fallbackNumber}`;
-
     return {
       id,
       label,

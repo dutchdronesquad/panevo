@@ -99,8 +99,8 @@ Local verification:
 
 ## Explicitly Deferred
 
-- [ ] RTSP preview.
-- [ ] NDI preview.
+- [ ] NDI preview playback backend.
+- [ ] RTSP preview as an in-app mode.
 - [ ] OBS integration.
 - [ ] RotorHazard integration.
 - [ ] Stream Deck integration.
@@ -233,14 +233,18 @@ Phase 2B hardware regression:
 - [ ] Decide whether TCP VISCA is useful enough to implement for the tested camera.
 - [ ] Identify any camera-profile compatibility flags needed before adding more camera models.
 - [ ] Keep VISCA live control stable while ONVIF remains the sync/discovery route.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
+- [x] Run `npm run typecheck`.
+- [x] Run `npm run lint`.
 
-## Phase 3: Preview and Monitoring
+## Phase 3: Stream Discovery and External Preview
 
-- [ ] Decide the first supported preview transport.
-- [ ] Add per-camera preview source fields after choosing the first transport.
-- [ ] Add active-camera preview panel without blocking PTZ control.
-- [ ] Show preview unavailable/configuration/error states.
-- [ ] Document packaging and CPU impact.
-- [ ] Defer NDI until packaging/licensing impact is understood.
+- [x] Decide current preview scope: no in-app playback.
+- [x] Discover RTSP stream URLs through ONVIF probe results.
+- [x] Show discovered RTSP URLs in ONVIF probe diagnostics.
+- [x] Remove active NDI preview UI, IPC, service, runtime, and SDK adapter code.
+- [x] Remove per-camera preview settings from the UI and config schema.
+- [x] Keep RTSP URLs diagnostics-only and out of active camera control.
+- [x] Document that external tools remain the preview path for now.
+- [ ] Validate ONVIF RTSP URL discovery against Tenveo hardware after the preview removal.
+- [x] Run `npm run typecheck`.
+- [x] Run `npm run lint`.

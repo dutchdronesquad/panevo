@@ -265,32 +265,30 @@ Exit criteria:
 - Decide whether TCP VISCA is useful for the tested Tenveo camera.
 - Keep VISCA live control stable while ONVIF remains the sync/discovery route.
 
-## Phase 3: Preview and Monitoring
+## Phase 3: Stream Discovery and External Preview
 
-Panevo should gain an operator confidence preview after PTZ control is stable. Preview must remain separate from camera control so failed video does not block movement, stop, presets, or configuration.
+Panevo should expose camera stream metadata without owning video playback yet. Video preview remains external so the application can stay focused on reliable control and camera discovery.
 
-Likely first scope:
+Current scope:
 
-- Single active-camera preview panel.
-- Preview source stored per camera profile.
-- Preview status/error state.
-- Clear fallback when no preview source is configured.
-- RTSP feasibility spike.
-- Browser-compatible preview route investigation such as MJPEG, HLS, WebRTC, or a local helper/transcoder.
+- ONVIF RTSP stream URI discovery.
+- RTSP stream diagnostics in probe results.
+- No active preview settings in camera profiles.
+- No NDI runtime, SDK binding, IPC, or renderer playback layer.
 
 Not first scope:
 
-- NDI implementation.
+- In-app RTSP playback.
+- In-app NDI playback.
 - Multi-camera preview grid.
 - Recording/streaming.
 - OBS preview dependency as the only preview path.
 
 Exit criteria:
 
-- Decide the first supported preview transport.
-- Keep preview optional and non-blocking.
-- Document packaging impact and native dependency risk.
-- Validate CPU/load impact during PTZ operation.
+- Validate RTSP URL discovery against Tenveo hardware.
+- Keep PTZ control unaffected by stream discovery failures.
+- Document future preview requirements before reintroducing any playback backend.
 
 ## Phase 4: Production Integrations
 
