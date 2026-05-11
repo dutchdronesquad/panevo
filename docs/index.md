@@ -10,6 +10,7 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 - `architecture.md`: process boundaries, source layout, IPC, services, and extension points.
 - `visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
 - `ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
+- `open-source-readiness.md`: repository readiness, README direction, CI, labels, Renovate, and release automation.
 - `integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
 - `integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, physical controls, and automation.
 - `preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
@@ -30,19 +31,20 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is Phase 3: Stream Discovery and External Preview.
+The active phase is Phase 3B: Open Source Project Readiness.
 
 Current priority:
 
 1. Keep in-app preview out of the active codebase.
 2. Keep ONVIF RTSP stream discovery available for diagnostics and future integrations.
-3. Keep external tools such as OBS, NDI Studio Monitor, or camera-native tooling responsible for video preview.
-4. Validate that removing preview code does not affect PTZ control or ONVIF probing.
+3. Make the repository ready for public open source use.
+4. Add README, license, contribution, dependency, release, and CI foundations before Phase 4 integrations.
 
 Still deferred:
 
 - In-app video preview.
 - Multi-camera preview grid.
+- Integration management UI.
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, Flexbar, and physical operator control integrations.

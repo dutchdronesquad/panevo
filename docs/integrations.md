@@ -6,6 +6,7 @@ Use `integration-use-cases.md` as the product guardrail before implementing any 
 
 ## Integration Principles
 
+- Integrations should be managed from a dedicated Integrations page before individual integrations add bespoke settings screens.
 - Integrations should map to Panevo actions, not raw VISCA packets.
 - Integrations should not bypass safety controls.
 - Integrations should remain optional.
@@ -20,6 +21,65 @@ Before starting any integration, answer:
 - Does it introduce packaging or native dependency risk?
 - What happens if the integration disconnects during a live show?
 - Can the operator manually override it?
+
+## Integration Management UX
+
+Panevo should get an `Integrations` sidebar page before individual integrations become active features. This page is the operator-facing home for adding, configuring, testing, enabling, disabling, and removing integrations.
+
+Minimum lifecycle states:
+
+- `Not configured`
+- `Configured`
+- `Enabled`
+- `Connected`
+- `Error`
+- `Disabled`
+
+Minimum actions per integration:
+
+- Configure
+- Enable or disable
+- Test connection
+- Reset or remove configuration
+- View last error
+
+Initial integration registry entries:
+
+- OBS
+- RotorHazard
+- Companion / Stream Deck bridge
+- Physical operator controls
+- Flexbar
+- Automation
+
+Integration configuration should be stored separately from camera profiles. Camera configuration should stay focused on cameras, control protocols, sync protocols, credentials, and presets.
+
+Suggested future structure:
+
+```text
+src/
+  main/
+    services/
+      integrations/
+        integration-config-service.ts
+        integration-registry.ts
+        integration-types.ts
+  renderer/
+    views/
+      IntegrationsView.tsx
+    components/
+      integrations/
+        IntegrationCard.tsx
+        IntegrationConfigDialog.tsx
+```
+
+Suggested local config file:
+
+```text
+panevo-integrations.json
+```
+
+No integration should become active automatically after install or discovery. The operator should explicitly enable it.
 
 ## OBS
 

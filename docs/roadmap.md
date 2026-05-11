@@ -290,6 +290,32 @@ Exit criteria:
 - Keep PTZ control unaffected by stream discovery failures.
 - Document future preview requirements before reintroducing any playback backend.
 
+## Phase 3B: Open Source Project Readiness
+
+Panevo should be prepared as an open source project before larger integrations increase the repository surface area.
+
+Scope:
+
+- Add `LICENSE`.
+- Rewrite `README.md` to be more end-user and contributor friendly.
+- Add screenshots or screenshot placeholders.
+- Add contribution guidance.
+- Add issue templates and pull request template.
+- Add GitHub label taxonomy.
+- Add Renovate configuration.
+- Add Release Drafter configuration.
+- Add GitHub Actions for lint, typecheck, and package smoke checks.
+- Add security/support docs where useful.
+
+Exit criteria:
+
+- A new user can understand what Panevo does and how to run it from the README.
+- A contributor can find architecture, roadmap, and setup docs from the README.
+- CI catches lint and typecheck failures.
+- Dependency update PRs are grouped and labelled.
+- Release notes can be drafted consistently.
+- Issue and PR templates guide useful bug reports and contributions.
+
 ## Phase 4: Production Integrations
 
 - OBS scene and source integration
@@ -300,18 +326,19 @@ Exit criteria:
 - Race-aware shot presets
 - Event-triggered camera actions
 
-Phase 4 should start by defining a shared Panevo action/event layer. Integrations should emit normalized Panevo actions and consume normalized Panevo state instead of talking directly to VISCA, ONVIF, renderer components, or camera sockets.
+Phase 4 should start with integration management UX and then define a shared Panevo action/event layer. Integrations should emit normalized Panevo actions and consume normalized Panevo state instead of talking directly to VISCA, ONVIF, renderer components, or camera sockets.
 
 Recommended Phase 4 order:
 
-1. Define the Panevo action/event layer and feedback model.
-2. Add OBS read-only connection and scene discovery.
-3. Add OBS scene switch action.
-4. Add Companion/Stream Deck friendly action bridge for core camera actions.
-5. Add a physical input spike using standard Gamepad/HID or MIDI behavior.
-6. Add RotorHazard read-only race state.
-7. Add first guarded trigger/action automation.
-8. Investigate Flexbar once the shared action and feedback model exists.
+1. Add an Integrations page and shared integration lifecycle model.
+2. Define the Panevo action/event layer and feedback model.
+3. Add OBS read-only connection and scene discovery.
+4. Add OBS scene switch action.
+5. Add Companion/Stream Deck friendly action bridge for core camera actions.
+6. Add a physical input spike using standard Gamepad/HID or MIDI behavior.
+7. Add RotorHazard read-only race state.
+8. Add first guarded trigger/action automation.
+9. Investigate Flexbar once the shared action and feedback model exists.
 
 ## Phase 5: Automation Platform
 
