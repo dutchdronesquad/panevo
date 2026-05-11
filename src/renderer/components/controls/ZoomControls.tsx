@@ -1,6 +1,10 @@
-import { useRef } from 'react';
-import { Minus, Plus } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/components/ui/tooltip';
+import { useRef } from "react";
+import { Minus, Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/renderer/components/ui/tooltip";
 
 interface ZoomActions {
   zoomIn: () => void;
@@ -37,7 +41,12 @@ export const ZoomControls = ({ actions }: ZoomControlsProps) => {
     <div className="zoom-buttons">
       <Tooltip>
         <TooltipTrigger asChild>
-          <button type="button" className="zoom-button" aria-label="Zoom out" {...pressEvents(actions.zoomOut)}>
+          <button
+            type="button"
+            className="zoom-button"
+            aria-label="Zoom out"
+            {...pressEvents(actions.zoomOut)}
+          >
             <Minus size={22} />
           </button>
         </TooltipTrigger>
@@ -45,7 +54,12 @@ export const ZoomControls = ({ actions }: ZoomControlsProps) => {
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button type="button" className="zoom-button" aria-label="Zoom in" {...pressEvents(actions.zoomIn)}>
+          <button
+            type="button"
+            className="zoom-button"
+            aria-label="Zoom in"
+            {...pressEvents(actions.zoomIn)}
+          >
             <Plus size={22} />
           </button>
         </TooltipTrigger>

@@ -110,6 +110,6 @@ Avoid:
 When changing behavior:
 
 - Update the relevant doc file.
-- Update `mvp-checklist.md` if a checklist item is completed.
-- Add decision notes to `decisions.md` when a choice affects future architecture.
-- Add hardware notes to `tenveo-hardware.md` after real-device tests.
+- Update `docs/product/mvp-checklist.md` if a checklist item is completed.
+- Add decision notes to `docs/product/decisions.md` when a choice affects future architecture.
+- Add hardware notes to `docs/hardware/tenveo-hardware.md` after real-device tests.

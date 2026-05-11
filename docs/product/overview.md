@@ -110,7 +110,7 @@ Excluded from the MVP:
 
 Panevo should grow in deliberate phases. Future capabilities such as preview, integrations, hardware surfaces, and automation should remain documented but deferred unless they directly support the current roadmap phase.
 
-Progress through the MVP should be tracked in `docs/mvp-checklist.md`.
+Progress through the MVP should be tracked in `docs/product/mvp-checklist.md`.
 
 Current work should be evaluated with this question:
 

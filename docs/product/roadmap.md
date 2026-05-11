@@ -2,7 +2,7 @@
 
 Panevo should grow in deliberate phases. The first phase is intentionally narrow: reliable PTZ control with a strong architecture foundation.
 
-Use `docs/mvp-checklist.md` as the operational checklist for tracking Phase 1 progress. Use `docs/index.md` as the entrypoint to the full documentation set.
+Use `docs/product/mvp-checklist.md` as the operational checklist for tracking Phase 1 progress. Use `docs/index.md` as the entrypoint to the full documentation set.
 
 ## Phase 1: PTZ MVP
 
@@ -117,7 +117,7 @@ The PTZ MVP is complete when:
 - RTSP or NDI preview.
 - OBS control.
 - RotorHazard integration.
-- Stream Deck, Companion, or Flexbar integrations.
+- Stream Deck, Companion, Flexbar, or physical operator control integrations.
 - Automation workflows.
 - TCP VISCA, unless UDP proves insufficient for the target camera.
 - Replacing the VISCA internals with an npm package.
@@ -190,7 +190,7 @@ Status: active.
 Entry criteria:
 
 - Phase 2B receives a real-camera regression pass on Tenveo hardware. Done.
-- Known Tenveo behavior is recorded in `docs/tenveo-hardware.md`.
+- Known Tenveo behavior is recorded in `docs/hardware/tenveo-hardware.md`.
 - The current implementation is committed or otherwise snapshotted before broad discovery work begins. Done.
 
 Recommended order:
@@ -245,7 +245,7 @@ Exit criteria:
 - Preset remove behaves as documented for ONVIF sync and local-only modes.
 - Camera management, control, and settings views remain usable at common window sizes.
 - `npm run typecheck`, `npm run lint`, and packaging smoke checks pass.
-- `tenveo-hardware.md`, `testing.md`, and `mvp-checklist.md` reflect the latest validation.
+- `docs/hardware/tenveo-hardware.md`, `docs/architecture/testing.md`, and `docs/product/mvp-checklist.md` reflect the latest validation.
 
 ### Phase 2E: VISCA Compatibility
 
@@ -290,14 +290,55 @@ Exit criteria:
 - Keep PTZ control unaffected by stream discovery failures.
 - Document future preview requirements before reintroducing any playback backend.
 
+## Phase 3B: Open Source Project Readiness
+
+Panevo should be prepared as an open source project before larger integrations increase the repository surface area.
+
+Scope:
+
+- Add `LICENSE`.
+- Rewrite `README.md` to be more end-user and contributor friendly.
+- Add screenshots or screenshot placeholders.
+- Add contribution guidance.
+- Add issue templates and pull request template.
+- Add GitHub label taxonomy.
+- Add Renovate configuration.
+- Add Release Drafter configuration.
+- Add GitHub Actions for lint, typecheck, and package smoke checks.
+- Add security/support docs where useful.
+
+Exit criteria:
+
+- A new user can understand what Panevo does and how to run it from the README.
+- A contributor can find architecture, roadmap, and setup docs from the README.
+- CI catches lint and typecheck failures.
+- Dependency update PRs are grouped and labelled.
+- Release notes can be drafted consistently.
+- Issue and PR templates guide useful bug reports and contributions.
+
 ## Phase 4: Production Integrations
 
 - OBS scene and source integration
 - RotorHazard race state integration
 - Stream Deck and Companion support
 - Flexbar touch panel integration investigation
+- Physical operator controls such as HDZero radio, gamepad, joystick, MIDI, keyboard shortcuts, and HID button boxes
 - Race-aware shot presets
 - Event-triggered camera actions
+
+Phase 4 should start with integration management UX and then define a shared Panevo action/event layer. Integrations should emit normalized Panevo actions and consume normalized Panevo state instead of talking directly to VISCA, ONVIF, renderer components, or camera sockets.
+
+Recommended Phase 4 order:
+
+1. Add an Integrations page and shared integration lifecycle model.
+2. Define the Panevo action/event layer and feedback model.
+3. Add OBS read-only connection and scene discovery.
+4. Add OBS scene switch action.
+5. Add Companion/Stream Deck friendly action bridge for core camera actions.
+6. Add a physical input spike using standard Gamepad/HID or MIDI behavior.
+7. Add RotorHazard read-only race state.
+8. Add first guarded trigger/action automation.
+9. Investigate Flexbar once the shared action and feedback model exists.
 
 ## Phase 5: Automation Platform
 

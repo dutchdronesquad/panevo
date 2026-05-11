@@ -1,8 +1,8 @@
-export type CameraProtocol = 'udp' | 'tcp';
-export type CameraControlProtocol = 'visca' | 'onvif';
-export type CameraSyncProtocol = 'none' | 'onvif';
-export type FocusMode = 'auto' | 'manual';
-export type CameraHealthCheckMode = 'visca-inquiry' | 'transport-only';
+export type CameraProtocol = "udp" | "tcp";
+export type CameraControlProtocol = "visca" | "onvif";
+export type CameraSyncProtocol = "none" | "onvif";
+export type FocusMode = "auto" | "manual";
+export type CameraHealthCheckMode = "visca-inquiry" | "transport-only";
 
 export interface CameraPreset {
   id: string;
@@ -133,18 +133,36 @@ export interface PanevoApi {
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;
-  testCameraConfig: (camera: CameraProfile) => Promise<PanevoResult<CameraConnectionStatus>>;
+  testCameraConfig: (
+    camera: CameraProfile,
+  ) => Promise<PanevoResult<CameraConnectionStatus>>;
   checkCameraHealth: () => Promise<PanevoResult<CameraConnectionStatus>>;
-  probeOnvifCamera: (input: OnvifProbeInput) => Promise<PanevoResult<OnvifProbeResult>>;
-  discoverOnvifCameras: (input?: OnvifDiscoveryInput) => Promise<PanevoResult<OnvifDiscoveryResult[]>>;
+  probeOnvifCamera: (
+    input: OnvifProbeInput,
+  ) => Promise<PanevoResult<OnvifProbeResult>>;
+  discoverOnvifCameras: (
+    input?: OnvifDiscoveryInput,
+  ) => Promise<PanevoResult<OnvifDiscoveryResult[]>>;
   panLeft: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   panRight: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   tiltUp: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   tiltDown: (speed: number) => Promise<PanevoResult<CommandResponse>>;
-  moveUpLeft: (panSpeed: number, tiltSpeed: number) => Promise<PanevoResult<CommandResponse>>;
-  moveUpRight: (panSpeed: number, tiltSpeed: number) => Promise<PanevoResult<CommandResponse>>;
-  moveDownLeft: (panSpeed: number, tiltSpeed: number) => Promise<PanevoResult<CommandResponse>>;
-  moveDownRight: (panSpeed: number, tiltSpeed: number) => Promise<PanevoResult<CommandResponse>>;
+  moveUpLeft: (
+    panSpeed: number,
+    tiltSpeed: number,
+  ) => Promise<PanevoResult<CommandResponse>>;
+  moveUpRight: (
+    panSpeed: number,
+    tiltSpeed: number,
+  ) => Promise<PanevoResult<CommandResponse>>;
+  moveDownLeft: (
+    panSpeed: number,
+    tiltSpeed: number,
+  ) => Promise<PanevoResult<CommandResponse>>;
+  moveDownRight: (
+    panSpeed: number,
+    tiltSpeed: number,
+  ) => Promise<PanevoResult<CommandResponse>>;
   zoomIn: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   zoomOut: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   stop: () => Promise<PanevoResult<CommandResponse>>;
@@ -153,7 +171,14 @@ export interface PanevoApi {
   focusIn: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   focusOut: (speed: number) => Promise<PanevoResult<CommandResponse>>;
   focusStop: () => Promise<PanevoResult<CommandResponse>>;
-  recallPreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
-  storePreset: (presetNumber: number, presetLabel?: string) => Promise<PanevoResult<CommandResponse>>;
-  removePreset: (presetNumber: number) => Promise<PanevoResult<CommandResponse>>;
+  recallPreset: (
+    presetNumber: number,
+  ) => Promise<PanevoResult<CommandResponse>>;
+  storePreset: (
+    presetNumber: number,
+    presetLabel?: string,
+  ) => Promise<PanevoResult<CommandResponse>>;
+  removePreset: (
+    presetNumber: number,
+  ) => Promise<PanevoResult<CommandResponse>>;
 }

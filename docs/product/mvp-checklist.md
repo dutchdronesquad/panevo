@@ -6,10 +6,10 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 
 - Check items only after behavior is implemented and verified.
 - If an item is partially true, leave it unchecked and add detail in the relevant doc.
-- When hardware behavior is verified, update `tenveo-hardware.md`.
-- When a technical direction changes, update `decisions.md`.
+- When hardware behavior is verified, update `docs/hardware/tenveo-hardware.md`.
+- When a technical direction changes, update `docs/product/decisions.md`.
 - When a task becomes intentionally deferred, move or duplicate it under Explicitly Deferred with context.
-- Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `roadmap.md`.
+- Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `docs/product/roadmap.md`.
 
 ## Phase 1.1: Foundation
 
@@ -41,7 +41,7 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - [x] Confirm preset numbering behavior.
 - [x] Confirm useful PTZ speed range.
 - [x] Confirm useful zoom speed range.
-- [x] Document Tenveo-specific quirks in `docs/visca.md`.
+- [x] Document Tenveo-specific quirks in `docs/hardware/visca.md`.
 
 ## Phase 1.3: Operator Safety Hardening
 
@@ -106,6 +106,7 @@ Local verification:
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
 - [ ] Flexbar integration.
+- [ ] Physical operator controls such as HDZero radio, gamepad, joystick, MIDI, keyboard shortcuts, and HID button boxes.
 - [ ] Automation workflows.
 - [ ] TCP VISCA support.
 - [ ] Replacing VISCA internals with an npm package.
@@ -223,7 +224,7 @@ Phase 2B hardware regression:
 - [x] Run `npm run lint`.
 - [x] Run `npm run package`.
   - Phase 2D accepted; last local package attempt completed Vite production bundles but Electron Forge packaging failed while resolving `github.com` (`getaddrinfo ENOTFOUND github.com`). Retry with working network access before release distribution.
-- [x] Update `tenveo-hardware.md` with Phase 2D regression results.
+- [x] Update `docs/hardware/tenveo-hardware.md` with Phase 2D regression results.
 
 ## Phase 2E: VISCA Compatibility
 
@@ -248,3 +249,141 @@ Phase 2B hardware regression:
 - [ ] Validate ONVIF RTSP URL discovery against Tenveo hardware after the preview removal.
 - [x] Run `npm run typecheck`.
 - [x] Run `npm run lint`.
+
+## Phase 3B: Open Source Project Readiness
+
+- [ ] Add `LICENSE`.
+- [ ] Rewrite `README.md` for end users and contributors.
+- [ ] Add screenshots or screenshot placeholders.
+- [ ] Link the docs index clearly from the README.
+- [ ] Add `CONTRIBUTING.md`.
+- [ ] Add pull request template.
+- [ ] Add bug report issue template.
+- [ ] Add feature request issue template.
+- [ ] Add hardware validation issue template.
+- [ ] Add GitHub label taxonomy.
+- [ ] Add Renovate configuration.
+- [ ] Add Release Drafter configuration.
+- [ ] Add GitHub Actions workflow for `npm run lint`.
+- [ ] Add GitHub Actions workflow for `npm run typecheck`.
+- [ ] Add package/build smoke workflow where practical.
+- [ ] Add `SECURITY.md` or document why it is deferred.
+- [ ] Add `CODE_OF_CONDUCT.md` or document why it is deferred.
+- [ ] Document release process and versioning expectations.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+## Phase 4: Production Integrations
+
+Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the integration management UX in `docs/integrations/integrations.md`. Do not start with a device-specific or protocol-specific implementation before integrations have a shared lifecycle and the shared Panevo action/event layer exists.
+
+### Phase 4A: Integration Management UI
+
+- [ ] Add `Integrations` sidebar view.
+- [ ] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Physical Controls, Flexbar, and Automation.
+- [ ] Define integration lifecycle states: not configured, configured, enabled, connected, error, disabled.
+- [ ] Add integration cards/list rows with name, description, status, and primary action.
+- [ ] Add shared configure dialog pattern.
+- [ ] Add enable/disable action.
+- [ ] Add test connection action placeholder.
+- [ ] Add reset/remove configuration action.
+- [ ] Store integration configuration separately from camera configuration.
+- [ ] Add `panevo-integrations.json` config service or equivalent integration config storage.
+- [ ] Ensure integrations do not auto-enable after discovery or configuration.
+- [ ] Show integration errors without blocking PTZ control.
+- [ ] Document integration config storage behavior.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+### Phase 4B: Action and Feedback Foundation
+
+- [ ] Define the internal Panevo action model for camera, preset, stop, focus, OBS, and automation actions.
+- [ ] Define the internal Panevo feedback/state model for active camera, connection state, last command, preset list, and integration status.
+- [ ] Add a main-process action dispatcher that routes normalized actions to existing services.
+- [ ] Ensure action dispatch uses existing safety checks, speed clamps, command queues, and active-camera validation.
+- [ ] Add structured action results for integrations.
+- [ ] Document which actions are safe, guarded, or destructive.
+- [ ] Add tests or focused validation for stop, preset recall, preset store, and camera selection through the action layer.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+### Phase 4C: OBS Integration
+
+- [ ] Decide OBS connection strategy and package choice.
+- [ ] Add isolated OBS service boundary in the main process.
+- [ ] Add OBS connection settings.
+- [ ] Add OBS connection test.
+- [ ] Read OBS scene list.
+- [ ] Show OBS connected/disconnected/error state in the UI.
+- [ ] Add normalized action for switching OBS scenes.
+- [ ] Add optional mapping from Panevo preset/action to OBS scene switch.
+- [ ] Ensure OBS disconnect does not affect PTZ control.
+- [ ] Document OBS setup and failure modes.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+### Phase 4D: Companion and Stream Deck Action Bridge
+
+- [ ] Decide whether first support is a local HTTP/WebSocket action bridge, a Companion module, a Stream Deck plugin, or documented keyboard shortcuts.
+- [ ] Expose safe Panevo actions for external triggering.
+- [ ] Support active camera selection.
+- [ ] Support preset recall.
+- [ ] Support emergency stop.
+- [ ] Support guarded preset store.
+- [ ] Provide basic feedback for active camera and connection state.
+- [ ] Prevent external triggers from bypassing safety checks.
+- [ ] Document setup and supported action IDs.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+### Phase 4E: Physical Operator Controls
+
+- [ ] Decide first physical input path: Gamepad API, HID, MIDI, keyboard shortcuts, or another standard OS input route.
+- [ ] Treat HDZero radio as a concrete test case only if it exposes a standard input path.
+- [ ] Add input-device discovery/status.
+- [ ] Add local device mapping profiles.
+- [ ] Map axes to pan/tilt with deadzone, inversion, curves, and speed limits.
+- [ ] Map buttons or switches to zoom, stop, active-camera selection, and preset recall.
+- [ ] Require deadman/enable input before movement commands are sent.
+- [ ] Send stop on disconnect, stale input, app blur, or disabled mapping.
+- [ ] Ensure device input routes through the shared Panevo action layer.
+- [ ] Document physical control safety requirements.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+### Phase 4F: RotorHazard Integration
+
+- [ ] Decide RotorHazard API/event strategy.
+- [ ] Add isolated RotorHazard service boundary in the main process.
+- [ ] Add RotorHazard connection settings.
+- [ ] Read current race state.
+- [ ] Read active heat, pilot, lane, and channel metadata where available.
+- [ ] Normalize race lifecycle events into Panevo events.
+- [ ] Show RotorHazard connected/disconnected/stale state.
+- [ ] Keep RotorHazard assumptions generic and not Dutch Drone Squad specific.
+- [ ] Ensure RotorHazard disconnect pauses race-aware automation.
+- [ ] Document RotorHazard setup and failure modes.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.
+
+### Phase 4G: Flexbar Investigation
+
+- [ ] Confirm whether Flexbar exposes an SDK, plugin API, local protocol, shortcut bridge, or macro bridge.
+- [ ] Decide whether Panevo integrates directly or through generic action triggers.
+- [ ] Define a compact touch-strip action layout for active camera, presets, stop, zoom, OBS actions, and race cues.
+- [ ] Define feedback requirements for labels, colors, active camera, and connection state.
+- [ ] Document macOS and Windows packaging or permission implications.
+- [ ] Avoid Flexbar-specific concepts in Panevo core.
+
+### Phase 4H: First Automation Rules
+
+- [ ] Define minimal trigger/action rule schema.
+- [ ] Add manual enable/disable for automation.
+- [ ] Support triggers from manual action bridge, OBS state, RotorHazard state, or physical input.
+- [ ] Support actions through the shared Panevo action layer.
+- [ ] Show last-triggered rule and last action result.
+- [ ] Ensure stop overrides automation.
+- [ ] Ensure automation cannot run against an unknown or disconnected active camera.
+- [ ] Document automation safety rules.
+- [ ] Run `npm run typecheck`.
+- [ ] Run `npm run lint`.

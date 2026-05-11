@@ -24,23 +24,23 @@ services/visca/
 ## High-Level Client API
 
 ```ts
-connect(config)
-disconnect()
-panLeft(speed)
-panRight(speed)
-tiltUp(speed)
-tiltDown(speed)
-moveUpLeft(panSpeed, tiltSpeed)
-moveUpRight(panSpeed, tiltSpeed)
-moveDownLeft(panSpeed, tiltSpeed)
-moveDownRight(panSpeed, tiltSpeed)
-zoomIn(speed)
-zoomOut(speed)
-stop()
-zoomStop()
-recallPreset(presetNumber)
-storePreset(presetNumber)
-removePreset(presetNumber)
+connect(config);
+disconnect();
+panLeft(speed);
+panRight(speed);
+tiltUp(speed);
+tiltDown(speed);
+moveUpLeft(panSpeed, tiltSpeed);
+moveUpRight(panSpeed, tiltSpeed);
+moveDownLeft(panSpeed, tiltSpeed);
+moveDownRight(panSpeed, tiltSpeed);
+zoomIn(speed);
+zoomOut(speed);
+stop();
+zoomStop();
+recallPreset(presetNumber);
+storePreset(presetNumber);
+removePreset(presetNumber);
 ```
 
 This API represents user intent. It is intentionally not a generic `sendPacket` API.

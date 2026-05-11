@@ -1,4 +1,4 @@
-export type Theme = 'dark' | 'light';
+export type Theme = "dark" | "light";
 
 interface SettingsViewProps {
   theme: Theme;
@@ -14,8 +14,8 @@ export const SettingsView = ({ theme, onThemeChange }: SettingsViewProps) => {
           <button
             type="button"
             className="theme-option"
-            data-active={theme === 'dark' || undefined}
-            onClick={() => onThemeChange('dark')}
+            data-active={theme === "dark" || undefined}
+            onClick={() => onThemeChange("dark")}
           >
             <span className="theme-swatch theme-swatch--dark" />
             Dark
@@ -23,8 +23,8 @@ export const SettingsView = ({ theme, onThemeChange }: SettingsViewProps) => {
           <button
             type="button"
             className="theme-option"
-            data-active={theme === 'light' || undefined}
-            onClick={() => onThemeChange('light')}
+            data-active={theme === "light" || undefined}
+            onClick={() => onThemeChange("light")}
           >
             <span className="theme-swatch theme-swatch--light" />
             Light

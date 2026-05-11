@@ -1,5 +1,5 @@
-declare module 'onvif' {
-  import type { EventEmitter } from 'node:events';
+declare module "onvif" {
+  import type { EventEmitter } from "node:events";
 
   export interface CamOptions {
     hostname: string;
@@ -38,8 +38,15 @@ declare module 'onvif' {
   }
 
   export interface StreamUriOptions {
-    stream?: 'RTP-Unicast' | 'RTP-Multicast';
-    protocol?: 'UDP' | 'TCP' | 'RTSP' | 'HTTP' | 'RtspUnicast' | 'RtspMulticast' | 'RtspOverHttp';
+    stream?: "RTP-Unicast" | "RTP-Multicast";
+    protocol?:
+      | "UDP"
+      | "TCP"
+      | "RTSP"
+      | "HTTP"
+      | "RtspUnicast"
+      | "RtspMulticast"
+      | "RtspOverHttp";
     profileToken?: string;
   }
 
@@ -58,7 +65,7 @@ declare module 'onvif' {
   export interface ImagingSettingsOptions {
     token?: string;
     focus?: {
-      autoFocusMode?: 'AUTO' | 'MANUAL';
+      autoFocusMode?: "AUTO" | "MANUAL";
       defaultSpeed?: number;
       nearLimit?: number;
       farLimit?: number;
@@ -85,7 +92,10 @@ declare module 'onvif' {
   }
 
   export class Cam extends EventEmitter {
-    constructor(options: CamOptions, callback?: (this: Cam, error?: Error | false | null) => void);
+    constructor(
+      options: CamOptions,
+      callback?: (this: Cam, error?: Error | false | null) => void,
+    );
 
     capabilities?: unknown;
     deviceInformation?: unknown;
@@ -94,50 +104,117 @@ declare module 'onvif' {
 
     connect(callback: (this: Cam, error?: Error | false | null) => void): void;
     getDeviceInformation(
-      callback: (this: Cam, error?: Error | false | null, info?: unknown, xml?: string) => void,
+      callback: (
+        this: Cam,
+        error?: Error | false | null,
+        info?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     getNodes(
-      callback: (this: Cam, error?: Error | false | null, nodes?: Record<string, unknown>, xml?: string) => void,
+      callback: (
+        this: Cam,
+        error?: Error | false | null,
+        nodes?: Record<string, unknown>,
+        xml?: string,
+      ) => void,
     ): void;
     getPresets(
-      options: PresetOptions | ((this: Cam, error?: Error | false | null, presets?: Record<string, unknown>, xml?: string) => void),
-      callback?: (this: Cam, error?: Error | false | null, presets?: Record<string, unknown>, xml?: string) => void,
+      options:
+        | PresetOptions
+        | ((
+            this: Cam,
+            error?: Error | false | null,
+            presets?: Record<string, unknown>,
+            xml?: string,
+          ) => void),
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        presets?: Record<string, unknown>,
+        xml?: string,
+      ) => void,
     ): void;
     getStreamUri(
       options: StreamUriOptions,
-      callback?: (this: Cam, error?: Error | false | null, stream?: StreamUriResponse, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        stream?: StreamUriResponse,
+        xml?: string,
+      ) => void,
     ): void;
     continuousMove(
       options: ContinuousMoveOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     stop(
       options?: StopOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     gotoPreset(
       options: PresetOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     setPreset(
       options: PresetOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     removePreset(
       options: PresetOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     setImagingSettings(
       options: ImagingSettingsOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     imagingMove(
       options: ImagingMoveOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
     imagingStop(
       options?: ImagingStopOptions,
-      callback?: (this: Cam, error?: Error | false | null, data?: unknown, xml?: string) => void,
+      callback?: (
+        this: Cam,
+        error?: Error | false | null,
+        data?: unknown,
+        xml?: string,
+      ) => void,
     ): void;
   }
 
@@ -166,7 +243,10 @@ declare module 'onvif' {
   export const Discovery: {
     probe(
       options: DiscoveryOptions,
-      callback: (error: Error[] | Error | null, devices: DiscoveryCam[]) => void,
+      callback: (
+        error: Error[] | Error | null,
+        devices: DiscoveryCam[],
+      ) => void,
     ): void;
   };
 }

@@ -4,13 +4,16 @@ import type {
   CommandResponse,
   FocusMode,
   PanevoResult,
-} from '../../../shared/types';
-import { OnvifPtzClient } from '../onvif/onvif-ptz-client';
-import { ViscaClient } from '../visca/visca-client';
+} from "../../../shared/types";
+import { OnvifPtzClient } from "../onvif/onvif-ptz-client";
+import { ViscaClient } from "../visca/visca-client";
 
 type ViscaCommand = () => Promise<PanevoResult<CommandResponse>>;
 
-const failure = <T = never>(code: string, message: string): PanevoResult<T> => ({
+const failure = <T = never>(
+  code: string,
+  message: string,
+): PanevoResult<T> => ({
   ok: false,
   error: { code, message },
 });
@@ -24,96 +27,150 @@ export class CameraControlService {
     this.onvifPtzClient.disconnect();
   }
 
-  async healthCheck(camera: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
-    if (camera.controlProtocol === 'onvif') {
+  async healthCheck(
+    camera: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
+    if (camera.controlProtocol === "onvif") {
       return this.onvifPtzClient.healthCheck(camera);
     }
 
     return this.viscaClient.healthCheck(camera);
   }
 
-  async passiveHealthCheck(camera: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
-    if (camera.controlProtocol === 'onvif') {
+  async passiveHealthCheck(
+    camera: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
+    if (camera.controlProtocol === "onvif") {
       return this.onvifPtzClient.healthCheck(camera);
     }
 
     return this.viscaClient.passiveHealthCheck(camera);
   }
 
-  panLeft(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  panLeft(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.panLeft(camera, speed));
     }
 
     return this.withVisca(camera, () => this.viscaClient.panLeft(speed));
   }
 
-  panRight(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  panRight(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.panRight(camera, speed));
     }
 
     return this.withVisca(camera, () => this.viscaClient.panRight(speed));
   }
 
-  tiltUp(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  tiltUp(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.tiltUp(camera, speed));
     }
 
     return this.withVisca(camera, () => this.viscaClient.tiltUp(speed));
   }
 
-  tiltDown(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  tiltDown(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.tiltDown(camera, speed));
     }
 
     return this.withVisca(camera, () => this.viscaClient.tiltDown(speed));
   }
 
-  moveUpLeft(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.moveUpLeft(camera, panSpeed, tiltSpeed));
+  moveUpLeft(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.moveUpLeft(camera, panSpeed, tiltSpeed),
+      );
     }
 
-    return this.withVisca(camera, () => this.viscaClient.moveUpLeft(panSpeed, tiltSpeed));
+    return this.withVisca(camera, () =>
+      this.viscaClient.moveUpLeft(panSpeed, tiltSpeed),
+    );
   }
 
-  moveUpRight(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.moveUpRight(camera, panSpeed, tiltSpeed));
+  moveUpRight(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.moveUpRight(camera, panSpeed, tiltSpeed),
+      );
     }
 
-    return this.withVisca(camera, () => this.viscaClient.moveUpRight(panSpeed, tiltSpeed));
+    return this.withVisca(camera, () =>
+      this.viscaClient.moveUpRight(panSpeed, tiltSpeed),
+    );
   }
 
-  moveDownLeft(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.moveDownLeft(camera, panSpeed, tiltSpeed));
+  moveDownLeft(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.moveDownLeft(camera, panSpeed, tiltSpeed),
+      );
     }
 
-    return this.withVisca(camera, () => this.viscaClient.moveDownLeft(panSpeed, tiltSpeed));
+    return this.withVisca(camera, () =>
+      this.viscaClient.moveDownLeft(panSpeed, tiltSpeed),
+    );
   }
 
-  moveDownRight(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.moveDownRight(camera, panSpeed, tiltSpeed));
+  moveDownRight(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.moveDownRight(camera, panSpeed, tiltSpeed),
+      );
     }
 
-    return this.withVisca(camera, () => this.viscaClient.moveDownRight(panSpeed, tiltSpeed));
+    return this.withVisca(camera, () =>
+      this.viscaClient.moveDownRight(panSpeed, tiltSpeed),
+    );
   }
 
-  zoomIn(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  zoomIn(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.zoomIn(camera, speed));
     }
 
     return this.withVisca(camera, () => this.viscaClient.zoomIn(speed));
   }
 
-  zoomOut(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  zoomOut(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.zoomOut(camera, speed));
     }
 
@@ -121,7 +178,7 @@ export class CameraControlService {
   }
 
   stop(camera: CameraProfile): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.stop(camera));
     }
 
@@ -129,31 +186,42 @@ export class CameraControlService {
   }
 
   zoomStop(camera: CameraProfile): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.zoomStop(camera));
     }
 
     return this.withVisca(camera, () => this.viscaClient.zoomStop());
   }
 
-  setFocusMode(camera: CameraProfile, mode: FocusMode): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.setFocusMode(camera, mode));
+  setFocusMode(
+    camera: CameraProfile,
+    mode: FocusMode,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.setFocusMode(camera, mode),
+      );
     }
 
     return this.withVisca(camera, () => this.viscaClient.setFocusMode(mode));
   }
 
-  focusIn(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  focusIn(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.focusIn(camera, speed));
     }
 
     return this.withVisca(camera, () => this.viscaClient.focusIn(speed));
   }
 
-  focusOut(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+  focusOut(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.focusOut(camera, speed));
     }
 
@@ -161,43 +229,69 @@ export class CameraControlService {
   }
 
   focusStop(camera: CameraProfile): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
+    if (camera.controlProtocol === "onvif") {
       return this.withOnvif(camera, (client) => client.focusStop(camera));
     }
 
     return this.withVisca(camera, () => this.viscaClient.focusStop());
   }
 
-  recallPreset(camera: CameraProfile, presetNumber: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.recallPreset(camera, presetNumber));
+  recallPreset(
+    camera: CameraProfile,
+    presetNumber: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.recallPreset(camera, presetNumber),
+      );
     }
 
-    return this.withVisca(camera, () => this.viscaClient.recallPreset(presetNumber));
+    return this.withVisca(camera, () =>
+      this.viscaClient.recallPreset(presetNumber),
+    );
   }
 
-  storePreset(camera: CameraProfile, presetNumber: number, presetLabel?: string): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif') {
-      return this.withOnvif(camera, (client) => client.storePreset(camera, presetNumber, presetLabel));
+  storePreset(
+    camera: CameraProfile,
+    presetNumber: number,
+    presetLabel?: string,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif") {
+      return this.withOnvif(camera, (client) =>
+        client.storePreset(camera, presetNumber, presetLabel),
+      );
     }
 
-    return this.withVisca(camera, () => this.viscaClient.storePreset(presetNumber));
+    return this.withVisca(camera, () =>
+      this.viscaClient.storePreset(presetNumber),
+    );
   }
 
-  removePreset(camera: CameraProfile, presetNumber: number): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol === 'onvif' || camera.syncProtocol === 'onvif') {
+  removePreset(
+    camera: CameraProfile,
+    presetNumber: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol === "onvif" || camera.syncProtocol === "onvif") {
       return this.onvifPtzClient.removePreset(camera, presetNumber);
     }
 
-    return Promise.resolve(failure(
-      'PRESET_DELETE_UNSUPPORTED',
-      'Camera-native preset delete requires ONVIF sync. Remove the Panevo mapping locally instead.',
-    ));
+    return Promise.resolve(
+      failure(
+        "PRESET_DELETE_UNSUPPORTED",
+        "Camera-native preset delete requires ONVIF sync. Remove the Panevo mapping locally instead.",
+      ),
+    );
   }
 
-  private async withVisca(camera: CameraProfile, command: ViscaCommand): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol !== 'visca') {
-      return failure('INVALID_CONTROL_PROTOCOL', 'Expected VISCA control protocol.');
+  private async withVisca(
+    camera: CameraProfile,
+    command: ViscaCommand,
+  ): Promise<PanevoResult<CommandResponse>> {
+    if (camera.controlProtocol !== "visca") {
+      return failure(
+        "INVALID_CONTROL_PROTOCOL",
+        "Expected VISCA control protocol.",
+      );
     }
 
     const connectResult = await this.viscaClient.ensureConnected(camera);
@@ -212,8 +306,10 @@ export class CameraControlService {
     camera: CameraProfile,
     command: (client: OnvifPtzClient) => Promise<PanevoResult<CommandResponse>>,
   ): Promise<PanevoResult<CommandResponse>> {
-    if (camera.controlProtocol !== 'onvif') {
-      return Promise.resolve(failure('INVALID_CONTROL_PROTOCOL', 'Expected ONVIF control protocol.'));
+    if (camera.controlProtocol !== "onvif") {
+      return Promise.resolve(
+        failure("INVALID_CONTROL_PROTOCOL", "Expected ONVIF control protocol."),
+      );
     }
 
     return command(this.onvifPtzClient);

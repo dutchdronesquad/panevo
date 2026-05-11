@@ -1,4 +1,4 @@
-import type { PanevoResult } from '../../../shared/types';
+import type { PanevoResult } from "../../../shared/types";
 
 interface QueueItem<T> {
   name: string;
@@ -9,7 +9,10 @@ interface QueueItem<T> {
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
 
-const failure = <T = never>(code: string, message: string): PanevoResult<T> => ({
+const failure = <T = never>(
+  code: string,
+  message: string,
+): PanevoResult<T> => ({
   ok: false,
   error: { code, message },
 });
@@ -18,7 +21,7 @@ export class CommandQueue {
   private pending: QueueItem<unknown>[] = [];
   private processing = false;
 
-  constructor(private readonly label = 'command') {}
+  constructor(private readonly label = "command") {}
 
   enqueue<T>(
     name: string,
@@ -47,7 +50,12 @@ export class CommandQueue {
   private flushPending(): void {
     while (this.pending.length > 0) {
       const item = this.pending.shift();
-      item?.resolve(failure('COMMAND_CANCELLED', 'Command was cancelled by a newer operator action.'));
+      item?.resolve(
+        failure(
+          "COMMAND_CANCELLED",
+          "Command was cancelled by a newer operator action.",
+        ),
+      );
     }
   }
 
@@ -68,9 +76,17 @@ export class CommandQueue {
       item.resolve(success(result));
     } catch (error) {
       if (item.logFailures) {
-        console.error(`[${this.label}-queue] Command failed: ${item.name}`, error);
+        console.error(
+          `[${this.label}-queue] Command failed: ${item.name}`,
+          error,
+        );
       }
-      item.resolve(failure('COMMAND_FAILED', `${this.label.toUpperCase()} command failed: ${item.name}`));
+      item.resolve(
+        failure(
+          "COMMAND_FAILED",
+          `${this.label.toUpperCase()} command failed: ${item.name}`,
+        ),
+      );
     } finally {
       this.processing = false;
       void this.processNext();
