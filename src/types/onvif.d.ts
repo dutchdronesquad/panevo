@@ -37,6 +37,24 @@ declare module 'onvif' {
     presetName?: string;
   }
 
+  export interface StreamUriOptions {
+    stream?: 'RTP-Unicast' | 'RTP-Multicast';
+    protocol?: 'UDP' | 'TCP' | 'RTSP' | 'HTTP' | 'RtspUnicast' | 'RtspMulticast' | 'RtspOverHttp';
+    profileToken?: string;
+  }
+
+  export interface StreamUriResponse {
+    uri?: string;
+    Uri?: string;
+    invalidAfterConnect?: boolean;
+    invalidAfterReboot?: boolean;
+    timeout?: string;
+    mediaUri?: {
+      uri?: string;
+      Uri?: string;
+    };
+  }
+
   export interface ImagingSettingsOptions {
     token?: string;
     focus?: {
@@ -84,6 +102,10 @@ declare module 'onvif' {
     getPresets(
       options: PresetOptions | ((this: Cam, error?: Error | false | null, presets?: Record<string, unknown>, xml?: string) => void),
       callback?: (this: Cam, error?: Error | false | null, presets?: Record<string, unknown>, xml?: string) => void,
+    ): void;
+    getStreamUri(
+      options: StreamUriOptions,
+      callback?: (this: Cam, error?: Error | false | null, stream?: StreamUriResponse, xml?: string) => void,
     ): void;
     continuousMove(
       options: ContinuousMoveOptions,

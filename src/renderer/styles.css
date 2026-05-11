@@ -1181,6 +1181,7 @@ input:disabled {
 .presets-column {
   display: grid;
   align-content: start;
+  gap: 16px;
 }
 
 .control-empty-state {

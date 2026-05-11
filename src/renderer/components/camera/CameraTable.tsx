@@ -137,19 +137,21 @@ const createCameraDraft = (cameraNumber: number): CameraProfile => ({
   presets: [],
 });
 
-const sanitizeCamera = (camera: CameraProfile, fallbackLabel: string): CameraProfile => ({
-  ...camera,
-  label: camera.label.trim().slice(0, 40) || fallbackLabel,
-  ipAddress: camera.ipAddress.trim(),
-  port: Math.max(1, Math.min(65535, Math.round(camera.port || 52381))),
-  onvifPort: Math.max(1, Math.min(65535, Math.round(camera.onvifPort || 8080))),
-  onvifUsername: camera.onvifUsername.trim().slice(0, 80),
-  onvifPassword: camera.onvifPassword,
-  controlProtocol: camera.controlProtocol === 'onvif' ? 'onvif' : 'visca',
-  syncProtocol: camera.syncProtocol === 'none' ? 'none' : 'onvif',
-  protocol: camera.protocol === 'tcp' ? 'tcp' : 'udp',
-  healthCheckMode: 'visca-inquiry',
-});
+const sanitizeCamera = (camera: CameraProfile, fallbackLabel: string): CameraProfile => {
+  return {
+    ...camera,
+    label: camera.label.trim().slice(0, 40) || fallbackLabel,
+    ipAddress: camera.ipAddress.trim(),
+    port: Math.max(1, Math.min(65535, Math.round(camera.port || 52381))),
+    onvifPort: Math.max(1, Math.min(65535, Math.round(camera.onvifPort || 8080))),
+    onvifUsername: camera.onvifUsername.trim().slice(0, 80),
+    onvifPassword: camera.onvifPassword,
+    controlProtocol: camera.controlProtocol === 'onvif' ? 'onvif' : 'visca',
+    syncProtocol: camera.syncProtocol === 'none' ? 'none' : 'onvif',
+    protocol: camera.protocol === 'tcp' ? 'tcp' : 'udp',
+    healthCheckMode: 'visca-inquiry',
+  };
+};
 
 interface CameraSettingsDialogProps {
   camera: CameraProfile;
@@ -676,7 +678,7 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
               </Button>
               {probeResult && (
                 <span className="camera-dialog-hint">
-                  {formatDeviceName(probeResult)} · {probeResult.profiles.length} profiles · {probeResult.presets.length} presets
+                  {formatDeviceName(probeResult)} · {probeResult.profiles.length} profiles · {probeResult.streamUris.length} streams · {probeResult.presets.length} presets
                 </span>
               )}
             </div>
@@ -987,6 +989,9 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
                 <span className={result.profiles.length > 0 ? 'onvif-chip onvif-chip--ok' : 'onvif-chip'}>
                   {result.profiles.length} media profiles
                 </span>
+                <span className={result.streamUris.length > 0 ? 'onvif-chip onvif-chip--ok' : 'onvif-chip'}>
+                  {result.streamUris.length} RTSP streams
+                </span>
               </div>
 
               <div className="onvif-result-grid">
@@ -1009,6 +1014,10 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
                 <div>
                   <span>Presets</span>
                   <strong>{result.presets.length}</strong>
+                </div>
+                <div>
+                  <span>Streams</span>
+                  <strong>{result.streamUris.length}</strong>
                 </div>
               </div>
 
@@ -1033,6 +1042,20 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
                         {profile.hasPtz && <span>PTZ</span>}
                         {profile.hasVideoSource && <span>Source</span>}
                         {profile.hasVideoEncoder && <span>Encoder</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {result.streamUris.length > 0 && (
+                <div className="onvif-profiles">
+                  <div className="onvif-subtitle">RTSP streams</div>
+                  {result.streamUris.map((stream) => (
+                    <div key={`${stream.profileToken}-${stream.uri}`} className="onvif-profile-row">
+                      <div>
+                        <span>{stream.profileName || 'Unnamed stream'}</span>
+                        <small>{stream.uri}</small>
                       </div>
                     </div>
                   ))}

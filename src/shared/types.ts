@@ -75,6 +75,12 @@ export interface OnvifProfileInfo {
   hasVideoEncoder: boolean;
 }
 
+export interface OnvifStreamUriInfo {
+  profileToken: string;
+  profileName?: string;
+  uri: string;
+}
+
 export interface OnvifPresetInfo {
   token: string;
   name?: string;
@@ -98,6 +104,7 @@ export interface OnvifProbeResult {
   device?: OnvifDeviceInfo;
   capabilities: OnvifCapabilitySummary;
   profiles: OnvifProfileInfo[];
+  streamUris: OnvifStreamUriInfo[];
   presets: OnvifPresetInfo[];
   ptzNodeCount: number;
 }

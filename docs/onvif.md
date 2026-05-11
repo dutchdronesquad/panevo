@@ -90,10 +90,11 @@ The renderer receives a normalized `OnvifProbeResult`:
 - `device`
 - `capabilities`
 - `profiles`
+- `streamUris`
 - `presets`
 - `ptzNodeCount`
 
-This result is intentionally not a `CameraProfile`. ONVIF metadata can help create or enrich a Panevo camera profile later, but it should not overwrite VISCA configuration automatically.
+This result is intentionally not a `CameraProfile`. ONVIF metadata can help create or enrich a Panevo camera profile, but VISCA transport settings remain owned by the local camera profile.
 
 ## Renderer Usage
 
@@ -104,15 +105,16 @@ The camera-management view keeps the latest ONVIF probe result in renderer state
 - It automatically refreshes after saving ONVIF endpoint or credential changes.
 - It is rebuilt automatically after app startup for cameras with an ONVIF control route or stored ONVIF credentials.
 - It resets when config is imported or relevant ONVIF profile settings change, then probes again where possible.
-- It does not write camera-discovered metadata back into the local config automatically.
+- It writes selected camera-discovered metadata back into the local config when it improves the profile safely: device label and numeric presets.
 - It imports numeric preset tokens automatically during successful ONVIF camera creation and can also import them explicitly from the probe dialog.
+- It shows discovered RTSP stream URIs in probe diagnostics, but RTSP is not used as the active Panevo preview source.
 - This preset import capability is ONVIF-specific. VISCA profiles can still recall and store preset numbers, but they cannot generically import a camera preset list or camera preset names.
 
 The ONVIF probe dialog presents:
 
 - Camera endpoint and authentication fields.
 - Manufacturer/model identity when available.
-- Firmware, serial, PTZ node count, and media profile count.
+- Firmware, serial, PTZ node count, media profile count, RTSP stream count, and presets.
 - High-level capability chips.
 - Media profile rows with PTZ/source/encoder flags.
 - Preset rows when the camera reports preset tokens.

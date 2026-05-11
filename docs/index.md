@@ -10,8 +10,8 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 - `architecture.md`: process boundaries, source layout, IPC, services, and extension points.
 - `visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
 - `ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
-- `integrations.md`: future OBS, RotorHazard, operator-surface, preview, and automation integrations.
-- `preview.md`: preview architecture, transport strategy, non-goals, and validation rules.
+- `integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
+- `preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
 - `onvif.md`: ONVIF package decision, probing scope, authentication notes, and failure modes.
 - `development.md`: local development workflow, commands, conventions, and repo practices.
 - `testing.md`: manual and technical validation strategy for the MVP.
@@ -29,19 +29,18 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Current Active Phase
 
-The active phase is Phase 2E: VISCA Compatibility.
+The active phase is Phase 3: Stream Discovery and External Preview.
 
 Current priority:
 
-1. Decide whether Panevo keeps its local VISCA implementation or evaluates a third-party VISCA package.
-2. Document Tenveo VISCA quirks and possible camera-profile compatibility flags.
-3. Decide whether TCP VISCA is useful for the tested camera.
-4. Keep VISCA live control stable while ONVIF remains the sync/discovery route.
-5. Prepare the preview architecture without coupling preview to camera control.
+1. Keep in-app preview out of the active codebase.
+2. Keep ONVIF RTSP stream discovery available for diagnostics and future integrations.
+3. Keep external tools such as OBS, NDI Studio Monitor, or camera-native tooling responsible for video preview.
+4. Validate that removing preview code does not affect PTZ control or ONVIF probing.
 
 Still deferred:
 
-- NDI preview.
+- In-app video preview.
 - Multi-camera preview grid.
 - OBS control.
 - RotorHazard integration.

@@ -73,6 +73,14 @@ const syncPresetEntriesFromOnvif = (camera: CameraProfile, result: OnvifProbeRes
     .sort((a, b) => a.cameraPreset - b.cameraPreset);
 };
 
+const syncCameraFromOnvifProbe = (camera: CameraProfile, result: OnvifProbeResult): CameraProfile => {
+  return {
+    ...camera,
+    label: [result.device?.manufacturer, result.device?.model].filter(Boolean).join(' ').trim() || camera.label,
+    presets: camera.syncProtocol === 'onvif' ? syncPresetEntriesFromOnvif(camera, result) : camera.presets,
+  };
+};
+
 const presetsChanged = (current: CameraPreset[], next: CameraPreset[]): boolean => {
   if (current.length !== next.length) {
     return true;
@@ -624,11 +632,7 @@ export const App = () => {
           });
 
           if (probeResult.ok) {
-            nextCamera = {
-              ...nextCamera,
-              label: [probeResult.data.device?.manufacturer, probeResult.data.device?.model].filter(Boolean).join(' ').trim() || nextCamera.label,
-              presets: syncPresetEntriesFromOnvif(nextCamera, probeResult.data),
-            };
+            nextCamera = syncCameraFromOnvifProbe(nextCamera, probeResult.data);
 
             setOnvifProbeStates((current) => ({
               ...current,
@@ -685,10 +689,13 @@ export const App = () => {
         }
 
         const result = await probeOnvifCamera(camera, auth, { showError: true });
-        if (result.ok && result.result && camera.syncProtocol === 'onvif') {
-          const nextPresets = syncPresetEntriesFromOnvif(camera, result.result);
-          if (presetsChanged(camera.presets, nextPresets)) {
-            await saveConfigState(updateCameraProfile(config, { ...camera, presets: nextPresets }));
+        if (result.ok && result.result) {
+          const nextCamera = syncCameraFromOnvifProbe(camera, result.result);
+          if (
+            presetsChanged(camera.presets, nextCamera.presets) ||
+            camera.label !== nextCamera.label
+          ) {
+            await saveConfigState(updateCameraProfile(config, nextCamera));
           }
         }
 

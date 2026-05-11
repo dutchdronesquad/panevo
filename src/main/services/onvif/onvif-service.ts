@@ -8,6 +8,7 @@ import type {
   OnvifProbeInput,
   OnvifProbeResult,
   OnvifProfileInfo,
+  OnvifStreamUriInfo,
   PanevoResult,
 } from '../../../shared/types';
 
@@ -195,6 +196,50 @@ const normalizePresets = (presets: Record<string, unknown>): OnvifPresetInfo[] =
     });
 };
 
+const normalizeStreamUri = (stream: unknown): string | undefined => {
+  if (typeof stream === 'string' && stream.trim().length > 0) {
+    return stream.trim();
+  }
+
+  if (!isRecord(stream)) {
+    return undefined;
+  }
+
+  const directUri = firstString(stream, ['uri', 'Uri']);
+  if (directUri) {
+    return directUri;
+  }
+
+  const mediaUri = stream.mediaUri ?? stream.MediaUri;
+  if (isRecord(mediaUri)) {
+    return firstString(mediaUri, ['uri', 'Uri']);
+  }
+
+  return undefined;
+};
+
+const addCredentialsToStreamUri = (uri: string, username?: string, password?: string): string => {
+  if (!username) {
+    return uri;
+  }
+
+  try {
+    const url = new URL(uri);
+    if (url.username || (url.protocol !== 'rtsp:' && url.protocol !== 'rtsps:')) {
+      return uri;
+    }
+
+    url.username = username;
+    if (password) {
+      url.password = password;
+    }
+
+    return url.toString();
+  } catch {
+    return uri;
+  }
+};
+
 const normalizeDiscoveryDevice = (device: unknown): OnvifDiscoveryResult | null => {
   if (!isRecord(device)) {
     return null;
@@ -274,6 +319,8 @@ export class OnvifService {
       const cam = await this.connect(normalized.data);
       const device = await this.getDeviceInformation(cam);
       const ptzNodes = await this.getPtzNodes(cam);
+      const profiles = summarizeProfiles(cam.profiles);
+      const streamUris = await this.getStreamUris(cam, profiles, normalized.data);
       const presets = await this.getPresets(cam);
 
       return success({
@@ -284,7 +331,8 @@ export class OnvifService {
         message: 'ONVIF probe succeeded.',
         device,
         capabilities: summarizeCapabilities(cam.capabilities),
-        profiles: summarizeProfiles(cam.profiles),
+        profiles,
+        streamUris,
         presets,
         ptzNodeCount: Object.keys(ptzNodes).length,
       });
@@ -357,5 +405,51 @@ export class OnvifService {
         resolve(normalizePresets(presets ?? {}));
       });
     });
+  }
+
+  private async getStreamUris(
+    cam: Cam,
+    profiles: OnvifProfileInfo[],
+    input: NormalizedOnvifProbeInput,
+  ): Promise<OnvifStreamUriInfo[]> {
+    const candidates = profiles.length > 0 ? profiles : [{ token: '', name: undefined }];
+    const results: OnvifStreamUriInfo[] = [];
+    const seen = new Set<string>();
+
+    for (const profile of candidates) {
+      const uri = await new Promise<string | undefined>((resolve) => {
+        cam.getStreamUri(
+          {
+            protocol: 'RTSP',
+            ...(profile.token ? { profileToken: profile.token } : {}),
+          },
+          function handleStreamUri(error, stream) {
+            if (error) {
+              console.warn(
+                `[ONVIF] Stream URI probe failed for profile ${profile.token || 'default'}:`,
+                errorMessage(error),
+              );
+              resolve(undefined);
+              return;
+            }
+
+            resolve(normalizeStreamUri(stream));
+          },
+        );
+      });
+
+      if (!uri || seen.has(uri)) {
+        continue;
+      }
+
+      seen.add(uri);
+      results.push({
+        profileToken: profile.token,
+        profileName: profile.name,
+        uri: addCredentialsToStreamUri(uri, input.username, input.password),
+      });
+    }
+
+    return results;
   }
 }
