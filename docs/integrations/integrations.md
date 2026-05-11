@@ -2,7 +2,7 @@
 
 Panevo's MVP only implements PTZ control. Future integrations should be added as separate services with clear IPC contracts and renderer-facing abstractions.
 
-Use `integration-use-cases.md` as the product guardrail before implementing any integration. This file describes integration categories and architecture direction; the use-case document defines the minimum useful operator workflows.
+Use `docs/integrations/integration-use-cases.md` as the product guardrail before implementing any integration. This file describes integration categories and architecture direction; the use-case document defines the minimum useful operator workflows.
 
 ## Integration Principles
 

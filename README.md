@@ -24,9 +24,9 @@ Implemented:
 
 Progress is tracked in:
 
-- `docs/roadmap.md`
-- `docs/mvp-checklist.md`
-- `docs/tenveo-hardware.md`
+- `docs/product/roadmap.md`
+- `docs/product/mvp-checklist.md`
+- `docs/hardware/tenveo-hardware.md`
 
 ## Screenshots
 
@@ -113,18 +113,21 @@ Start with `docs/index.md`.
 
 Key documents:
 
-- `docs/overview.md`: product vision, scope, principles, MVP discipline, and glossary.
-- `docs/architecture.md`: process boundaries, data flow, services, IPC, safety architecture, and future extension points.
-- `docs/roadmap.md`: phased roadmap and MVP completion criteria.
-- `docs/mvp-checklist.md`: operational checklist for tracking implementation progress.
-- `docs/visca.md`: VISCA client architecture, command strategy, vendor variance, package strategy, and discovery notes.
-- `docs/onvif.md`: ONVIF package decision, probing, control, auth, preset sync, and failure modes.
-- `docs/ui-ux.md`: operator-focused design direction and UI framework strategy.
-- `docs/integrations.md`: deferred OBS, RotorHazard, operator-surface, preview, and automation integration plans.
-- `docs/development.md`: local development workflow and coding conventions.
-- `docs/testing.md`: static, mock, hardware, safety, and packaging validation strategy.
-- `docs/tenveo-hardware.md`: Tenveo hardware test notes and open questions.
-- `docs/decisions.md`: architectural decisions and deferred choices.
+- `docs/product/overview.md`: product vision, scope, principles, MVP discipline, and glossary.
+- `docs/architecture/architecture.md`: process boundaries, data flow, services, IPC, safety architecture, and future extension points.
+- `docs/product/roadmap.md`: phased roadmap and MVP completion criteria.
+- `docs/product/mvp-checklist.md`: operational checklist for tracking implementation progress.
+- `docs/hardware/visca.md`: VISCA client architecture, command strategy, vendor variance, package strategy, and discovery notes.
+- `docs/hardware/onvif.md`: ONVIF package decision, probing, control, auth, preset sync, and failure modes.
+- `docs/ui/ui-ux.md`: operator-focused design direction and UI framework strategy.
+- `docs/integrations/integrations.md`: deferred OBS, RotorHazard, operator-surface, preview, and automation integration plans.
+- `docs/integrations/integration-use-cases.md`: minimum useful workflows for future integrations.
+- `docs/integrations/preview.md`: external preview and ONVIF RTSP discovery scope.
+- `docs/project/open-source-readiness.md`: repository readiness, CI, labels, Renovate, and release automation.
+- `docs/architecture/development.md`: local development workflow and coding conventions.
+- `docs/architecture/testing.md`: static, mock, hardware, safety, and packaging validation strategy.
+- `docs/hardware/tenveo-hardware.md`: Tenveo hardware test notes and open questions.
+- `docs/product/decisions.md`: architectural decisions and deferred choices.
 
 ## Roadmap Ideas
 

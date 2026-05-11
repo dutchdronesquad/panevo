@@ -2,7 +2,7 @@
 
 Panevo should grow in deliberate phases. The first phase is intentionally narrow: reliable PTZ control with a strong architecture foundation.
 
-Use `docs/mvp-checklist.md` as the operational checklist for tracking Phase 1 progress. Use `docs/index.md` as the entrypoint to the full documentation set.
+Use `docs/product/mvp-checklist.md` as the operational checklist for tracking Phase 1 progress. Use `docs/index.md` as the entrypoint to the full documentation set.
 
 ## Phase 1: PTZ MVP
 
@@ -190,7 +190,7 @@ Status: active.
 Entry criteria:
 
 - Phase 2B receives a real-camera regression pass on Tenveo hardware. Done.
-- Known Tenveo behavior is recorded in `docs/tenveo-hardware.md`.
+- Known Tenveo behavior is recorded in `docs/hardware/tenveo-hardware.md`.
 - The current implementation is committed or otherwise snapshotted before broad discovery work begins. Done.
 
 Recommended order:
@@ -245,7 +245,7 @@ Exit criteria:
 - Preset remove behaves as documented for ONVIF sync and local-only modes.
 - Camera management, control, and settings views remain usable at common window sizes.
 - `npm run typecheck`, `npm run lint`, and packaging smoke checks pass.
-- `tenveo-hardware.md`, `testing.md`, and `mvp-checklist.md` reflect the latest validation.
+- `docs/hardware/tenveo-hardware.md`, `docs/architecture/testing.md`, and `docs/product/mvp-checklist.md` reflect the latest validation.
 
 ### Phase 2E: VISCA Compatibility
 

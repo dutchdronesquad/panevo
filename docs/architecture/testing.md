@@ -54,7 +54,7 @@ Validate:
 - Speed range.
 - Preset numbering.
 
-Record results in `tenveo-hardware.md`.
+Record results in `docs/hardware/tenveo-hardware.md`.
 
 ## Safety Validation
 

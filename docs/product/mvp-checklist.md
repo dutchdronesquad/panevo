@@ -6,10 +6,10 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 
 - Check items only after behavior is implemented and verified.
 - If an item is partially true, leave it unchecked and add detail in the relevant doc.
-- When hardware behavior is verified, update `tenveo-hardware.md`.
-- When a technical direction changes, update `decisions.md`.
+- When hardware behavior is verified, update `docs/hardware/tenveo-hardware.md`.
+- When a technical direction changes, update `docs/product/decisions.md`.
 - When a task becomes intentionally deferred, move or duplicate it under Explicitly Deferred with context.
-- Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `roadmap.md`.
+- Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `docs/product/roadmap.md`.
 
 ## Phase 1.1: Foundation
 
@@ -41,7 +41,7 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - [x] Confirm preset numbering behavior.
 - [x] Confirm useful PTZ speed range.
 - [x] Confirm useful zoom speed range.
-- [x] Document Tenveo-specific quirks in `docs/visca.md`.
+- [x] Document Tenveo-specific quirks in `docs/hardware/visca.md`.
 
 ## Phase 1.3: Operator Safety Hardening
 
@@ -224,7 +224,7 @@ Phase 2B hardware regression:
 - [x] Run `npm run lint`.
 - [x] Run `npm run package`.
   - Phase 2D accepted; last local package attempt completed Vite production bundles but Electron Forge packaging failed while resolving `github.com` (`getaddrinfo ENOTFOUND github.com`). Retry with working network access before release distribution.
-- [x] Update `tenveo-hardware.md` with Phase 2D regression results.
+- [x] Update `docs/hardware/tenveo-hardware.md` with Phase 2D regression results.
 
 ## Phase 2E: VISCA Compatibility
 
@@ -275,7 +275,7 @@ Phase 2B hardware regression:
 
 ## Phase 4: Production Integrations
 
-Phase 4 should be driven by `docs/integration-use-cases.md` and the integration management UX in `docs/integrations.md`. Do not start with a device-specific or protocol-specific implementation before integrations have a shared lifecycle and the shared Panevo action/event layer exists.
+Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the integration management UX in `docs/integrations/integrations.md`. Do not start with a device-specific or protocol-specific implementation before integrations have a shared lifecycle and the shared Panevo action/event layer exists.
 
 ### Phase 4A: Integration Management UI
 

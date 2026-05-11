@@ -4,28 +4,45 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 
 ## Start Here
 
-- `overview.md`: product vision, scope, principles, and MVP discipline.
-- `roadmap.md`: phased delivery plan and MVP completion criteria.
-- `mvp-checklist.md`: operational checklist for tracking progress.
-- `architecture.md`: process boundaries, source layout, IPC, services, and extension points.
-- `visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
-- `ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
-- `open-source-readiness.md`: repository readiness, README direction, CI, labels, Renovate, and release automation.
-- `integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
-- `integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, physical controls, and automation.
-- `preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
-- `onvif.md`: ONVIF package decision, probing scope, authentication notes, and failure modes.
-- `development.md`: local development workflow, commands, conventions, and repo practices.
-- `testing.md`: manual and technical validation strategy for the MVP.
-- `tenveo-hardware.md`: Tenveo-specific hardware validation notes and open questions.
-- `decisions.md`: architectural decisions and deferred choices.
+Product:
+
+- `product/overview.md`: product vision, scope, principles, and MVP discipline.
+- `product/roadmap.md`: phased delivery plan and MVP completion criteria.
+- `product/mvp-checklist.md`: operational checklist for tracking progress.
+- `product/decisions.md`: architectural decisions and deferred choices.
+
+Architecture:
+
+- `architecture/architecture.md`: process boundaries, source layout, IPC, services, and extension points.
+- `architecture/development.md`: local development workflow, commands, conventions, and repo practices.
+- `architecture/testing.md`: manual and technical validation strategy for the MVP.
+
+Hardware and protocols:
+
+- `hardware/visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
+- `hardware/onvif.md`: ONVIF package decision, probing scope, authentication notes, and failure modes.
+- `hardware/tenveo-hardware.md`: Tenveo-specific hardware validation notes and open questions.
+
+UI:
+
+- `ui/ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
+
+Integrations:
+
+- `integrations/integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
+- `integrations/integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, physical controls, and automation.
+- `integrations/preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
+
+Project:
+
+- `project/open-source-readiness.md`: repository readiness, README direction, CI, labels, Renovate, and release automation.
 
 ## Documentation Rules
 
 - Keep docs aligned with tested behavior.
 - Record assumptions explicitly.
 - Prefer updating existing decisions over burying conflicting guidance in new files.
-- Use `mvp-checklist.md` to track Phase 1 progress.
+- Use `product/mvp-checklist.md` to track progress.
 - Keep future ideas documented, but do not treat them as active scope until the roadmap phase changes.
 - If code behavior changes, update docs in the same task.
 
