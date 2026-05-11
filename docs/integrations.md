@@ -2,6 +2,8 @@
 
 Panevo's MVP only implements PTZ control. Future integrations should be added as separate services with clear IPC contracts and renderer-facing abstractions.
 
+Use `integration-use-cases.md` as the product guardrail before implementing any integration. This file describes integration categories and architecture direction; the use-case document defines the minimum useful operator workflows.
+
 ## Integration Principles
 
 - Integrations should map to Panevo actions, not raw VISCA packets.
@@ -67,9 +69,49 @@ Potential features:
 - Stream Deck plugin investigation
 - Status feedback on hardware keys
 - Flexbar integration investigation
+- Physical input devices such as gamepads, joysticks, MIDI controllers, button boxes, keyboards, or radio-style controllers
 - Touch panel pages for camera banks, presets, zoom, and race-aware actions
 
 Panevo should expose stable action concepts before committing to a plugin API.
+
+## Physical Operator Controls
+
+Physical operator controls are a broad integration category for devices that let an operator move cameras or trigger production actions without relying on mouse input.
+
+Potential device classes:
+
+- HDZero radio connected over Bluetooth, if it exposes a standard input path.
+- Gamepad or joystick.
+- MIDI controller.
+- Keyboard shortcut surface.
+- Custom HID button box.
+- Future generic control panels.
+
+HDZero radio is a useful test idea because it matches drone-racing workflows, but Panevo should not create a direct HDZero-specific camera-control path first. The preferred model is:
+
+```text
+Physical input device
+  -> device adapter
+  -> normalized Panevo action
+  -> CameraControlService / automation / OBS
+```
+
+Minimum useful behavior:
+
+- Map axes to pan and tilt.
+- Map buttons or switches to zoom, stop, active-camera selection, and preset recall.
+- Support a deadman/enable input before movement commands are sent.
+- Stop movement when the device disconnects, the app loses focus, or input becomes stale.
+- Keep per-device mapping profiles local and optional.
+
+Safety constraints:
+
+- Do not assume a flight radio is safe to share with camera operation during an active race.
+- Do not bypass speed clamps, command queues, active-camera checks, or emergency stop handling.
+- Unknown devices should start unmapped.
+- Device disconnect must result in stop where a movement command may be active.
+
+This category should be implemented only after a shared Panevo action layer exists.
 
 ### Flexbar
 

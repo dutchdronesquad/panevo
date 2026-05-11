@@ -11,6 +11,7 @@ This folder is the long-term project memory for Panevo. It exists to keep produc
 - `visca.md`: VISCA over IP architecture, command strategy, queueing, package strategy, and discovery notes.
 - `ui-ux.md`: visual direction, UI framework strategy, interaction rules, and operator-focused design guidance.
 - `integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
+- `integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, physical controls, and automation.
 - `preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
 - `onvif.md`: ONVIF package decision, probing scope, authentication notes, and failure modes.
 - `development.md`: local development workflow, commands, conventions, and repo practices.
@@ -44,7 +45,7 @@ Still deferred:
 - Multi-camera preview grid.
 - OBS control.
 - RotorHazard integration.
-- Stream Deck, Companion, and Flexbar integrations.
+- Stream Deck, Companion, Flexbar, and physical operator control integrations.
 - Automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.

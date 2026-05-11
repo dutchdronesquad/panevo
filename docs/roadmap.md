@@ -117,7 +117,7 @@ The PTZ MVP is complete when:
 - RTSP or NDI preview.
 - OBS control.
 - RotorHazard integration.
-- Stream Deck, Companion, or Flexbar integrations.
+- Stream Deck, Companion, Flexbar, or physical operator control integrations.
 - Automation workflows.
 - TCP VISCA, unless UDP proves insufficient for the target camera.
 - Replacing the VISCA internals with an npm package.
@@ -296,8 +296,22 @@ Exit criteria:
 - RotorHazard race state integration
 - Stream Deck and Companion support
 - Flexbar touch panel integration investigation
+- Physical operator controls such as HDZero radio, gamepad, joystick, MIDI, keyboard shortcuts, and HID button boxes
 - Race-aware shot presets
 - Event-triggered camera actions
+
+Phase 4 should start by defining a shared Panevo action/event layer. Integrations should emit normalized Panevo actions and consume normalized Panevo state instead of talking directly to VISCA, ONVIF, renderer components, or camera sockets.
+
+Recommended Phase 4 order:
+
+1. Define the Panevo action/event layer and feedback model.
+2. Add OBS read-only connection and scene discovery.
+3. Add OBS scene switch action.
+4. Add Companion/Stream Deck friendly action bridge for core camera actions.
+5. Add a physical input spike using standard Gamepad/HID or MIDI behavior.
+6. Add RotorHazard read-only race state.
+7. Add first guarded trigger/action automation.
+8. Investigate Flexbar once the shared action and feedback model exists.
 
 ## Phase 5: Automation Platform
 
