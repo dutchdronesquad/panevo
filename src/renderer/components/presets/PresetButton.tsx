@@ -1,5 +1,5 @@
-import { MoreHorizontal, Save, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { MoreHorizontal, Save, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,12 +9,28 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/renderer/components/ui/alert-dialog';
-import { Button } from '@/renderer/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/renderer/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/renderer/components/ui/dropdown-menu';
-import { Input } from '@/renderer/components/ui/input';
-import type { CameraControlProtocol, CameraPreset, CameraSyncProtocol } from '../../types/camera';
+} from "@/renderer/components/ui/alert-dialog";
+import { Button } from "@/renderer/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/renderer/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/renderer/components/ui/dropdown-menu";
+import { Input } from "@/renderer/components/ui/input";
+import type {
+  CameraControlProtocol,
+  CameraPreset,
+  CameraSyncProtocol,
+} from "../../types/camera";
 
 interface PresetButtonProps {
   preset: CameraPreset;
@@ -22,11 +38,22 @@ interface PresetButtonProps {
   syncProtocol: CameraSyncProtocol;
   onRecall: (preset: number) => void;
   onStore: (preset: number, label?: string) => void;
-  onUpdate: (id: string, updates: Partial<Pick<CameraPreset, 'label' | 'cameraPreset'>>) => void;
+  onUpdate: (
+    id: string,
+    updates: Partial<Pick<CameraPreset, "label" | "cameraPreset">>,
+  ) => void;
   onDelete: (id: string) => void;
 }
 
-export const PresetButton = ({ preset, controlProtocol, syncProtocol, onRecall, onStore, onUpdate, onDelete }: PresetButtonProps) => {
+export const PresetButton = ({
+  preset,
+  controlProtocol,
+  syncProtocol,
+  onRecall,
+  onStore,
+  onUpdate,
+  onDelete,
+}: PresetButtonProps) => {
   const [draftLabel, setDraftLabel] = useState(preset.label);
   const [editOpen, setEditOpen] = useState(false);
   const [storeOpen, setStoreOpen] = useState(false);
@@ -40,7 +67,7 @@ export const PresetButton = ({ preset, controlProtocol, syncProtocol, onRecall, 
     onUpdate(preset.id, { label: draftLabel });
   };
 
-  const num = String(preset.cameraPreset).padStart(2, '0');
+  const num = String(preset.cameraPreset).padStart(2, "0");
 
   return (
     <div className="preset-tile">
@@ -66,9 +93,18 @@ export const PresetButton = ({ preset, controlProtocol, syncProtocol, onRecall, 
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditOpen(true)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => setStoreOpen(true)}>Store position</DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>Remove</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setStoreOpen(true)}>
+              Store position
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => setDeleteOpen(true)}
+            >
+              Remove
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -80,18 +116,29 @@ export const PresetButton = ({ preset, controlProtocol, syncProtocol, onRecall, 
           </DialogHeader>
           <form
             className="preset-dialog-form"
-            onSubmit={(e) => { e.preventDefault(); commitChanges(); setEditOpen(false); }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              commitChanges();
+              setEditOpen(false);
+            }}
           >
             <p className="preset-dialog-note">
-              Saving syncs to the camera when supported by the active control protocol.
+              Saving syncs to the camera when supported by the active control
+              protocol.
             </p>
             <label className="field">
               <span>Label</span>
-              <Input value={draftLabel} maxLength={32} onChange={(e) => setDraftLabel(e.target.value)} />
+              <Input
+                value={draftLabel}
+                maxLength={32}
+                onChange={(e) => setDraftLabel(e.target.value)}
+              />
             </label>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline" type="button">Cancel</Button>
+                <Button variant="outline" type="button">
+                  Cancel
+                </Button>
               </DialogClose>
               <Button type="submit">Save</Button>
             </DialogFooter>
@@ -104,12 +151,15 @@ export const PresetButton = ({ preset, controlProtocol, syncProtocol, onRecall, 
           <AlertDialogHeader>
             <AlertDialogTitle>Store camera position?</AlertDialogTitle>
             <AlertDialogDescription>
-              Writes the current camera position to preset {preset.cameraPreset} ({preset.label}). This overwrites the camera-native preset.
+              Writes the current camera position to preset {preset.cameraPreset}{" "}
+              ({preset.label}). This overwrites the camera-native preset.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onStore(preset.cameraPreset, preset.label)}>
+            <AlertDialogAction
+              onClick={() => onStore(preset.cameraPreset, preset.label)}
+            >
               <Save size={14} />
               Store
             </AlertDialogAction>
@@ -122,16 +172,19 @@ export const PresetButton = ({ preset, controlProtocol, syncProtocol, onRecall, 
           <AlertDialogHeader>
             <AlertDialogTitle>Remove preset?</AlertDialogTitle>
             <AlertDialogDescription>
-              {controlProtocol === 'onvif'
+              {controlProtocol === "onvif"
                 ? `Removes ${preset.label} from Panevo and deletes the camera-native ONVIF preset.`
-                : syncProtocol === 'onvif'
-                ? `Removes ${preset.label} from Panevo and deletes the camera-native ONVIF preset.`
-                : `Removes ${preset.label} from Panevo only. VISCA cannot import or reliably delete camera-native presets on this camera.`}
+                : syncProtocol === "onvif"
+                  ? `Removes ${preset.label} from Panevo and deletes the camera-native ONVIF preset.`
+                  : `Removes ${preset.label} from Panevo only. VISCA cannot import or reliably delete camera-native presets on this camera.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => onDelete(preset.id)}>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => onDelete(preset.id)}
+            >
               <Trash2 size={14} />
               Remove
             </AlertDialogAction>

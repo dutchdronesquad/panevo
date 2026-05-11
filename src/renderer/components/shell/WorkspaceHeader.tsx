@@ -1,5 +1,5 @@
-import { OctagonX } from 'lucide-react';
-import { Button } from '@/renderer/components/ui/button';
+import { OctagonX } from "lucide-react";
+import { Button } from "@/renderer/components/ui/button";
 
 interface WorkspaceHeaderProps {
   title: string;
@@ -7,7 +7,11 @@ interface WorkspaceHeaderProps {
   emergencyStopDisabled?: boolean;
 }
 
-export const WorkspaceHeader = ({ title, onEmergencyStop, emergencyStopDisabled = false }: WorkspaceHeaderProps) => {
+export const WorkspaceHeader = ({
+  title,
+  onEmergencyStop,
+  emergencyStopDisabled = false,
+}: WorkspaceHeaderProps) => {
   return (
     <header className="workspace-header">
       <h2>{title}</h2>
@@ -16,7 +20,11 @@ export const WorkspaceHeader = ({ title, onEmergencyStop, emergencyStopDisabled 
         size="sm"
         className="emergency-stop-button"
         disabled={emergencyStopDisabled}
-        title={emergencyStopDisabled ? 'No active camera' : 'Stop active camera movement'}
+        title={
+          emergencyStopDisabled
+            ? "No active camera"
+            : "Stop active camera movement"
+        }
         onClick={onEmergencyStop}
       >
         <OctagonX size={13} />

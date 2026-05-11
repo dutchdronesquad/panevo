@@ -1,6 +1,12 @@
-import { Cam } from 'onvif';
-import type { CameraConnectionStatus, CameraProfile, CommandResponse, FocusMode, PanevoResult } from '../../../shared/types';
-import { CommandQueue } from '../camera-control/command-queue';
+import { Cam } from "onvif";
+import type {
+  CameraConnectionStatus,
+  CameraProfile,
+  CommandResponse,
+  FocusMode,
+  PanevoResult,
+} from "../../../shared/types";
+import { CommandQueue } from "../camera-control/command-queue";
 
 const DEFAULT_TIMEOUT_MS = 5000;
 const MAX_PAN_TILT_SPEED = 24;
@@ -9,17 +15,20 @@ const MAX_FOCUS_SPEED = 8;
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
 
-const failure = <T = never>(code: string, message: string): PanevoResult<T> => ({
+const failure = <T = never>(
+  code: string,
+  message: string,
+): PanevoResult<T> => ({
   ok: false,
   error: { code, message },
 });
 
 const isErrorLike = (error: unknown): error is { message: string } => {
-  return typeof error === 'object' && error !== null && 'message' in error;
+  return typeof error === "object" && error !== null && "message" in error;
 };
 
 const errorMessage = (error: unknown): string => {
-  if (isErrorLike(error) && typeof error.message === 'string') {
+  if (isErrorLike(error) && typeof error.message === "string") {
     return error.message;
   }
 
@@ -41,7 +50,7 @@ const scaleSpeed = (speed: number, max: number): number => {
 export class OnvifPtzClient {
   private cam: Cam | null = null;
   private targetKey: string | null = null;
-  private readonly queue = new CommandQueue('onvif');
+  private readonly queue = new CommandQueue("onvif");
 
   disconnect(): void {
     this.cam = null;
@@ -49,7 +58,9 @@ export class OnvifPtzClient {
     this.queue.clear();
   }
 
-  async healthCheck(camera: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+  async healthCheck(
+    camera: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     const connectResult = await this.ensureConnected(camera);
     if (!connectResult.ok) {
       return connectResult;
@@ -58,33 +69,77 @@ export class OnvifPtzClient {
     return success({
       connected: true,
       protocol: camera.protocol,
-      controlProtocol: 'onvif',
-      message: 'Camera connected through ONVIF control endpoint.',
+      controlProtocol: "onvif",
+      message: "Camera connected through ONVIF control endpoint.",
       checkedAt: new Date().toISOString(),
       responseVerified: true,
     });
   }
 
-  panLeft(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.move(camera, 'pan-left', -scaleSpeed(speed, MAX_PAN_TILT_SPEED), 0, 0, { onlySendPanTilt: true });
-  }
-
-  panRight(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.move(camera, 'pan-right', scaleSpeed(speed, MAX_PAN_TILT_SPEED), 0, 0, { onlySendPanTilt: true });
-  }
-
-  tiltUp(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.move(camera, 'tilt-up', 0, scaleSpeed(speed, MAX_PAN_TILT_SPEED), 0, { onlySendPanTilt: true });
-  }
-
-  tiltDown(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.move(camera, 'tilt-down', 0, -scaleSpeed(speed, MAX_PAN_TILT_SPEED), 0, { onlySendPanTilt: true });
-  }
-
-  moveUpLeft(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
+  panLeft(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     return this.move(
       camera,
-      'move-up-left',
+      "pan-left",
+      -scaleSpeed(speed, MAX_PAN_TILT_SPEED),
+      0,
+      0,
+      { onlySendPanTilt: true },
+    );
+  }
+
+  panRight(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.move(
+      camera,
+      "pan-right",
+      scaleSpeed(speed, MAX_PAN_TILT_SPEED),
+      0,
+      0,
+      { onlySendPanTilt: true },
+    );
+  }
+
+  tiltUp(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.move(
+      camera,
+      "tilt-up",
+      0,
+      scaleSpeed(speed, MAX_PAN_TILT_SPEED),
+      0,
+      { onlySendPanTilt: true },
+    );
+  }
+
+  tiltDown(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.move(
+      camera,
+      "tilt-down",
+      0,
+      -scaleSpeed(speed, MAX_PAN_TILT_SPEED),
+      0,
+      { onlySendPanTilt: true },
+    );
+  }
+
+  moveUpLeft(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.move(
+      camera,
+      "move-up-left",
       -scaleSpeed(panSpeed, MAX_PAN_TILT_SPEED),
       scaleSpeed(tiltSpeed, MAX_PAN_TILT_SPEED),
       0,
@@ -92,10 +147,14 @@ export class OnvifPtzClient {
     );
   }
 
-  moveUpRight(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
+  moveUpRight(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     return this.move(
       camera,
-      'move-up-right',
+      "move-up-right",
       scaleSpeed(panSpeed, MAX_PAN_TILT_SPEED),
       scaleSpeed(tiltSpeed, MAX_PAN_TILT_SPEED),
       0,
@@ -103,10 +162,14 @@ export class OnvifPtzClient {
     );
   }
 
-  moveDownLeft(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
+  moveDownLeft(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     return this.move(
       camera,
-      'move-down-left',
+      "move-down-left",
       -scaleSpeed(panSpeed, MAX_PAN_TILT_SPEED),
       -scaleSpeed(tiltSpeed, MAX_PAN_TILT_SPEED),
       0,
@@ -114,10 +177,14 @@ export class OnvifPtzClient {
     );
   }
 
-  moveDownRight(camera: CameraProfile, panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
+  moveDownRight(
+    camera: CameraProfile,
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     return this.move(
       camera,
-      'move-down-right',
+      "move-down-right",
       scaleSpeed(panSpeed, MAX_PAN_TILT_SPEED),
       -scaleSpeed(tiltSpeed, MAX_PAN_TILT_SPEED),
       0,
@@ -125,71 +192,129 @@ export class OnvifPtzClient {
     );
   }
 
-  zoomIn(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.move(camera, 'zoom-in', 0, 0, scaleSpeed(speed, MAX_ZOOM_SPEED), { onlySendZoom: true });
+  zoomIn(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.move(
+      camera,
+      "zoom-in",
+      0,
+      0,
+      scaleSpeed(speed, MAX_ZOOM_SPEED),
+      { onlySendZoom: true },
+    );
   }
 
-  zoomOut(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.move(camera, 'zoom-out', 0, 0, -scaleSpeed(speed, MAX_ZOOM_SPEED), { onlySendZoom: true });
+  zoomOut(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.move(
+      camera,
+      "zoom-out",
+      0,
+      0,
+      -scaleSpeed(speed, MAX_ZOOM_SPEED),
+      { onlySendZoom: true },
+    );
   }
 
   stop(camera: CameraProfile): Promise<PanevoResult<CommandResponse>> {
-    return this.stopMovement(camera, 'stop', { panTilt: true, zoom: true });
+    return this.stopMovement(camera, "stop", { panTilt: true, zoom: true });
   }
 
   zoomStop(camera: CameraProfile): Promise<PanevoResult<CommandResponse>> {
-    return this.stopMovement(camera, 'zoom-stop', { zoom: true });
+    return this.stopMovement(camera, "zoom-stop", { zoom: true });
   }
 
-  setFocusMode(camera: CameraProfile, mode: FocusMode): Promise<PanevoResult<CommandResponse>> {
-    const autoFocusMode = mode === 'auto' ? 'AUTO' : 'MANUAL';
+  setFocusMode(
+    camera: CameraProfile,
+    mode: FocusMode,
+  ): Promise<PanevoResult<CommandResponse>> {
+    const autoFocusMode = mode === "auto" ? "AUTO" : "MANUAL";
     return this.sendCommand(camera, `focus-${mode}`, (cam) =>
-      this.invoke('setImagingSettings', (callback) =>
-        cam.setImagingSettings({
-          focus: { autoFocusMode },
-        }, callback),
+      this.invoke("setImagingSettings", (callback) =>
+        cam.setImagingSettings(
+          {
+            focus: { autoFocusMode },
+          },
+          callback,
+        ),
       ),
     );
   }
 
-  focusIn(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.focusMove(camera, 'focus-in', scaleSpeed(speed, MAX_FOCUS_SPEED));
+  focusIn(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.focusMove(
+      camera,
+      "focus-in",
+      scaleSpeed(speed, MAX_FOCUS_SPEED),
+    );
   }
 
-  focusOut(camera: CameraProfile, speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.focusMove(camera, 'focus-out', -scaleSpeed(speed, MAX_FOCUS_SPEED));
+  focusOut(
+    camera: CameraProfile,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.focusMove(
+      camera,
+      "focus-out",
+      -scaleSpeed(speed, MAX_FOCUS_SPEED),
+    );
   }
 
   focusStop(camera: CameraProfile): Promise<PanevoResult<CommandResponse>> {
     return this.sendCommand(
       camera,
-      'focus-stop',
-      (cam) => this.invoke('imagingStop', (callback) => cam.imagingStop({}, callback)),
+      "focus-stop",
+      (cam) =>
+        this.invoke("imagingStop", (callback) => cam.imagingStop({}, callback)),
       { flushPending: true },
     );
   }
 
-  recallPreset(camera: CameraProfile, presetNumber: number): Promise<PanevoResult<CommandResponse>> {
+  recallPreset(
+    camera: CameraProfile,
+    presetNumber: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     const presetToken = String(Math.round(clamp(presetNumber, 1, 255)));
     return this.sendCommand(camera, `recall-preset-${presetToken}`, (cam) =>
-      this.invoke('gotoPreset', (callback) => cam.gotoPreset({ preset: presetToken }, callback)),
+      this.invoke("gotoPreset", (callback) =>
+        cam.gotoPreset({ preset: presetToken }, callback),
+      ),
     );
   }
 
-  storePreset(camera: CameraProfile, presetNumber: number, presetLabel?: string): Promise<PanevoResult<CommandResponse>> {
+  storePreset(
+    camera: CameraProfile,
+    presetNumber: number,
+    presetLabel?: string,
+  ): Promise<PanevoResult<CommandResponse>> {
     const presetToken = String(Math.round(clamp(presetNumber, 1, 255)));
-    const presetName = typeof presetLabel === 'string' && presetLabel.trim().length > 0
-      ? presetLabel.trim().slice(0, 32)
-      : `Preset ${presetToken}`;
+    const presetName =
+      typeof presetLabel === "string" && presetLabel.trim().length > 0
+        ? presetLabel.trim().slice(0, 32)
+        : `Preset ${presetToken}`;
     return this.sendCommand(camera, `store-preset-${presetToken}`, (cam) =>
-      this.invoke('setPreset', (callback) => cam.setPreset({ presetToken, presetName }, callback)),
+      this.invoke("setPreset", (callback) =>
+        cam.setPreset({ presetToken, presetName }, callback),
+      ),
     );
   }
 
-  removePreset(camera: CameraProfile, presetNumber: number): Promise<PanevoResult<CommandResponse>> {
+  removePreset(
+    camera: CameraProfile,
+    presetNumber: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     const presetToken = String(Math.round(clamp(presetNumber, 1, 255)));
     return this.sendCommand(camera, `remove-preset-${presetToken}`, (cam) =>
-      this.invoke('removePreset', (callback) => cam.removePreset({ presetToken }, callback)),
+      this.invoke("removePreset", (callback) =>
+        cam.removePreset({ presetToken }, callback),
+      ),
     );
   }
 
@@ -202,14 +327,17 @@ export class OnvifPtzClient {
     options: { onlySendPanTilt?: boolean; onlySendZoom?: boolean },
   ): Promise<PanevoResult<CommandResponse>> {
     return this.sendCommand(camera, name, (cam) =>
-      this.invoke('continuousMove', (callback) =>
-        cam.continuousMove({
-          x,
-          y,
-          zoom,
-          onlySendPanTilt: options.onlySendPanTilt,
-          onlySendZoom: options.onlySendZoom,
-        }, callback),
+      this.invoke("continuousMove", (callback) =>
+        cam.continuousMove(
+          {
+            x,
+            y,
+            zoom,
+            onlySendPanTilt: options.onlySendPanTilt,
+            onlySendZoom: options.onlySendZoom,
+          },
+          callback,
+        ),
       ),
     );
   }
@@ -222,17 +350,24 @@ export class OnvifPtzClient {
     return this.sendCommand(
       camera,
       name,
-      (cam) => this.invoke('stop', (callback) => cam.stop(options, callback)),
+      (cam) => this.invoke("stop", (callback) => cam.stop(options, callback)),
       { flushPending: true },
     );
   }
 
-  private focusMove(camera: CameraProfile, name: string, speed: number): Promise<PanevoResult<CommandResponse>> {
+  private focusMove(
+    camera: CameraProfile,
+    name: string,
+    speed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
     return this.sendCommand(camera, name, (cam) =>
-      this.invoke('imagingMove', (callback) =>
-        cam.imagingMove({
-          continuous: { speed },
-        }, callback),
+      this.invoke("imagingMove", (callback) =>
+        cam.imagingMove(
+          {
+            continuous: { speed },
+          },
+          callback,
+        ),
       ),
     );
   }
@@ -252,7 +387,7 @@ export class OnvifPtzClient {
       name,
       async () => {
         if (!this.cam) {
-          throw new Error('Missing ONVIF client');
+          throw new Error("Missing ONVIF client");
         }
 
         await execute(this.cam);
@@ -266,7 +401,9 @@ export class OnvifPtzClient {
     );
   }
 
-  private ensureConnected(camera: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+  private ensureConnected(
+    camera: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     const validation = this.validateCamera(camera);
     if (!validation.ok) {
       return Promise.resolve(validation);
@@ -277,37 +414,49 @@ export class OnvifPtzClient {
       camera.onvifPort,
       camera.onvifUsername,
       camera.onvifPassword,
-    ].join('|');
+    ].join("|");
 
     if (this.cam && this.targetKey === targetKey) {
-      return Promise.resolve(success({
-        connected: true,
-        protocol: camera.protocol,
-        controlProtocol: 'onvif',
-        message: 'Connected',
-      }));
+      return Promise.resolve(
+        success({
+          connected: true,
+          protocol: camera.protocol,
+          controlProtocol: "onvif",
+          message: "Connected",
+        }),
+      );
     }
 
     return this.connect(camera, targetKey);
   }
 
-  private connect(camera: CameraProfile, targetKey: string): Promise<PanevoResult<CameraConnectionStatus>> {
+  private connect(
+    camera: CameraProfile,
+    targetKey: string,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     return new Promise((resolve) => {
       const failConnect = (error: unknown) => {
         this.cam = null;
         this.targetKey = null;
-        resolve(failure('ONVIF_CONTROL_CONNECT_FAILED', `ONVIF control connect failed: ${errorMessage(error)}`));
+        resolve(
+          failure(
+            "ONVIF_CONTROL_CONNECT_FAILED",
+            `ONVIF control connect failed: ${errorMessage(error)}`,
+          ),
+        );
       };
 
       const onConnect = (cam: Cam) => {
         this.cam = cam;
         this.targetKey = targetKey;
-        resolve(success({
-          connected: true,
-          protocol: camera.protocol,
-          controlProtocol: 'onvif',
-          message: `ONVIF control ready for ${camera.ipAddress}:${camera.onvifPort}`,
-        }));
+        resolve(
+          success({
+            connected: true,
+            protocol: camera.protocol,
+            controlProtocol: "onvif",
+            message: `ONVIF control ready for ${camera.ipAddress}:${camera.onvifPort}`,
+          }),
+        );
       };
 
       new Cam(
@@ -355,20 +504,22 @@ export class OnvifPtzClient {
     });
   }
 
-  private validateCamera(camera: CameraProfile): PanevoResult<CameraConnectionStatus> {
+  private validateCamera(
+    camera: CameraProfile,
+  ): PanevoResult<CameraConnectionStatus> {
     if (!camera.ipAddress.trim()) {
-      return failure('INVALID_CONFIG', 'Camera IP address is required.');
+      return failure("INVALID_CONFIG", "Camera IP address is required.");
     }
 
     if (!Number.isFinite(camera.onvifPort)) {
-      return failure('INVALID_CONFIG', 'ONVIF port is required.');
+      return failure("INVALID_CONFIG", "ONVIF port is required.");
     }
 
     return success({
       connected: true,
       protocol: camera.protocol,
-      controlProtocol: 'onvif',
-      message: 'ONVIF config valid.',
+      controlProtocol: "onvif",
+      message: "ONVIF config valid.",
     });
   }
 }

@@ -1,9 +1,15 @@
-import { Download, Plus, Trash2, Upload } from 'lucide-react';
-import { Button } from '@/renderer/components/ui/button';
-import { Input } from '@/renderer/components/ui/input';
-import { Label } from '@/renderer/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/renderer/components/ui/select';
-import type { CameraProfile } from '../../types/camera';
+import { Download, Plus, Trash2, Upload } from "lucide-react";
+import { Button } from "@/renderer/components/ui/button";
+import { Input } from "@/renderer/components/ui/input";
+import { Label } from "@/renderer/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/renderer/components/ui/select";
+import type { CameraProfile } from "../../types/camera";
 
 interface CameraProfileSelectorProps {
   cameras: CameraProfile[];
@@ -26,7 +32,8 @@ export const CameraProfileSelector = ({
   onImport,
   onExport,
 }: CameraProfileSelectorProps) => {
-  const activeCamera = cameras.find((c) => c.id === activeCameraId) ?? cameras[0];
+  const activeCamera =
+    cameras.find((c) => c.id === activeCameraId) ?? cameras[0];
   const hasActiveCamera = Boolean(activeCamera);
 
   return (
@@ -34,8 +41,14 @@ export const CameraProfileSelector = ({
       <div className="card-title">Camera profiles</div>
       <div className="form-stack">
         <div className="field">
-          <Label htmlFor="active-camera" className="field-label">Active camera</Label>
-          <Select value={activeCamera?.id ?? ''} onValueChange={onSelect} disabled={!hasActiveCamera}>
+          <Label htmlFor="active-camera" className="field-label">
+            Active camera
+          </Label>
+          <Select
+            value={activeCamera?.id ?? ""}
+            onValueChange={onSelect}
+            disabled={!hasActiveCamera}
+          >
             <SelectTrigger id="active-camera" className="w-full">
               <SelectValue placeholder="No cameras configured" />
             </SelectTrigger>
@@ -50,10 +63,12 @@ export const CameraProfileSelector = ({
         </div>
 
         <div className="field">
-          <Label htmlFor="camera-label" className="field-label">Camera label</Label>
+          <Label htmlFor="camera-label" className="field-label">
+            Camera label
+          </Label>
           <Input
             id="camera-label"
-            value={activeCamera?.label ?? ''}
+            value={activeCamera?.label ?? ""}
             maxLength={40}
             disabled={!hasActiveCamera}
             onChange={(e) => {
@@ -69,7 +84,11 @@ export const CameraProfileSelector = ({
             <Plus size={15} />
             Add
           </Button>
-          <Button variant="destructive" disabled={!activeCamera} onClick={() => activeCamera && onDelete(activeCamera.id)}>
+          <Button
+            variant="destructive"
+            disabled={!activeCamera}
+            onClick={() => activeCamera && onDelete(activeCamera.id)}
+          >
             <Trash2 size={15} />
             Remove
           </Button>

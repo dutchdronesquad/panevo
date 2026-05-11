@@ -1,7 +1,7 @@
-import { CommandQueue } from '../camera-control/command-queue';
+import { CommandQueue } from "../camera-control/command-queue";
 
 export class ViscaQueue extends CommandQueue {
   constructor() {
-    super('visca');
+    super("visca");
   }
 }

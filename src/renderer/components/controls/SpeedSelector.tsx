@@ -1,4 +1,4 @@
-import { Slider } from '@/renderer/components/ui/slider';
+import { Slider } from "@/renderer/components/ui/slider";
 
 interface SpeedSelectorProps {
   label: string;
@@ -8,7 +8,13 @@ interface SpeedSelectorProps {
   onChange: (value: number) => void;
 }
 
-export const SpeedSelector = ({ label, value, min, max, onChange }: SpeedSelectorProps) => {
+export const SpeedSelector = ({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: SpeedSelectorProps) => {
   return (
     <label className="speed-control">
       <span>

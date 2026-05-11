@@ -1,7 +1,7 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Plugin } from "vite";
 
 const disablePreloadCodeSplitting = (): Plugin => ({
-  name: 'panevo:disable-preload-code-splitting',
+  name: "panevo:disable-preload-code-splitting",
   configResolved(config) {
     const output = config.build.rolldownOptions.output;
     const outputs = Array.isArray(output) ? output : [output];

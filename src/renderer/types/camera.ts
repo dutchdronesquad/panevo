@@ -1,4 +1,4 @@
-import type { OnvifProbeResult } from '../../shared/types';
+import type { OnvifProbeResult } from "../../shared/types";
 
 export type {
   CameraConfig,
@@ -19,9 +19,9 @@ export type {
   OnvifPresetInfo,
   OnvifProfileInfo,
   PanevoResult,
-} from '../../shared/types';
+} from "../../shared/types";
 
-export type OnvifProbeStatus = 'unknown' | 'verified' | 'failed';
+export type OnvifProbeStatus = "unknown" | "verified" | "failed";
 
 export interface OnvifProbeState {
   status: OnvifProbeStatus;

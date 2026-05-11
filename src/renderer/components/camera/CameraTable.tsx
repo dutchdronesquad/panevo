@@ -1,6 +1,16 @@
-import { Download, LoaderCircle, Pencil, PlugZap, Plus, Radar, Search, Trash2, Upload } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import {
+  Download,
+  LoaderCircle,
+  Pencil,
+  PlugZap,
+  Plus,
+  Radar,
+  Search,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,8 +20,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/renderer/components/ui/alert-dialog';
-import { Button } from '@/renderer/components/ui/button';
+} from "@/renderer/components/ui/alert-dialog";
+import { Button } from "@/renderer/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -20,17 +30,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/renderer/components/ui/dialog';
-import { Input } from '@/renderer/components/ui/input';
-import { Label } from '@/renderer/components/ui/label';
+} from "@/renderer/components/ui/dialog";
+import { Input } from "@/renderer/components/ui/input";
+import { Label } from "@/renderer/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/renderer/components/ui/select';
-import type { CameraProfile, OnvifDiscoveryResult, OnvifProbeResult, OnvifProbeState } from '../../types/camera';
+} from "@/renderer/components/ui/select";
+import type {
+  CameraProfile,
+  OnvifDiscoveryResult,
+  OnvifProbeResult,
+  OnvifProbeState,
+} from "../../types/camera";
 
 interface CameraTableProps {
   cameras: CameraProfile[];
@@ -40,7 +55,10 @@ interface CameraTableProps {
   onAdd: (camera: CameraProfile) => Promise<CameraTableActionResult>;
   onUpdate: (camera: CameraProfile) => void;
   onTest: (cameraId: string) => void;
-  onProbeOnvif: (cameraId: string, auth?: OnvifProbeAuth) => Promise<OnvifProbeActionResult>;
+  onProbeOnvif: (
+    cameraId: string,
+    auth?: OnvifProbeAuth,
+  ) => Promise<OnvifProbeActionResult>;
   onImportOnvifPresets: (cameraId: string, result: OnvifProbeResult) => void;
   onRename: (cameraId: string, label: string) => void;
   onDelete: (cameraId: string) => void;
@@ -103,8 +121,11 @@ const InlineName = ({ value, onSave }: InlineNameProps) => {
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') { e.preventDefault(); commit(); }
-          if (e.key === 'Escape') cancel();
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+          if (e.key === "Escape") cancel();
         }}
         onClick={(e) => e.stopPropagation()}
       />
@@ -115,7 +136,10 @@ const InlineName = ({ value, onSave }: InlineNameProps) => {
     <span
       className="camera-name-text"
       title="Click to rename"
-      onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setEditing(true);
+      }}
     >
       {value}
     </span>
@@ -125,31 +149,37 @@ const InlineName = ({ value, onSave }: InlineNameProps) => {
 const createCameraDraft = (cameraNumber: number): CameraProfile => ({
   id: `camera-${Date.now()}`,
   label: `Camera ${cameraNumber}`,
-  ipAddress: '',
+  ipAddress: "",
   port: 52381,
   onvifPort: 8080,
-  onvifUsername: '',
-  onvifPassword: '',
-  controlProtocol: 'visca',
-  syncProtocol: 'onvif',
-  protocol: 'udp',
-  healthCheckMode: 'visca-inquiry',
+  onvifUsername: "",
+  onvifPassword: "",
+  controlProtocol: "visca",
+  syncProtocol: "onvif",
+  protocol: "udp",
+  healthCheckMode: "visca-inquiry",
   presets: [],
 });
 
-const sanitizeCamera = (camera: CameraProfile, fallbackLabel: string): CameraProfile => {
+const sanitizeCamera = (
+  camera: CameraProfile,
+  fallbackLabel: string,
+): CameraProfile => {
   return {
     ...camera,
     label: camera.label.trim().slice(0, 40) || fallbackLabel,
     ipAddress: camera.ipAddress.trim(),
     port: Math.max(1, Math.min(65535, Math.round(camera.port || 52381))),
-    onvifPort: Math.max(1, Math.min(65535, Math.round(camera.onvifPort || 8080))),
+    onvifPort: Math.max(
+      1,
+      Math.min(65535, Math.round(camera.onvifPort || 8080)),
+    ),
     onvifUsername: camera.onvifUsername.trim().slice(0, 80),
     onvifPassword: camera.onvifPassword,
-    controlProtocol: camera.controlProtocol === 'onvif' ? 'onvif' : 'visca',
-    syncProtocol: camera.syncProtocol === 'none' ? 'none' : 'onvif',
-    protocol: camera.protocol === 'tcp' ? 'tcp' : 'udp',
-    healthCheckMode: 'visca-inquiry',
+    controlProtocol: camera.controlProtocol === "onvif" ? "onvif" : "visca",
+    syncProtocol: camera.syncProtocol === "none" ? "none" : "onvif",
+    protocol: camera.protocol === "tcp" ? "tcp" : "udp",
+    healthCheckMode: "visca-inquiry",
   };
 };
 
@@ -158,7 +188,13 @@ interface CameraSettingsDialogProps {
   onSave: (camera: CameraProfile) => void;
 }
 
-const FieldGroup = ({ title, children }: { title: string; children: ReactNode }) => (
+const FieldGroup = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) => (
   <div className="camera-dialog-group">
     <div className="camera-dialog-group-title">{title}</div>
     <div className="camera-dialog-group-body">{children}</div>
@@ -166,10 +202,18 @@ const FieldGroup = ({ title, children }: { title: string; children: ReactNode })
 );
 
 const usesOnvifSync = (camera: CameraProfile): boolean => {
-  return camera.syncProtocol === 'onvif' || camera.controlProtocol === 'onvif';
+  return camera.syncProtocol === "onvif" || camera.controlProtocol === "onvif";
 };
 
-const OnvifStatus = ({ state, port, enabled }: { state?: OnvifProbeState; port: number; enabled: boolean }) => {
+const OnvifStatus = ({
+  state,
+  port,
+  enabled,
+}: {
+  state?: OnvifProbeState;
+  port: number;
+  enabled: boolean;
+}) => {
   if (!enabled) {
     return (
       <div className="onvif-table-status">
@@ -194,8 +238,8 @@ const OnvifStatus = ({ state, port, enabled }: { state?: OnvifProbeState; port: 
     );
   }
 
-  if (state.status === 'verified') {
-    const label = state.result ? formatDeviceName(state.result) : 'Verified';
+  if (state.status === "verified") {
+    const label = state.result ? formatDeviceName(state.result) : "Verified";
 
     return (
       <div className="onvif-table-status onvif-table-status--ok">
@@ -208,7 +252,7 @@ const OnvifStatus = ({ state, port, enabled }: { state?: OnvifProbeState; port: 
     );
   }
 
-  if (state.status === 'unknown') {
+  if (state.status === "unknown") {
     return (
       <div className="onvif-table-status">
         <span className="onvif-status-dot onvif-status-dot--unknown" />
@@ -225,22 +269,28 @@ const OnvifStatus = ({ state, port, enabled }: { state?: OnvifProbeState; port: 
       <span className="onvif-status-dot onvif-status-dot--failed" />
       <div>
         <span>Unavailable</span>
-        <small>{state.checkedAt ? 'Probe failed' : `:${port}`}</small>
+        <small>{state.checkedAt ? "Probe failed" : `:${port}`}</small>
       </div>
     </div>
   );
 };
 
 const formatControlTarget = (camera: CameraProfile): string => {
-  if (camera.controlProtocol === 'onvif') {
+  if (camera.controlProtocol === "onvif") {
     return `ONVIF · ${camera.onvifPort}`;
   }
 
   return `VISCA · ${camera.protocol.toUpperCase()} · ${camera.port}`;
 };
 
-const labelFromProbeResult = (result: OnvifProbeResult, fallback: string): string => {
-  const label = [result.device?.manufacturer, result.device?.model].filter(Boolean).join(' ').trim();
+const labelFromProbeResult = (
+  result: OnvifProbeResult,
+  fallback: string,
+): string => {
+  const label = [result.device?.manufacturer, result.device?.model]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
   return label || fallback;
 };
 
@@ -248,7 +298,10 @@ const hasNumericPresets = (result: OnvifProbeResult): boolean => {
   return result.presets.some((preset) => preset.numericPreset !== undefined);
 };
 
-const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => {
+const CameraSettingsDialog = ({
+  camera,
+  onSave,
+}: CameraSettingsDialogProps) => {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(camera);
 
@@ -258,7 +311,10 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
     }
   }, [camera, open]);
 
-  const updateDraft = <Key extends keyof CameraProfile>(key: Key, value: CameraProfile[Key]) => {
+  const updateDraft = <Key extends keyof CameraProfile>(
+    key: Key,
+    value: CameraProfile[Key],
+  ) => {
     setDraft((current) => ({ ...current, [key]: value }));
   };
 
@@ -302,7 +358,7 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
                   id={`camera-label-${camera.id}`}
                   value={draft.label}
                   maxLength={40}
-                  onChange={(event) => updateDraft('label', event.target.value)}
+                  onChange={(event) => updateDraft("label", event.target.value)}
                 />
               </div>
 
@@ -312,7 +368,9 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
                   id={`camera-ip-${camera.id}`}
                   value={draft.ipAddress}
                   placeholder="192.168.1.120"
-                  onChange={(event) => updateDraft('ipAddress', event.target.value)}
+                  onChange={(event) =>
+                    updateDraft("ipAddress", event.target.value)
+                  }
                 />
               </div>
             </div>
@@ -324,12 +382,22 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
                 <Label>Live control</Label>
                 <Select
                   value={draft.controlProtocol}
-                  onValueChange={(value) => updateDraft('controlProtocol', value as CameraProfile['controlProtocol'])}
+                  onValueChange={(value) =>
+                    updateDraft(
+                      "controlProtocol",
+                      value as CameraProfile["controlProtocol"],
+                    )
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" align="start" avoidCollisions={false}>
+                  <SelectContent
+                    position="popper"
+                    side="bottom"
+                    align="start"
+                    avoidCollisions={false}
+                  >
                     <SelectItem value="visca">VISCA</SelectItem>
                     <SelectItem value="onvif">ONVIF PTZ</SelectItem>
                   </SelectContent>
@@ -340,12 +408,22 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
                 <Label>Sync</Label>
                 <Select
                   value={draft.syncProtocol}
-                  onValueChange={(value) => updateDraft('syncProtocol', value as CameraProfile['syncProtocol'])}
+                  onValueChange={(value) =>
+                    updateDraft(
+                      "syncProtocol",
+                      value as CameraProfile["syncProtocol"],
+                    )
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" align="start" avoidCollisions={false}>
+                  <SelectContent
+                    position="popper"
+                    side="bottom"
+                    align="start"
+                    avoidCollisions={false}
+                  >
                     <SelectItem value="onvif">ONVIF</SelectItem>
                     <SelectItem value="none">None</SelectItem>
                   </SelectContent>
@@ -354,7 +432,7 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
             </div>
           </FieldGroup>
 
-          {draft.controlProtocol === 'visca' && (
+          {draft.controlProtocol === "visca" && (
             <FieldGroup title="VISCA">
               <div className="field-row">
                 <div className="field">
@@ -365,7 +443,9 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
                     min={1}
                     max={65535}
                     value={draft.port}
-                    onChange={(event) => updateDraft('port', Number(event.target.value))}
+                    onChange={(event) =>
+                      updateDraft("port", Number(event.target.value))
+                    }
                   />
                 </div>
 
@@ -373,12 +453,22 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
                   <Label>Transport</Label>
                   <Select
                     value={draft.protocol}
-                    onValueChange={(value) => updateDraft('protocol', value as CameraProfile['protocol'])}
+                    onValueChange={(value) =>
+                      updateDraft(
+                        "protocol",
+                        value as CameraProfile["protocol"],
+                      )
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent position="popper" side="bottom" align="start" avoidCollisions={false}>
+                    <SelectContent
+                      position="popper"
+                      side="bottom"
+                      align="start"
+                      avoidCollisions={false}
+                    >
                       <SelectItem value="udp">UDP</SelectItem>
                       <SelectItem value="tcp">TCP</SelectItem>
                     </SelectContent>
@@ -392,39 +482,51 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
             <FieldGroup title="ONVIF sync">
               <div className="field-row">
                 <div className="field">
-                  <Label htmlFor={`camera-onvif-port-${camera.id}`}>ONVIF port</Label>
+                  <Label htmlFor={`camera-onvif-port-${camera.id}`}>
+                    ONVIF port
+                  </Label>
                   <Input
                     id={`camera-onvif-port-${camera.id}`}
                     type="number"
                     min={1}
                     max={65535}
                     value={draft.onvifPort}
-                    onChange={(event) => updateDraft('onvifPort', Number(event.target.value))}
+                    onChange={(event) =>
+                      updateDraft("onvifPort", Number(event.target.value))
+                    }
                   />
                 </div>
               </div>
 
               <div className="field-row">
                 <div className="field">
-                  <Label htmlFor={`camera-onvif-username-${camera.id}`}>Username</Label>
+                  <Label htmlFor={`camera-onvif-username-${camera.id}`}>
+                    Username
+                  </Label>
                   <Input
                     id={`camera-onvif-username-${camera.id}`}
                     value={draft.onvifUsername}
                     placeholder="Optional"
                     autoComplete="username"
-                    onChange={(event) => updateDraft('onvifUsername', event.target.value)}
+                    onChange={(event) =>
+                      updateDraft("onvifUsername", event.target.value)
+                    }
                   />
                 </div>
 
                 <div className="field">
-                  <Label htmlFor={`camera-onvif-password-${camera.id}`}>Password</Label>
+                  <Label htmlFor={`camera-onvif-password-${camera.id}`}>
+                    Password
+                  </Label>
                   <Input
                     id={`camera-onvif-password-${camera.id}`}
                     type="password"
                     value={draft.onvifPassword}
                     placeholder="Stored in local config"
                     autoComplete="current-password"
-                    onChange={(event) => updateDraft('onvifPassword', event.target.value)}
+                    onChange={(event) =>
+                      updateDraft("onvifPassword", event.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -433,7 +535,9 @@ const CameraSettingsDialog = ({ camera, onSave }: CameraSettingsDialogProps) => 
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary">Cancel</Button>
+              <Button type="button" variant="secondary">
+                Cancel
+              </Button>
             </DialogClose>
             <Button type="submit">Save settings</Button>
           </DialogFooter>
@@ -466,7 +570,10 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
     }
   }, [cameraNumber, open]);
 
-  const updateDraft = <Key extends keyof CameraProfile>(key: Key, value: CameraProfile[Key]) => {
+  const updateDraft = <Key extends keyof CameraProfile>(
+    key: Key,
+    value: CameraProfile[Key],
+  ) => {
     setDraft((current) => ({ ...current, [key]: value }));
   };
 
@@ -478,7 +585,7 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
     setSubmitting(false);
 
     if (!result.ok) {
-      setError(result.error ?? 'Camera connection failed.');
+      setError(result.error ?? "Camera connection failed.");
       return;
     }
 
@@ -508,7 +615,7 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
     setDraft((current) => ({
       ...current,
       label: labelFromProbeResult(result.data, current.label).slice(0, 40),
-      syncProtocol: 'onvif',
+      syncProtocol: "onvif",
     }));
   };
 
@@ -539,7 +646,7 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
                 id="add-camera-label"
                 value={draft.label}
                 maxLength={40}
-                onChange={(event) => updateDraft('label', event.target.value)}
+                onChange={(event) => updateDraft("label", event.target.value)}
               />
             </div>
 
@@ -549,7 +656,9 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
                 id="add-camera-ip"
                 value={draft.ipAddress}
                 placeholder="192.168.1.120"
-                onChange={(event) => updateDraft('ipAddress', event.target.value)}
+                onChange={(event) =>
+                  updateDraft("ipAddress", event.target.value)
+                }
               />
             </div>
           </div>
@@ -559,12 +668,22 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
               <Label>Live control</Label>
               <Select
                 value={draft.controlProtocol}
-                onValueChange={(value) => updateDraft('controlProtocol', value as CameraProfile['controlProtocol'])}
+                onValueChange={(value) =>
+                  updateDraft(
+                    "controlProtocol",
+                    value as CameraProfile["controlProtocol"],
+                  )
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper" side="bottom" align="start" avoidCollisions={false}>
+                <SelectContent
+                  position="popper"
+                  side="bottom"
+                  align="start"
+                  avoidCollisions={false}
+                >
                   <SelectItem value="visca">VISCA</SelectItem>
                   <SelectItem value="onvif">ONVIF PTZ</SelectItem>
                 </SelectContent>
@@ -575,12 +694,22 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
               <Label>Sync</Label>
               <Select
                 value={draft.syncProtocol}
-                onValueChange={(value) => updateDraft('syncProtocol', value as CameraProfile['syncProtocol'])}
+                onValueChange={(value) =>
+                  updateDraft(
+                    "syncProtocol",
+                    value as CameraProfile["syncProtocol"],
+                  )
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent position="popper" side="bottom" align="start" avoidCollisions={false}>
+                <SelectContent
+                  position="popper"
+                  side="bottom"
+                  align="start"
+                  avoidCollisions={false}
+                >
                   <SelectItem value="onvif">ONVIF</SelectItem>
                   <SelectItem value="none">None</SelectItem>
                 </SelectContent>
@@ -589,7 +718,7 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
           </div>
 
           <div className="field-row">
-            {draft.controlProtocol === 'visca' && (
+            {draft.controlProtocol === "visca" && (
               <div className="field">
                 <Label htmlFor="add-camera-port">VISCA port</Label>
                 <Input
@@ -598,7 +727,9 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
                   min={1}
                   max={65535}
                   value={draft.port}
-                  onChange={(event) => updateDraft('port', Number(event.target.value))}
+                  onChange={(event) =>
+                    updateDraft("port", Number(event.target.value))
+                  }
                 />
               </div>
             )}
@@ -612,24 +743,33 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
                   min={1}
                   max={65535}
                   value={draft.onvifPort}
-                  onChange={(event) => updateDraft('onvifPort', Number(event.target.value))}
+                  onChange={(event) =>
+                    updateDraft("onvifPort", Number(event.target.value))
+                  }
                 />
               </div>
             )}
           </div>
 
-          {draft.controlProtocol === 'visca' && (
+          {draft.controlProtocol === "visca" && (
             <div className="field-row">
               <div className="field">
                 <Label>Transport</Label>
                 <Select
                   value={draft.protocol}
-                  onValueChange={(value) => updateDraft('protocol', value as CameraProfile['protocol'])}
+                  onValueChange={(value) =>
+                    updateDraft("protocol", value as CameraProfile["protocol"])
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent position="popper" side="bottom" align="start" avoidCollisions={false}>
+                  <SelectContent
+                    position="popper"
+                    side="bottom"
+                    align="start"
+                    avoidCollisions={false}
+                  >
                     <SelectItem value="udp">UDP</SelectItem>
                     <SelectItem value="tcp">TCP</SelectItem>
                   </SelectContent>
@@ -641,25 +781,33 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
           {usesOnvifSync(draft) && (
             <div className="field-row">
               <div className="field">
-                <Label htmlFor="add-camera-onvif-username">ONVIF username</Label>
+                <Label htmlFor="add-camera-onvif-username">
+                  ONVIF username
+                </Label>
                 <Input
                   id="add-camera-onvif-username"
                   value={draft.onvifUsername}
                   placeholder="Optional"
                   autoComplete="username"
-                  onChange={(event) => updateDraft('onvifUsername', event.target.value)}
+                  onChange={(event) =>
+                    updateDraft("onvifUsername", event.target.value)
+                  }
                 />
               </div>
 
               <div className="field">
-                <Label htmlFor="add-camera-onvif-password">ONVIF password</Label>
+                <Label htmlFor="add-camera-onvif-password">
+                  ONVIF password
+                </Label>
                 <Input
                   id="add-camera-onvif-password"
                   type="password"
                   value={draft.onvifPassword}
                   placeholder="Stored in local config"
                   autoComplete="current-password"
-                  onChange={(event) => updateDraft('onvifPassword', event.target.value)}
+                  onChange={(event) =>
+                    updateDraft("onvifPassword", event.target.value)
+                  }
                 />
               </div>
             </div>
@@ -673,12 +821,17 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
                 disabled={probing || draft.ipAddress.trim().length === 0}
                 onClick={() => void probeDraft()}
               >
-                {probing && <LoaderCircle className="camera-dialog-spinner" size={13} />}
+                {probing && (
+                  <LoaderCircle className="camera-dialog-spinner" size={13} />
+                )}
                 Probe ONVIF
               </Button>
               {probeResult && (
                 <span className="camera-dialog-hint">
-                  {formatDeviceName(probeResult)} · {probeResult.profiles.length} profiles · {probeResult.streamUris.length} streams · {probeResult.presets.length} presets
+                  {formatDeviceName(probeResult)} ·{" "}
+                  {probeResult.profiles.length} profiles ·{" "}
+                  {probeResult.streamUris.length} streams ·{" "}
+                  {probeResult.presets.length} presets
                 </span>
               )}
             </div>
@@ -688,11 +841,18 @@ const AddCameraDialog = ({ cameraNumber, onAdd }: AddCameraDialogProps) => {
 
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary" disabled={submitting}>Cancel</Button>
+              <Button type="button" variant="secondary" disabled={submitting}>
+                Cancel
+              </Button>
             </DialogClose>
-            <Button type="submit" disabled={submitting || draft.ipAddress.trim().length === 0}>
-              {submitting && <LoaderCircle className="camera-dialog-spinner" size={13} />}
-              {submitting ? 'Testing...' : 'Test and add'}
+            <Button
+              type="submit"
+              disabled={submitting || draft.ipAddress.trim().length === 0}
+            >
+              {submitting && (
+                <LoaderCircle className="camera-dialog-spinner" size={13} />
+              )}
+              {submitting ? "Testing..." : "Test and add"}
             </Button>
           </DialogFooter>
         </form>
@@ -707,24 +867,29 @@ interface OnvifDiscoveryDialogProps {
 }
 
 const formatDiscoveryTarget = (device: OnvifDiscoveryResult): string => {
-  const path = device.path && device.path !== '/' ? device.path : '';
+  const path = device.path && device.path !== "/" ? device.path : "";
   return `${device.ipAddress}:${device.port}${path}`;
 };
 
-const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps) => {
+const OnvifDiscoveryDialog = ({
+  cameraNumber,
+  onAdd,
+}: OnvifDiscoveryDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [addingTarget, setAddingTarget] = useState<string | null>(null);
   const [devices, setDevices] = useState<OnvifDiscoveryResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
   const runDiscovery = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    const result = await window.panevo.discoverOnvifCameras({ timeoutMs: 5000 });
+    const result = await window.panevo.discoverOnvifCameras({
+      timeoutMs: 5000,
+    });
     setLoading(false);
 
     if (!result.ok) {
@@ -735,7 +900,7 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
 
     setDevices(result.data);
     if (result.data.length === 0) {
-      setError('No ONVIF devices found on the local network.');
+      setError("No ONVIF devices found on the local network.");
     }
   }, []);
 
@@ -744,8 +909,8 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
       setError(null);
       setDevices([]);
       setAddingTarget(null);
-      setUsername('');
-      setPassword('');
+      setUsername("");
+      setPassword("");
       void runDiscovery();
     }
   }, [open, runDiscovery]);
@@ -763,8 +928,8 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
         onvifPort: device.port,
         onvifUsername: username,
         onvifPassword: password,
-        controlProtocol: 'visca',
-        syncProtocol: 'onvif',
+        controlProtocol: "visca",
+        syncProtocol: "onvif",
       },
       `Camera ${cameraNumber}`,
     );
@@ -773,7 +938,7 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
     setAddingTarget(null);
 
     if (!result.ok) {
-      setError(result.error ?? 'Camera connection failed.');
+      setError(result.error ?? "Camera connection failed.");
       return;
     }
 
@@ -820,12 +985,20 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
           </div>
 
           <div className="button-row">
-            <Button type="button" variant="secondary" disabled={loading} onClick={() => void runDiscovery()}>
-              {loading && <LoaderCircle className="camera-dialog-spinner" size={13} />}
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={loading}
+              onClick={() => void runDiscovery()}
+            >
+              {loading && (
+                <LoaderCircle className="camera-dialog-spinner" size={13} />
+              )}
               Scan network
             </Button>
             <span className="camera-dialog-hint">
-              WS-Discovery scans the local network and validates the camera when adding.
+              WS-Discovery scans the local network and validates the camera when
+              adding.
             </span>
           </div>
 
@@ -837,10 +1010,15 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
               const isAdding = addingTarget === target;
 
               return (
-                <div key={`${device.ipAddress}-${device.port}-${device.urn ?? target}`} className="onvif-discovery-row">
+                <div
+                  key={`${device.ipAddress}-${device.port}-${device.urn ?? target}`}
+                  className="onvif-discovery-row"
+                >
                   <div>
                     <span>{target}</span>
-                    <small>{device.urn ?? device.xaddrs[0] ?? 'ONVIF device'}</small>
+                    <small>
+                      {device.urn ?? device.xaddrs[0] ?? "ONVIF device"}
+                    </small>
                   </div>
                   <Button
                     type="button"
@@ -848,7 +1026,12 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
                     disabled={loading || addingTarget !== null}
                     onClick={() => void addDiscoveredCamera(device)}
                   >
-                    {isAdding && <LoaderCircle className="camera-dialog-spinner" size={13} />}
+                    {isAdding && (
+                      <LoaderCircle
+                        className="camera-dialog-spinner"
+                        size={13}
+                      />
+                    )}
                     Test and add
                   </Button>
                 </div>
@@ -869,23 +1052,39 @@ const OnvifDiscoveryDialog = ({ cameraNumber, onAdd }: OnvifDiscoveryDialogProps
 interface OnvifProbeDialogProps {
   camera: CameraProfile;
   probeState?: OnvifProbeState;
-  onProbe: (cameraId: string, auth?: OnvifProbeAuth) => Promise<OnvifProbeActionResult>;
+  onProbe: (
+    cameraId: string,
+    auth?: OnvifProbeAuth,
+  ) => Promise<OnvifProbeActionResult>;
   onImportPresets: (cameraId: string, result: OnvifProbeResult) => void;
 }
 
 const formatDeviceName = (result: OnvifProbeResult): string => {
-  const model = [result.device?.manufacturer, result.device?.model].filter(Boolean).join(' ');
-  return model || 'Unknown ONVIF device';
+  const model = [result.device?.manufacturer, result.device?.model]
+    .filter(Boolean)
+    .join(" ");
+  return model || "Unknown ONVIF device";
 };
 
 const hasPtzSupport = (result: OnvifProbeResult): boolean => {
-  return result.capabilities.ptz || result.ptzNodeCount > 0 || result.profiles.some((profile) => profile.hasPtz);
+  return (
+    result.capabilities.ptz ||
+    result.ptzNodeCount > 0 ||
+    result.profiles.some((profile) => profile.hasPtz)
+  );
 };
 
-const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: OnvifProbeDialogProps) => {
+const OnvifProbeDialog = ({
+  camera,
+  probeState,
+  onProbe,
+  onImportPresets,
+}: OnvifProbeDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<OnvifProbeResult | null>(probeState?.result ?? null);
+  const [result, setResult] = useState<OnvifProbeResult | null>(
+    probeState?.result ?? null,
+  );
   const [error, setError] = useState<string | null>(probeState?.error ?? null);
   const [username, setUsername] = useState(camera.onvifUsername);
   const [password, setPassword] = useState(camera.onvifPassword);
@@ -899,7 +1098,7 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
     setLoading(false);
 
     if (!probeResult.ok || !probeResult.result) {
-      setError(probeResult.error ?? 'ONVIF probe failed.');
+      setError(probeResult.error ?? "ONVIF probe failed.");
       return;
     }
 
@@ -913,7 +1112,13 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
       setResult(probeState?.result ?? null);
       setError(probeState?.error ?? null);
     }
-  }, [camera.onvifPassword, camera.onvifUsername, open, probeState?.error, probeState?.result]);
+  }, [
+    camera.onvifPassword,
+    camera.onvifUsername,
+    open,
+    probeState?.error,
+    probeState?.result,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -938,12 +1143,16 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
         <div className="onvif-probe">
           <div className="onvif-probe-target">
             <span>{camera.label}</span>
-            <strong>{camera.ipAddress || 'No address configured'}:{camera.onvifPort}</strong>
+            <strong>
+              {camera.ipAddress || "No address configured"}:{camera.onvifPort}
+            </strong>
           </div>
 
           <div className="field-row">
             <div className="field">
-              <Label htmlFor={`onvif-probe-username-${camera.id}`}>Username</Label>
+              <Label htmlFor={`onvif-probe-username-${camera.id}`}>
+                Username
+              </Label>
               <Input
                 id={`onvif-probe-username-${camera.id}`}
                 value={username}
@@ -954,12 +1163,16 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
             </div>
 
             <div className="field">
-              <Label htmlFor={`onvif-probe-password-${camera.id}`}>Password</Label>
+              <Label htmlFor={`onvif-probe-password-${camera.id}`}>
+                Password
+              </Label>
               <Input
                 id={`onvif-probe-password-${camera.id}`}
                 type="password"
                 value={password}
-                placeholder={camera.onvifPassword ? 'Stored password' : 'Optional'}
+                placeholder={
+                  camera.onvifPassword ? "Stored password" : "Optional"
+                }
                 autoComplete="current-password"
                 onChange={(event) => setPassword(event.target.value)}
               />
@@ -983,13 +1196,31 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
               </div>
 
               <div className="onvif-summary">
-                <span className={hasPtzSupport(result) ? 'onvif-chip onvif-chip--ok' : 'onvif-chip'}>
-                  PTZ {hasPtzSupport(result) ? 'available' : 'not reported'}
+                <span
+                  className={
+                    hasPtzSupport(result)
+                      ? "onvif-chip onvif-chip--ok"
+                      : "onvif-chip"
+                  }
+                >
+                  PTZ {hasPtzSupport(result) ? "available" : "not reported"}
                 </span>
-                <span className={result.profiles.length > 0 ? 'onvif-chip onvif-chip--ok' : 'onvif-chip'}>
+                <span
+                  className={
+                    result.profiles.length > 0
+                      ? "onvif-chip onvif-chip--ok"
+                      : "onvif-chip"
+                  }
+                >
                   {result.profiles.length} media profiles
                 </span>
-                <span className={result.streamUris.length > 0 ? 'onvif-chip onvif-chip--ok' : 'onvif-chip'}>
+                <span
+                  className={
+                    result.streamUris.length > 0
+                      ? "onvif-chip onvif-chip--ok"
+                      : "onvif-chip"
+                  }
+                >
                   {result.streamUris.length} RTSP streams
                 </span>
               </div>
@@ -997,11 +1228,11 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
               <div className="onvif-result-grid">
                 <div>
                   <span>Firmware</span>
-                  <strong>{result.device?.firmwareVersion ?? 'Unknown'}</strong>
+                  <strong>{result.device?.firmwareVersion ?? "Unknown"}</strong>
                 </div>
                 <div>
                   <span>Serial</span>
-                  <strong>{result.device?.serialNumber ?? 'Unknown'}</strong>
+                  <strong>{result.device?.serialNumber ?? "Unknown"}</strong>
                 </div>
                 <div>
                   <span>PTZ nodes</span>
@@ -1023,7 +1254,12 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
 
               <div className="onvif-capabilities">
                 {Object.entries(result.capabilities).map(([key, enabled]) => (
-                  <span key={key} className={enabled ? 'onvif-chip onvif-chip--ok' : 'onvif-chip'}>
+                  <span
+                    key={key}
+                    className={
+                      enabled ? "onvif-chip onvif-chip--ok" : "onvif-chip"
+                    }
+                  >
                     {key}
                   </span>
                 ))}
@@ -1035,7 +1271,7 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
                   {result.profiles.map((profile) => (
                     <div key={profile.token} className="onvif-profile-row">
                       <div>
-                        <span>{profile.name || 'Unnamed profile'}</span>
+                        <span>{profile.name || "Unnamed profile"}</span>
                         <small>{profile.token}</small>
                       </div>
                       <div className="onvif-profile-flags">
@@ -1052,9 +1288,12 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
                 <div className="onvif-profiles">
                   <div className="onvif-subtitle">RTSP streams</div>
                   {result.streamUris.map((stream) => (
-                    <div key={`${stream.profileToken}-${stream.uri}`} className="onvif-profile-row">
+                    <div
+                      key={`${stream.profileToken}-${stream.uri}`}
+                      className="onvif-profile-row"
+                    >
                       <div>
-                        <span>{stream.profileName || 'Unnamed stream'}</span>
+                        <span>{stream.profileName || "Unnamed stream"}</span>
                         <small>{stream.uri}</small>
                       </div>
                     </div>
@@ -1069,7 +1308,11 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
                     <div key={preset.token} className="onvif-profile-row">
                       <div>
                         <span>{preset.name || `Preset ${preset.token}`}</span>
-                        <small>{preset.numericPreset ? `numeric ${preset.numericPreset}` : `token ${preset.token}`}</small>
+                        <small>
+                          {preset.numericPreset
+                            ? `numeric ${preset.numericPreset}`
+                            : `token ${preset.token}`}
+                        </small>
                       </div>
                     </div>
                   ))}
@@ -1089,12 +1332,20 @@ const OnvifProbeDialog = ({ camera, probeState, onProbe, onImportPresets }: Onvi
         </div>
 
         <DialogFooter>
-          <Button type="button" disabled={loading} onClick={() => void runProbe()}>
-            {loading && <LoaderCircle className="camera-dialog-spinner" size={13} />}
+          <Button
+            type="button"
+            disabled={loading}
+            onClick={() => void runProbe()}
+          >
+            {loading && (
+              <LoaderCircle className="camera-dialog-spinner" size={13} />
+            )}
             Probe
           </Button>
           <DialogClose asChild>
-            <Button type="button" variant="secondary">Done</Button>
+            <Button type="button" variant="secondary">
+              Done
+            </Button>
           </DialogClose>
         </DialogFooter>
       </DialogContent>
@@ -1117,7 +1368,9 @@ export const CameraTable = ({
   onImport,
   onExport,
 }: CameraTableProps) => {
-  const [cameraToDelete, setCameraToDelete] = useState<CameraProfile | null>(null);
+  const [cameraToDelete, setCameraToDelete] = useState<CameraProfile | null>(
+    null,
+  );
 
   const confirmDelete = () => {
     if (!cameraToDelete) {
@@ -1141,7 +1394,10 @@ export const CameraTable = ({
             <Download size={13} />
             Export
           </Button>
-          <OnvifDiscoveryDialog cameraNumber={cameras.length + 1} onAdd={onAdd} />
+          <OnvifDiscoveryDialog
+            cameraNumber={cameras.length + 1}
+            onAdd={onAdd}
+          />
           <AddCameraDialog cameraNumber={cameras.length + 1} onAdd={onAdd} />
         </div>
       </div>
@@ -1164,30 +1420,40 @@ export const CameraTable = ({
             return (
               <tr
                 key={camera.id}
-                className={`camera-row${isActive ? ' camera-row--active' : ''}`}
+                className={`camera-row${isActive ? " camera-row--active" : ""}`}
                 onClick={() => onSelect(camera.id)}
               >
                 <td className="col-active">
                   {isActive && <span className="camera-active-dot" />}
                 </td>
                 <td className="col-name">
-                  <InlineName value={camera.label} onSave={(label) => onRename(camera.id, label)} />
+                  <InlineName
+                    value={camera.label}
+                    onSave={(label) => onRename(camera.id, label)}
+                  />
                 </td>
                 <td className="col-address">
-                  {camera.ipAddress || <span className="camera-no-value">Not configured</span>}
+                  {camera.ipAddress || (
+                    <span className="camera-no-value">Not configured</span>
+                  )}
                 </td>
-                <td className="col-protocol">
-                  {formatControlTarget(camera)}
-                </td>
+                <td className="col-protocol">{formatControlTarget(camera)}</td>
                 <td className="col-onvif">
-                  <OnvifStatus state={probeState} port={camera.onvifPort} enabled={usesOnvifSync(camera)} />
+                  <OnvifStatus
+                    state={probeState}
+                    port={camera.onvifPort}
+                    enabled={usesOnvifSync(camera)}
+                  />
                 </td>
                 <td className="col-actions">
                   <div className="camera-row-actions">
                     <Button
                       size="sm"
                       variant="secondary"
-                      onClick={(e) => { e.stopPropagation(); onTest(camera.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTest(camera.id);
+                      }}
                     >
                       <PlugZap size={13} />
                       Test
@@ -1205,7 +1471,10 @@ export const CameraTable = ({
                       variant="destructive"
                       className="camera-delete-btn"
                       aria-label={`Delete ${camera.label}`}
-                      onClick={(e) => { e.stopPropagation(); setCameraToDelete(camera); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCameraToDelete(camera);
+                      }}
                     >
                       <Trash2 size={13} />
                     </Button>
@@ -1226,12 +1495,16 @@ export const CameraTable = ({
           )}
         </tbody>
       </table>
-      <AlertDialog open={Boolean(cameraToDelete)} onOpenChange={(open) => !open && setCameraToDelete(null)}>
+      <AlertDialog
+        open={Boolean(cameraToDelete)}
+        onOpenChange={(open) => !open && setCameraToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete camera profile?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes {cameraToDelete?.label ?? 'this camera'} from Panevo. Camera presets and camera settings on the device are not changed.
+              This removes {cameraToDelete?.label ?? "this camera"} from Panevo.
+              Camera presets and camera settings on the device are not changed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

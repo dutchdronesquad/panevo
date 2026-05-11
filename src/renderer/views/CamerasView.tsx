@@ -1,9 +1,16 @@
-import { CameraTable } from '../components/camera/CameraTable';
-import type { CameraConfig, CameraProfile, OnvifProbeResult, OnvifProbeState } from '../types/camera';
+import { CameraTable } from "../components/camera/CameraTable";
+import type {
+  CameraConfig,
+  CameraProfile,
+  OnvifProbeResult,
+  OnvifProbeState,
+} from "../types/camera";
 
 interface CameraProfileActions {
   selectCamera: (cameraId: string) => void;
-  addCamera: (camera: CameraProfile) => Promise<{ ok: boolean; error?: string }>;
+  addCamera: (
+    camera: CameraProfile,
+  ) => Promise<{ ok: boolean; error?: string }>;
   probeOnvif: (
     cameraId: string,
     auth?: { username?: string; password?: string },
@@ -33,39 +40,51 @@ export const CamerasView = ({
   onTestCamera,
 }: CamerasViewProps) => {
   const hasCameras = config.cameras.length > 0;
-  const activeControlValue = activeCamera.controlProtocol === 'onvif'
-    ? `ONVIF · ${activeCamera.onvifPort}`
-    : `${activeCamera.protocol.toUpperCase()} · ${activeCamera.port}`;
-  const activeControlSub = activeCamera.controlProtocol === 'onvif' ? 'ONVIF PTZ profile' : 'VISCA IP profile';
+  const activeControlValue =
+    activeCamera.controlProtocol === "onvif"
+      ? `ONVIF · ${activeCamera.onvifPort}`
+      : `${activeCamera.protocol.toUpperCase()} · ${activeCamera.port}`;
+  const activeControlSub =
+    activeCamera.controlProtocol === "onvif"
+      ? "ONVIF PTZ profile"
+      : "VISCA IP profile";
   const activeSyncState = onvifProbeStates[activeCamera.id];
-  const activeSyncValue = activeCamera.syncProtocol === 'onvif'
-    ? `ONVIF · ${activeCamera.onvifPort}`
-    : 'Local only';
-  const activeSyncSub = activeCamera.syncProtocol === 'onvif'
-    ? activeSyncState?.status === 'verified'
-      ? `${activeCamera.presets.length} presets synced`
-      : `${activeCamera.presets.length} presets · probe pending`
-    : `${activeCamera.presets.length} local presets`;
+  const activeSyncValue =
+    activeCamera.syncProtocol === "onvif"
+      ? `ONVIF · ${activeCamera.onvifPort}`
+      : "Local only";
+  const activeSyncSub =
+    activeCamera.syncProtocol === "onvif"
+      ? activeSyncState?.status === "verified"
+        ? `${activeCamera.presets.length} presets synced`
+        : `${activeCamera.presets.length} presets · probe pending`
+      : `${activeCamera.presets.length} local presets`;
 
   return (
     <main className="cameras-view">
       <div className="camera-overview">
         <div className="camera-metric">
           <span>Active camera</span>
-          <strong>{hasCameras ? activeCamera.label : 'No camera'}</strong>
-          <small>{hasCameras ? activeCamera.ipAddress || 'No address configured' : 'Add a camera to start'}</small>
+          <strong>{hasCameras ? activeCamera.label : "No camera"}</strong>
+          <small>
+            {hasCameras
+              ? activeCamera.ipAddress || "No address configured"
+              : "Add a camera to start"}
+          </small>
         </div>
         <div className="camera-metric">
           <span>Live control</span>
-          <strong>
-            {hasCameras ? activeControlValue : '-'}
-          </strong>
-          <small>{hasCameras && activeCamera.ipAddress ? activeControlSub : 'Setup required'}</small>
+          <strong>{hasCameras ? activeControlValue : "-"}</strong>
+          <small>
+            {hasCameras && activeCamera.ipAddress
+              ? activeControlSub
+              : "Setup required"}
+          </small>
         </div>
         <div className="camera-metric">
           <span>Sync</span>
-          <strong>{hasCameras ? activeSyncValue : '-'}</strong>
-          <small>{hasCameras ? activeSyncSub : 'No active sync route'}</small>
+          <strong>{hasCameras ? activeSyncValue : "-"}</strong>
+          <small>{hasCameras ? activeSyncSub : "No active sync route"}</small>
         </div>
       </div>
 

@@ -1,7 +1,11 @@
-import { useRef } from 'react';
-import { Minus, Plus } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/renderer/components/ui/tooltip';
-import type { FocusMode } from '../../types/camera';
+import { useRef } from "react";
+import { Minus, Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/renderer/components/ui/tooltip";
+import type { FocusMode } from "../../types/camera";
 
 interface FocusActions {
   setFocusMode: (mode: FocusMode) => void;
@@ -17,7 +21,7 @@ interface FocusControlsProps {
 
 export const FocusControls = ({ mode, actions }: FocusControlsProps) => {
   const activePointerId = useRef<number | null>(null);
-  const manual = mode === 'manual';
+  const manual = mode === "manual";
 
   const stopIfActive = () => {
     if (activePointerId.current === null) return;
@@ -44,8 +48,8 @@ export const FocusControls = ({ mode, actions }: FocusControlsProps) => {
         <button
           type="button"
           className="focus-mode-button"
-          data-active={mode === 'auto' || undefined}
-          onClick={() => actions.setFocusMode('auto')}
+          data-active={mode === "auto" || undefined}
+          onClick={() => actions.setFocusMode("auto")}
         >
           Auto
         </button>
@@ -53,7 +57,7 @@ export const FocusControls = ({ mode, actions }: FocusControlsProps) => {
           type="button"
           className="focus-mode-button"
           data-active={manual || undefined}
-          onClick={() => actions.setFocusMode('manual')}
+          onClick={() => actions.setFocusMode("manual")}
         >
           Manual
         </button>

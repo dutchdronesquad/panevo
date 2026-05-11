@@ -1,12 +1,12 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { App } from './App';
-import './styles.css';
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "./App";
+import "./styles.css";
 
-const root = document.getElementById('root');
+const root = document.getElementById("root");
 
 if (!root) {
-  throw new Error('Panevo root element was not found.');
+  throw new Error("Panevo root element was not found.");
 }
 
 createRoot(root).render(
@@ -14,4 +14,3 @@ createRoot(root).render(
     <App />
   </React.StrictMode>,
 );
-

@@ -1,11 +1,11 @@
-import { Camera } from 'lucide-react';
-import { Button } from '@/renderer/components/ui/button';
-import { FocusControls } from '../components/controls/FocusControls';
-import { PtzControls } from '../components/controls/PtzControls';
-import { SpeedSelector } from '../components/controls/SpeedSelector';
-import { ZoomControls } from '../components/controls/ZoomControls';
-import { PresetGrid } from '../components/presets/PresetGrid';
-import type { CameraPreset, CameraProfile, FocusMode } from '../types/camera';
+import { Camera } from "lucide-react";
+import { Button } from "@/renderer/components/ui/button";
+import { FocusControls } from "../components/controls/FocusControls";
+import { PtzControls } from "../components/controls/PtzControls";
+import { SpeedSelector } from "../components/controls/SpeedSelector";
+import { ZoomControls } from "../components/controls/ZoomControls";
+import { PresetGrid } from "../components/presets/PresetGrid";
+import type { CameraPreset, CameraProfile, FocusMode } from "../types/camera";
 
 interface ControlActions {
   panLeft: () => void;
@@ -27,7 +27,10 @@ interface ControlActions {
   recallPreset: (preset: number) => void;
   storePreset: (preset: number, label?: string) => void;
   addPreset: () => void;
-  updatePreset: (id: string, updates: Partial<Pick<CameraPreset, 'label' | 'cameraPreset'>>) => void;
+  updatePreset: (
+    id: string,
+    updates: Partial<Pick<CameraPreset, "label" | "cameraPreset">>,
+  ) => void;
   deletePreset: (id: string) => void;
 }
 
@@ -63,7 +66,9 @@ export const ControlView = ({
           </div>
           <div className="control-empty-copy">
             <h3>No active camera</h3>
-            <p>Add and verify a camera profile before using live PTZ controls.</p>
+            <p>
+              Add and verify a camera profile before using live PTZ controls.
+            </p>
           </div>
           <Button type="button" onClick={onOpenCameras}>
             Open cameras
@@ -76,7 +81,6 @@ export const ControlView = ({
   return (
     <main className="operator-surface">
       <div className="control-grid">
-
         <div className="ptz-column">
           <div className="ctrl-section-first">
             <span className="ctrl-section-label">PTZ</span>
@@ -96,8 +100,20 @@ export const ControlView = ({
           <div className="ctrl-section">
             <span className="ctrl-section-label">Speed</span>
             <div className="speed-grid">
-              <SpeedSelector label="PTZ" value={speed} min={1} max={24} onChange={onSpeedChange} />
-              <SpeedSelector label="Zoom" value={zoomSpeed} min={1} max={8} onChange={onZoomSpeedChange} />
+              <SpeedSelector
+                label="PTZ"
+                value={speed}
+                min={1}
+                max={24}
+                onChange={onSpeedChange}
+              />
+              <SpeedSelector
+                label="Zoom"
+                value={zoomSpeed}
+                min={1}
+                max={8}
+                onChange={onZoomSpeedChange}
+              />
             </div>
           </div>
         </div>
@@ -110,7 +126,6 @@ export const ControlView = ({
             actions={actions}
           />
         </div>
-
       </div>
     </main>
   );

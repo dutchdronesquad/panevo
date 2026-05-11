@@ -1,5 +1,11 @@
-import dgram from 'node:dgram';
-import type { CameraConnectionStatus, CameraProfile, CommandResponse, FocusMode, PanevoResult } from '../../../shared/types';
+import dgram from "node:dgram";
+import type {
+  CameraConnectionStatus,
+  CameraProfile,
+  CommandResponse,
+  FocusMode,
+  PanevoResult,
+} from "../../../shared/types";
 import {
   buildFocusCommand,
   buildFocusModeInquiryCommand,
@@ -11,13 +17,16 @@ import {
   buildStorePresetCommand,
   buildZoomCommand,
   buildZoomStopCommand,
-} from './visca-commands';
-import { ViscaQueue } from './visca-queue';
-import type { PanDirection, TiltDirection } from './visca-types';
+} from "./visca-commands";
+import { ViscaQueue } from "./visca-queue";
+import type { PanDirection, TiltDirection } from "./visca-types";
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
 
-const failure = <T = never>(code: string, message: string): PanevoResult<T> => ({
+const failure = <T = never>(
+  code: string,
+  message: string,
+): PanevoResult<T> => ({
   ok: false,
   error: { code, message },
 });
@@ -40,7 +49,9 @@ export class ViscaClient {
   private healthResponseVerified = false;
   private readonly queue = new ViscaQueue();
 
-  async connect(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+  async connect(
+    config: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     const validation = this.validateConfig(config);
     if (!validation.ok) {
       return validation;
@@ -50,33 +61,41 @@ export class ViscaClient {
     this.consecutiveHealthInquiryFailures = 0;
     this.healthResponseVerified = false;
 
-    if (this.config.protocol === 'tcp') {
-      return failure('TCP_NOT_IMPLEMENTED', 'TCP VISCA is reserved for future support. Use UDP for the MVP.');
+    if (this.config.protocol === "tcp") {
+      return failure(
+        "TCP_NOT_IMPLEMENTED",
+        "TCP VISCA is reserved for future support. Use UDP for the MVP.",
+      );
     }
 
     this.disconnectSocket();
 
     try {
-      this.socket = dgram.createSocket('udp4');
-      this.socket.on('error', (error) => {
-        console.error('[visca] UDP socket error', error);
+      this.socket = dgram.createSocket("udp4");
+      this.socket.on("error", (error) => {
+        console.error("[visca] UDP socket error", error);
         this.connected = false;
       });
       this.connected = true;
 
       return success({
         connected: true,
-        protocol: 'udp',
-        controlProtocol: 'visca',
+        protocol: "udp",
+        controlProtocol: "visca",
         message: `UDP transport ready for ${this.config.ipAddress}:${this.config.port}`,
       });
     } catch (error) {
-      console.error('[visca] Failed to create UDP socket', error);
-      return failure('SOCKET_CREATE_FAILED', 'Unable to create UDP socket for VISCA transport.');
+      console.error("[visca] Failed to create UDP socket", error);
+      return failure(
+        "SOCKET_CREATE_FAILED",
+        "Unable to create UDP socket for VISCA transport.",
+      );
     }
   }
 
-  async ensureConnected(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+  async ensureConnected(
+    config: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     const activeConfig = this.config;
     const sameTarget =
       activeConfig &&
@@ -88,43 +107,48 @@ export class ViscaClient {
       return success({
         connected: true,
         protocol: activeConfig.protocol,
-        controlProtocol: 'visca',
-        message: 'Connected',
+        controlProtocol: "visca",
+        message: "Connected",
       });
     }
 
     return this.connect(config);
   }
 
-  async healthCheck(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+  async healthCheck(
+    config: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     const connectionResult = await this.ensureConnected(config);
     if (!connectionResult.ok) {
       return connectionResult;
     }
 
-    if (config.healthCheckMode === 'transport-only') {
+    if (config.healthCheckMode === "transport-only") {
       return success({
         connected: true,
         protocol: connectionResult.data.protocol,
-        controlProtocol: 'visca',
-        message: 'Transport ready; camera response not verified.',
+        controlProtocol: "visca",
+        message: "Transport ready; camera response not verified.",
         checkedAt: new Date().toISOString(),
         responseVerified: false,
       });
     }
 
     const inquiryResult = await this.queue.enqueue<CameraConnectionStatus>(
-      'health-check',
+      "health-check",
       async () => {
-        await this.sendInquiry(buildFocusModeInquiryCommand(), HEALTH_CHECK_TIMEOUT_MS);
+        await this.sendInquiry(
+          buildFocusModeInquiryCommand(),
+          HEALTH_CHECK_TIMEOUT_MS,
+        );
         this.consecutiveHealthInquiryFailures = 0;
         this.healthResponseVerified = true;
 
         return {
           connected: true,
           protocol: connectionResult.data.protocol,
-          controlProtocol: 'visca',
-          message: 'Camera responded to VISCA health inquiry.',
+          controlProtocol: "visca",
+          message: "Camera responded to VISCA health inquiry.",
           checkedAt: new Date().toISOString(),
           responseVerified: true,
         };
@@ -136,11 +160,13 @@ export class ViscaClient {
       this.consecutiveHealthInquiryFailures += 1;
       this.healthResponseVerified = false;
 
-      if (this.consecutiveHealthInquiryFailures < HEALTH_CHECK_FAILURE_THRESHOLD) {
+      if (
+        this.consecutiveHealthInquiryFailures < HEALTH_CHECK_FAILURE_THRESHOLD
+      ) {
         return success({
           connected: true,
           protocol: connectionResult.data.protocol,
-          controlProtocol: 'visca',
+          controlProtocol: "visca",
           message: `VISCA transport ready; camera response not verified (${this.consecutiveHealthInquiryFailures}/${HEALTH_CHECK_FAILURE_THRESHOLD}).`,
           checkedAt: new Date().toISOString(),
           responseVerified: false,
@@ -148,7 +174,7 @@ export class ViscaClient {
       }
 
       return failure(
-        'HEALTH_CHECK_FAILED',
+        "HEALTH_CHECK_FAILED",
         `Camera did not respond to ${this.consecutiveHealthInquiryFailures} consecutive VISCA health inquiries.`,
       );
     }
@@ -156,7 +182,9 @@ export class ViscaClient {
     return inquiryResult;
   }
 
-  async passiveHealthCheck(config: CameraProfile): Promise<PanevoResult<CameraConnectionStatus>> {
+  async passiveHealthCheck(
+    config: CameraProfile,
+  ): Promise<PanevoResult<CameraConnectionStatus>> {
     const connectionResult = await this.ensureConnected(config);
     if (!connectionResult.ok) {
       return connectionResult;
@@ -165,10 +193,13 @@ export class ViscaClient {
     return success({
       connected: true,
       protocol: connectionResult.data.protocol,
-      controlProtocol: 'visca',
-      message: this.consecutiveHealthInquiryFailures === 0
-        ? this.healthResponseVerified ? 'VISCA transport ready; camera response was verified.' : 'VISCA transport ready; camera response not verified.'
-        : `VISCA transport ready; last verified inquiry missed (${this.consecutiveHealthInquiryFailures}/${HEALTH_CHECK_FAILURE_THRESHOLD}).`,
+      controlProtocol: "visca",
+      message:
+        this.consecutiveHealthInquiryFailures === 0
+          ? this.healthResponseVerified
+            ? "VISCA transport ready; camera response was verified."
+            : "VISCA transport ready; camera response not verified."
+          : `VISCA transport ready; last verified inquiry missed (${this.consecutiveHealthInquiryFailures}/${HEALTH_CHECK_FAILURE_THRESHOLD}).`,
       checkedAt: new Date().toISOString(),
       responseVerified: this.healthResponseVerified,
     });
@@ -183,51 +214,77 @@ export class ViscaClient {
   }
 
   panLeft(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('pan-left', 'left', 'stop', speed, speed);
+    return this.panTilt("pan-left", "left", "stop", speed, speed);
   }
 
   panRight(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('pan-right', 'right', 'stop', speed, speed);
+    return this.panTilt("pan-right", "right", "stop", speed, speed);
   }
 
   tiltUp(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('tilt-up', 'stop', 'up', speed, speed);
+    return this.panTilt("tilt-up", "stop", "up", speed, speed);
   }
 
   tiltDown(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('tilt-down', 'stop', 'down', speed, speed);
+    return this.panTilt("tilt-down", "stop", "down", speed, speed);
   }
 
-  moveUpLeft(panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('move-up-left', 'left', 'up', panSpeed, tiltSpeed);
+  moveUpLeft(
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.panTilt("move-up-left", "left", "up", panSpeed, tiltSpeed);
   }
 
-  moveUpRight(panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('move-up-right', 'right', 'up', panSpeed, tiltSpeed);
+  moveUpRight(
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.panTilt("move-up-right", "right", "up", panSpeed, tiltSpeed);
   }
 
-  moveDownLeft(panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('move-down-left', 'left', 'down', panSpeed, tiltSpeed);
+  moveDownLeft(
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.panTilt("move-down-left", "left", "down", panSpeed, tiltSpeed);
   }
 
-  moveDownRight(panSpeed: number, tiltSpeed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.panTilt('move-down-right', 'right', 'down', panSpeed, tiltSpeed);
+  moveDownRight(
+    panSpeed: number,
+    tiltSpeed: number,
+  ): Promise<PanevoResult<CommandResponse>> {
+    return this.panTilt(
+      "move-down-right",
+      "right",
+      "down",
+      panSpeed,
+      tiltSpeed,
+    );
   }
 
   zoomIn(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('zoom-in', buildZoomCommand('in', this.clampZoomSpeed(speed)));
+    return this.sendCommand(
+      "zoom-in",
+      buildZoomCommand("in", this.clampZoomSpeed(speed)),
+    );
   }
 
   zoomOut(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('zoom-out', buildZoomCommand('out', this.clampZoomSpeed(speed)));
+    return this.sendCommand(
+      "zoom-out",
+      buildZoomCommand("out", this.clampZoomSpeed(speed)),
+    );
   }
 
   stop(): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('stop', buildStopCommand(), { flushPending: true });
+    return this.sendCommand("stop", buildStopCommand(), { flushPending: true });
   }
 
   zoomStop(): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('zoom-stop', buildZoomStopCommand(), { flushPending: true });
+    return this.sendCommand("zoom-stop", buildZoomStopCommand(), {
+      flushPending: true,
+    });
   }
 
   setFocusMode(mode: FocusMode): Promise<PanevoResult<CommandResponse>> {
@@ -235,25 +292,39 @@ export class ViscaClient {
   }
 
   focusIn(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('focus-in', buildFocusCommand('in', this.clampFocusSpeed(speed)));
+    return this.sendCommand(
+      "focus-in",
+      buildFocusCommand("in", this.clampFocusSpeed(speed)),
+    );
   }
 
   focusOut(speed: number): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('focus-out', buildFocusCommand('out', this.clampFocusSpeed(speed)));
+    return this.sendCommand(
+      "focus-out",
+      buildFocusCommand("out", this.clampFocusSpeed(speed)),
+    );
   }
 
   focusStop(): Promise<PanevoResult<CommandResponse>> {
-    return this.sendCommand('focus-stop', buildFocusStopCommand(), { flushPending: true });
+    return this.sendCommand("focus-stop", buildFocusStopCommand(), {
+      flushPending: true,
+    });
   }
 
   recallPreset(presetNumber: number): Promise<PanevoResult<CommandResponse>> {
     const preset = this.clampPresetNumber(presetNumber);
-    return this.sendCommand(`recall-preset-${preset}`, buildRecallPresetCommand(preset));
+    return this.sendCommand(
+      `recall-preset-${preset}`,
+      buildRecallPresetCommand(preset),
+    );
   }
 
   storePreset(presetNumber: number): Promise<PanevoResult<CommandResponse>> {
     const preset = this.clampPresetNumber(presetNumber);
-    return this.sendCommand(`store-preset-${preset}`, buildStorePresetCommand(preset));
+    return this.sendCommand(
+      `store-preset-${preset}`,
+      buildStorePresetCommand(preset),
+    );
   }
 
   private panTilt(
@@ -265,7 +336,12 @@ export class ViscaClient {
   ): Promise<PanevoResult<CommandResponse>> {
     return this.sendCommand(
       name,
-      buildPanTiltCommand(panDirection, tiltDirection, this.clampPanSpeed(panSpeed), this.clampTiltSpeed(tiltSpeed)),
+      buildPanTiltCommand(
+        panDirection,
+        tiltDirection,
+        this.clampPanSpeed(panSpeed),
+        this.clampTiltSpeed(tiltSpeed),
+      ),
     );
   }
 
@@ -275,18 +351,20 @@ export class ViscaClient {
     options: { flushPending?: boolean } = {},
   ): Promise<PanevoResult<CommandResponse>> {
     if (!this.config || !this.connected) {
-      return Promise.resolve(failure('NOT_CONNECTED', 'Camera is not connected.'));
+      return Promise.resolve(
+        failure("NOT_CONNECTED", "Camera is not connected."),
+      );
     }
 
     return this.queue.enqueue(
       name,
       async () => {
         if (!this.config) {
-          throw new Error('Missing VISCA config');
+          throw new Error("Missing VISCA config");
         }
 
         if (!this.socket) {
-          throw new Error('Missing UDP socket');
+          throw new Error("Missing UDP socket");
         }
 
         await this.sendPacket(packet);
@@ -307,31 +385,36 @@ export class ViscaClient {
   private sendPacket(packet: Buffer): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.config || !this.socket) {
-        reject(new Error('Missing VISCA transport'));
+        reject(new Error("Missing VISCA transport"));
         return;
       }
 
-      this.socket.send(packet, this.config.port, this.config.ipAddress, (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      });
+      this.socket.send(
+        packet,
+        this.config.port,
+        this.config.ipAddress,
+        (error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        },
+      );
     });
   }
 
   private sendInquiry(packet: Buffer, timeoutMs: number): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       if (!this.config || !this.socket) {
-        reject(new Error('Missing VISCA transport'));
+        reject(new Error("Missing VISCA transport"));
         return;
       }
 
       const socket = this.socket;
       const timer = setTimeout(() => {
-        socket.off('message', onMessage);
-        reject(new Error('VISCA inquiry timed out'));
+        socket.off("message", onMessage);
+        reject(new Error("VISCA inquiry timed out"));
       }, timeoutMs);
 
       const onMessage = (message: Buffer) => {
@@ -339,11 +422,11 @@ export class ViscaClient {
         resolve(message);
       };
 
-      socket.once('message', onMessage);
+      socket.once("message", onMessage);
       socket.send(packet, this.config.port, this.config.ipAddress, (error) => {
         if (error) {
           clearTimeout(timer);
-          socket.off('message', onMessage);
+          socket.off("message", onMessage);
           reject(error);
         }
       });
@@ -356,21 +439,30 @@ export class ViscaClient {
       id: config.id,
       label: config.label,
       ipAddress: config.ipAddress.trim(),
-      port: Number.isFinite(roundedPort) ? Math.min(65535, Math.max(1, roundedPort)) : 52381,
+      port: Number.isFinite(roundedPort)
+        ? Math.min(65535, Math.max(1, roundedPort))
+        : 52381,
       onvifPort: Number.isFinite(config.onvifPort)
         ? Math.min(65535, Math.max(1, Math.round(config.onvifPort)))
         : 8080,
-      onvifUsername: typeof config.onvifUsername === 'string' ? config.onvifUsername.trim().slice(0, 80) : '',
-      onvifPassword: typeof config.onvifPassword === 'string' ? config.onvifPassword : '',
-      controlProtocol: config.controlProtocol === 'onvif' ? 'onvif' : 'visca',
-      syncProtocol: config.syncProtocol === 'none' ? 'none' : 'onvif',
-      protocol: config.protocol === 'tcp' ? 'tcp' : 'udp',
-      healthCheckMode: config.healthCheckMode === 'transport-only' ? 'transport-only' : 'visca-inquiry',
+      onvifUsername:
+        typeof config.onvifUsername === "string"
+          ? config.onvifUsername.trim().slice(0, 80)
+          : "",
+      onvifPassword:
+        typeof config.onvifPassword === "string" ? config.onvifPassword : "",
+      controlProtocol: config.controlProtocol === "onvif" ? "onvif" : "visca",
+      syncProtocol: config.syncProtocol === "none" ? "none" : "onvif",
+      protocol: config.protocol === "tcp" ? "tcp" : "udp",
+      healthCheckMode:
+        config.healthCheckMode === "transport-only"
+          ? "transport-only"
+          : "visca-inquiry",
       presets: config.presets,
     };
 
     if (normalized.ipAddress.length === 0) {
-      return failure('INVALID_CONFIG', 'Camera IP address is required.');
+      return failure("INVALID_CONFIG", "Camera IP address is required.");
     }
 
     return success(normalized);
