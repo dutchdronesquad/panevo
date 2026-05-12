@@ -9,6 +9,7 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 import { resolve } from "node:path";
 
 const appIconBase = resolve(__dirname, "assets/app-icon/icon");
+const appIconIcns = resolve(__dirname, "assets/app-icon/icon.icns");
 const appIconIco = resolve(__dirname, "assets/app-icon/icon.ico");
 const appIconPng = resolve(__dirname, "assets/app-icon/icon-512.png");
 
@@ -26,7 +27,7 @@ const config: ForgeConfig = {
     }),
     new MakerDMG({
       name: "Panevo",
-      icon: appIconBase,
+      icon: appIconIcns,
       overwrite: true,
     }),
     new MakerRpm({
