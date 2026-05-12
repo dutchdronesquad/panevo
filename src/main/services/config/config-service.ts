@@ -24,8 +24,8 @@ const DEFAULT_CAMERA: CameraProfile = {
 };
 
 const DEFAULT_CONFIG: CameraConfig = {
-  activeCameraId: DEFAULT_CAMERA.id,
-  cameras: [DEFAULT_CAMERA],
+  activeCameraId: "",
+  cameras: [],
 };
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
@@ -176,8 +176,26 @@ export class ConfigService {
         .filter((camera): camera is CameraProfile => Boolean(camera));
     }
 
+    if (!this.hasLegacyCameraConfig(config)) {
+      return [];
+    }
+
     const migratedCamera = this.normalizeCamera(config, 1);
     return migratedCamera ? [migratedCamera] : [];
+  }
+
+  private hasLegacyCameraConfig(
+    config: Partial<CameraConfig> &
+      Partial<CameraProfile> & { presetLabels?: unknown },
+  ): boolean {
+    return (
+      typeof config.ipAddress === "string" ||
+      typeof config.label === "string" ||
+      typeof config.port === "number" ||
+      typeof config.onvifPort === "number" ||
+      typeof config.protocol === "string" ||
+      Boolean(config.presetLabels)
+    );
   }
 
   private normalizeCamera(

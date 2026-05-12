@@ -6,12 +6,26 @@ import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+const packageJson = JSON.parse(
+  readFileSync(resolve(__dirname, "package.json"), "utf8"),
+) as { version: string };
+
+const packageVersion = packageJson.version;
 const appIconBase = resolve(__dirname, "assets/app-icon/icon");
 const appIconIcns = resolve(__dirname, "assets/app-icon/icon.icns");
 const appIconIco = resolve(__dirname, "assets/app-icon/icon.ico");
 const appIconPng = resolve(__dirname, "assets/app-icon/icon-512.png");
+const windowsSigningOptions =
+  process.env.WINDOWS_CERTIFICATE_FILE &&
+  process.env.WINDOWS_CERTIFICATE_PASSWORD
+    ? {
+        certificateFile: process.env.WINDOWS_CERTIFICATE_FILE,
+        certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD,
+      }
+    : {};
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -23,10 +37,11 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       name: "Panevo",
+      setupExe: `Panevo-${packageVersion}-Setup.exe`,
       setupIcon: appIconIco,
+      ...windowsSigningOptions,
     }),
     new MakerDMG({
-      name: "Panevo",
       icon: appIconIcns,
       overwrite: true,
     }),

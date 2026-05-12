@@ -69,6 +69,7 @@ Preload:
 Main process:
 
 - Owns Electron lifecycle.
+- Owns desktop app shell behavior such as window creation, platform identity, and tray lifecycle.
 - Registers IPC handlers.
 - Owns config persistence.
 - Owns VISCA transport, queueing, and command construction.
@@ -87,7 +88,7 @@ Main process:
 
 Panevo stores local configuration in Electron's `userData` directory as JSON.
 
-The current config model stores camera profiles, one active camera id, per-camera preset entries, internal camera health-check state, ONVIF endpoint settings, and ONVIF credentials. Keep this model local-first and explicit. Future versions can expand it into operator workspaces, integration credentials, or discovered camera metadata, but those additions should remain behind clear schema changes.
+The current config model stores camera profiles, one active camera id, per-camera preset entries, internal camera health-check state, ONVIF endpoint settings, and ONVIF credentials. A fresh install starts with an empty camera bank and no active camera. Keep this model local-first and explicit. Future versions can expand it into operator workspaces, integration credentials, or discovered camera metadata, but those additions should remain behind clear schema changes.
 
 ONVIF passwords are currently stored in local JSON only to keep Phase 2C probing, preset sync, and ONVIF control usable after restart. This is not the final production model. Move camera credentials to OS keychain storage, encrypted local storage, or a documented opt-in plain-config mode before treating ONVIF support as release-quality.
 

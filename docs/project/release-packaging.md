@@ -41,8 +41,8 @@ This keeps GitHub Release publishing as the manual release gate. The workflow do
 
 Expected release assets:
 
-- One macOS `.dmg` file.
-- One Windows setup `.exe` file.
+- One versioned macOS `.dmg` file.
+- One versioned Windows setup `.exe` file.
 
 Squirrel update artifacts such as `.nupkg` and `RELEASES` are intentionally not uploaded while Panevo does not have an auto-update strategy.
 
@@ -64,6 +64,16 @@ The package identity is configured in `forge.config.ts`:
 - DMG `icon`: macOS installer icon.
 - Squirrel `setupIcon`: Windows installer icon.
 - DEB/RPM `options.icon`: Linux desktop/package icon.
+
+Runtime desktop identity is configured in `src/main/app`:
+
+- `asset-paths.ts`: shared runtime icon paths.
+- `platform.ts`: per-platform app shell decisions.
+- `main-window.ts`: `BrowserWindow` creation and runtime window icon.
+- `tray.ts`: system tray creation for platforms that keep Panevo running in the background.
+- `lifecycle.ts`: app name, App User Model ID, close-to-tray, quit, and activate behavior.
+
+Keep packaging identity and runtime identity aligned. A correct installer icon does not guarantee the taskbar/runtime icon is correct, and a correct runtime icon does not guarantee the installer or app bundle metadata is correct.
 
 ## Required Icon Assets
 
@@ -108,13 +118,23 @@ Minimum expected Windows checks:
 - The Squirrel installer uses the Panevo setup icon.
 - The installed app appears as Panevo in Start Menu and Apps & Features.
 - The taskbar icon is Panevo after install and first launch.
+- Closing the main window keeps Panevo running in the system tray.
+- The tray menu can reopen Panevo and quit Panevo explicitly.
+- The Windows App User Model ID is set to `nl.dutchdronesquad.panevo`.
 - Squirrel startup/update/uninstall events are handled by `electron-squirrel-startup`.
 
 Before a public Windows release, add:
 
-- Code signing certificate support.
+- A trusted Authenticode code-signing certificate.
 - A decision between Squirrel.Windows, WiX/MSI, or MSIX for the primary public installer.
 - Windows App User Model ID validation.
+
+Panevo's Squirrel maker supports optional Windows signing when these environment variables are available during `npm run make`:
+
+- `WINDOWS_CERTIFICATE_FILE`: path to the `.pfx` or `.p12` certificate file.
+- `WINDOWS_CERTIFICATE_PASSWORD`: certificate password.
+
+Unsigned builds can still be produced, but Microsoft Defender SmartScreen may warn users because the installer has no trusted publisher reputation. Code signing is required to meaningfully reduce that warning. An EV certificate or established publisher reputation may still be needed before SmartScreen stops warning on fresh releases.
 
 ## Linux Release Requirements
 
@@ -136,7 +156,9 @@ Run before tagging a release:
 - `rm -rf out && npm run package`
 - Launch the packaged app on the target OS.
 - Confirm icon, app name, menu name, and window title.
+- Confirm Windows close-to-tray behavior and tray quit behavior.
 - Confirm config storage path still points to the packaged app's `userData`.
+- Confirm a fresh userData directory starts with no configured cameras.
 - Confirm camera controls still work in packaged mode.
 - Confirm ONVIF probing still works in packaged mode.
 
