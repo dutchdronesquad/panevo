@@ -9,6 +9,7 @@ on:
 
 env:
   DEFAULT_NODE: 24
+  RELEASE_TAG: ${{ github.event.release.tag_name }}
 
 permissions:
   contents: write
@@ -18,28 +19,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  validate:
-    name: Validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v6.0.2
-      - name: 🏗 Set up Node.js ${{ env.DEFAULT_NODE }}
-        uses: actions/setup-node@v6.4.0
-        with:
-          node-version: ${{ env.DEFAULT_NODE }}
-      - name: 🏗 Install dependencies
-        run: npm ci
-      - name: 🚀 Run TypeScript
-        run: npm run type
-      - name: 🚀 Run ESLint
-        run: npm run lint
-      - name: 🚀 Run Prettier
-        run: npm run format:check
-
   make:
     name: Make ${{ matrix.name }}
-    needs: validate
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -60,6 +41,12 @@ jobs:
           node-version: ${{ env.DEFAULT_NODE }}
       - name: 🏗 Install dependencies
         run: npm ci
+      - name: 🏷 Use release tag version
+        shell: bash
+        run: |
+          npm version "${RELEASE_TAG#v}" \
+            --no-git-tag-version \
+            --allow-same-version
       - name: 🚀 Make distributables
         run: npm run make
       - name: ⬆️ Upload release asset

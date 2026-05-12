@@ -33,13 +33,11 @@ Panevo releases are initiated from GitHub Releases. Publishing a release in GitH
 The workflow:
 
 1. Runs `npm ci`.
-2. Runs `npm run type`.
-3. Runs `npm run lint`.
-4. Runs `npm run format:check`.
-5. Builds macOS and Windows distributables with `npm run make`.
-6. Uploads the generated `.dmg` and `.exe` artifacts from `out/make` back to the published GitHub Release with `softprops/action-gh-release`.
+2. Derives the application version from the GitHub Release tag.
+3. Builds macOS and Windows distributables with `npm run make`.
+4. Uploads the generated `.dmg` and `.exe` artifacts from `out/make` back to the published GitHub Release with `softprops/action-gh-release`.
 
-This keeps GitHub Release publishing as the manual release gate. The workflow does not create releases or tags itself.
+This keeps GitHub Release publishing as the manual release gate. The workflow does not create releases or tags itself. The release tag is the source of truth for the packaged app version. For example, publishing release `v0.1.0` makes the workflow build with package version `0.1.0` even if the committed `package.json` version is still a development placeholder.
 
 Expected release assets:
 
@@ -144,11 +142,10 @@ Run before tagging a release:
 
 GitHub release flow:
 
-1. Update `package.json` version.
-2. Merge release-ready changes into `main`.
-3. Create and publish a GitHub Release with a tag that matches the package version, for example `v0.1.0`.
-4. Wait for the Release workflow to attach macOS and Windows artifacts.
-5. Download and smoke test the uploaded artifacts on real machines before announcing the release.
+1. Merge release-ready changes into `main`.
+2. Create and publish a GitHub Release with the intended version tag, for example `v0.1.0`.
+3. Wait for the Release workflow to attach macOS and Windows artifacts.
+4. Download and smoke test the uploaded artifacts on real machines before announcing the release.
 
 ## Known Notes
 
