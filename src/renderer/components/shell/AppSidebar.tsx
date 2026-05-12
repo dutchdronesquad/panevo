@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   CircleOff,
   Gamepad2,
-  RadioReceiver,
   Settings,
 } from "lucide-react";
 import {
@@ -12,6 +11,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/renderer/components/ui/tooltip";
+import panevoIcon from "@/assets/brand/panevo-icon-color.svg";
+import panevoLogoDark from "@/assets/brand/panevo-logo-color-darkbg.svg";
+import panevoLogoLight from "@/assets/brand/panevo-logo-color-lightbg.svg";
 import type { CameraConnectionStatus, CameraProfile } from "../../types/camera";
 
 export type AppView = "control" | "cameras" | "settings";
@@ -89,14 +91,19 @@ export const AppSidebar = ({
   return (
     <aside className="sidebar">
       <div className="brand-row sidebar-brand">
-        <div className="brand-mark">
-          <RadioReceiver size={18} />
-        </div>
-        <div>
-          <h1>Panevo</h1>
-          <p>Live production control</p>
-        </div>
+        <img
+          className="brand-logo-full brand-logo-full--dark"
+          src={panevoLogoDark}
+          alt="Panevo"
+        />
+        <img
+          className="brand-logo-full brand-logo-full--light"
+          src={panevoLogoLight}
+          alt="Panevo"
+        />
+        <img className="brand-logo-icon" src={panevoIcon} alt="Panevo" />
       </div>
+      <div className="sidebar-separator" />
 
       <nav className="sidebar-nav" aria-label="Panevo views">
         {navBtn("control", <Gamepad2 size={16} />, "Control")}

@@ -244,8 +244,8 @@ button {
 
 .sidebar {
   display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  gap: 20px;
+  grid-template-rows: auto auto auto 1fr auto;
+  row-gap: 8px;
   height: 100vh;
   overflow: hidden;
   border-right: 1px solid var(--panevo-border-strong);
@@ -254,7 +254,9 @@ button {
 }
 
 .sidebar-brand {
-  align-items: flex-start;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 8px;
 }
 
 .sidebar-brand h1 {
@@ -267,6 +269,12 @@ button {
 .sidebar-nav {
   display: grid;
   gap: 4px;
+}
+
+.sidebar-separator {
+  height: 1px;
+  background: var(--panevo-border-subtle);
+  margin: 2px 8px;
 }
 
 .sidebar-nav-button {
@@ -402,11 +410,40 @@ button {
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid var(--panevo-border-strong);
+  border: 0;
   border-radius: 8px;
-  background: var(--panevo-surface-panel);
-  color: var(--panevo-signal-blue);
+  background: transparent;
   flex-shrink: 0;
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.brand-logo-full {
+  display: block;
+  width: 156px;
+  height: auto;
+}
+
+.brand-logo-full--light {
+  display: none;
+}
+
+:root[data-theme="light"] .brand-logo-full--dark {
+  display: none;
+}
+
+:root[data-theme="light"] .brand-logo-full--light {
+  display: block;
+}
+
+.brand-logo-icon {
+  display: none;
+  width: 38px;
+  height: 38px;
 }
 
 h1,
@@ -1808,12 +1845,20 @@ input:disabled {
   }
 
   .sidebar {
-    gap: 16px;
+    row-gap: 8px;
     padding: 12px 8px;
   }
 
   .sidebar-brand {
     justify-content: center;
+  }
+
+  .brand-logo-full {
+    display: none;
+  }
+
+  .brand-logo-icon {
+    display: block;
   }
 
   .sidebar-brand > div:not(.brand-mark),
@@ -1868,7 +1913,7 @@ input:disabled {
 
   .sidebar {
     grid-template-columns: auto 1fr auto;
-    grid-template-rows: auto;
+    grid-template-rows: auto auto;
     align-items: center;
     height: auto;
     border-right: 0;
@@ -1878,6 +1923,20 @@ input:disabled {
 
   .sidebar-brand {
     justify-content: flex-start;
+  }
+
+  .brand-logo-full {
+    display: block;
+    width: 132px;
+  }
+
+  .brand-logo-icon {
+    display: none;
+  }
+
+  .sidebar-separator {
+    grid-column: 1 / -1;
+    margin: 0;
   }
 
   .sidebar-brand > div:not(.brand-mark) {

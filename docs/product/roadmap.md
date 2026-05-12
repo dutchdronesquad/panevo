@@ -87,7 +87,7 @@ Status: complete.
 - Clean up MVP UI spacing, sizing, and contrast.
 - Keep PTZ controls large and touch-friendly.
 - Evaluate whether to introduce `shadcn/ui` now or defer until after MVP.
-- Run typecheck and lint.
+- Run type and lint.
 - Verify development start.
 - Verify package build when network/tooling allows.
 - Add first screenshots to README.
@@ -143,7 +143,7 @@ Status: complete.
 
 Exit criteria:
 
-- `npm run typecheck` passes.
+- `npm run type` passes.
 - `npm run lint` passes.
 - Existing PTZ, zoom, settings, mock mode, and dynamic preset workflows still work.
 - The app no longer relies on one-off temporary UI primitives for common controls.
@@ -168,7 +168,7 @@ Exit criteria:
 - Selecting a camera runs a health check instead of incorrectly marking the camera disconnected.
 - The active camera status distinguishes verified camera response from transport-only fallback.
 - PTZ, zoom, focus, presets, emergency stop, and per-camera presets continue to work after switching cameras.
-- `npm run typecheck` passes.
+- `npm run type` passes.
 - `npm run lint` passes.
 
 ### Phase 2C: Camera Discovery and ONVIF
@@ -244,7 +244,7 @@ Exit criteria:
 - Background health checks do not block or disrupt PTZ commands.
 - Preset remove behaves as documented for ONVIF sync and local-only modes.
 - Camera management, control, and settings views remain usable at common window sizes.
-- `npm run typecheck`, `npm run lint`, and packaging smoke checks pass.
+- `npm run type`, `npm run lint`, and packaging smoke checks pass.
 - `docs/hardware/tenveo-hardware.md`, `docs/architecture/testing.md`, and `docs/product/mvp-checklist.md` reflect the latest validation.
 
 ### Phase 2E: VISCA Compatibility
@@ -300,21 +300,21 @@ Scope:
 - Rewrite `README.md` to be more end-user and contributor friendly.
 - Add screenshots or screenshot placeholders.
 - Add contribution guidance.
-- Add issue templates and pull request template.
+- Add pull request template.
 - Add GitHub label taxonomy.
 - Add Renovate configuration.
 - Add Release Drafter configuration.
-- Add GitHub Actions for lint, typecheck, and package smoke checks.
+- Add GitHub Actions for lint, type, and package smoke checks.
 - Add security/support docs where useful.
 
 Exit criteria:
 
 - A new user can understand what Panevo does and how to run it from the README.
 - A contributor can find architecture, roadmap, and setup docs from the README.
-- CI catches lint and typecheck failures.
+- CI catches lint and type failures.
 - Dependency update PRs are grouped and labelled.
 - Release notes can be drafted consistently.
-- Issue and PR templates guide useful bug reports and contributions.
+- Pull request guidance supports useful contributions.
 
 ## Phase 4: Production Integrations
 

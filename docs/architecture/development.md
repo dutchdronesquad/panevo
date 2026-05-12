@@ -19,7 +19,7 @@ npm start
 Run TypeScript checks:
 
 ```bash
-npm run typecheck
+npm run type
 ```
 
 Run linting:

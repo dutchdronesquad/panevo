@@ -10,6 +10,7 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - When a technical direction changes, update `docs/product/decisions.md`.
 - When a task becomes intentionally deferred, move or duplicate it under Explicitly Deferred with context.
 - Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `docs/product/roadmap.md`.
+- Verification commands are not repeated per phase. Run the standard checks from `AGENTS.md` after code, workflow, dependency, or formatting changes.
 
 ## Phase 1.1: Foundation
 
@@ -22,7 +23,6 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - [x] Add local JSON config service.
 - [x] Add mock mode foundation.
 - [x] Add basic operator UI layout.
-- [x] Verify TypeScript with `npm run typecheck`.
 - [x] Verify `npm start` on a clean checkout.
 
 ## Phase 1.2: VISCA Hardware Validation
@@ -78,8 +78,6 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - [x] Verify controls remain usable at minimum window size.
 - [x] Verify touch/pointer behavior on PTZ and zoom controls.
 - [x] Decide whether `shadcn/ui` is added before or after MVP completion.
-- [x] Run `npm run typecheck`.
-- [x] Run `npm run lint` or update lint tooling if incompatible with TypeScript version.
 - [x] Verify `npm start`.
 - [x] Verify `npm run package` when network/tooling allows.
 - [x] Add screenshots to README.
@@ -126,8 +124,6 @@ Local verification:
 - [x] Preserve custom PTZ, zoom, dynamic preset, and connection status components.
 - [x] Define Panevo design tokens.
 - [x] Verify PTZ, zoom, settings, mock mode, and dynamic presets still work.
-- [x] Run `npm run typecheck`.
-- [x] Run `npm run lint`.
 - [x] Remove Vite 8 `inlineDynamicImports` preload warning.
 
 ## Phase 2B: Camera Profiles
@@ -149,8 +145,6 @@ Local verification:
 - [x] Add camera connection health checks.
 - [x] Distinguish verified camera response from transport-only fallback status.
 - [x] Run camera health check during active camera selection.
-- [x] Run `npm run typecheck`.
-- [x] Run `npm run lint`.
 
 Phase 2B hardware regression:
 
@@ -220,8 +214,6 @@ Phase 2B hardware regression:
 - [x] Validate that deleted ONVIF presets disappear from the camera web UI.
 - [x] Validate app restart keeps ONVIF credentials and rebuilds probe/sync state.
 - [x] Validate responsive layout at `1440`, `1180`, `980`, `760`, and `560` px widths.
-- [x] Run `npm run typecheck`.
-- [x] Run `npm run lint`.
 - [x] Run `npm run package`.
   - Phase 2D accepted; last local package attempt completed Vite production bundles but Electron Forge packaging failed while resolving `github.com` (`getaddrinfo ENOTFOUND github.com`). Retry with working network access before release distribution.
 - [x] Update `docs/hardware/tenveo-hardware.md` with Phase 2D regression results.
@@ -234,8 +226,6 @@ Phase 2B hardware regression:
 - [ ] Decide whether TCP VISCA is useful enough to implement for the tested camera.
 - [ ] Identify any camera-profile compatibility flags needed before adding more camera models.
 - [ ] Keep VISCA live control stable while ONVIF remains the sync/discovery route.
-- [x] Run `npm run typecheck`.
-- [x] Run `npm run lint`.
 
 ## Phase 3: Stream Discovery and External Preview
 
@@ -246,32 +236,25 @@ Phase 2B hardware regression:
 - [x] Remove per-camera preview settings from the UI and config schema.
 - [x] Keep RTSP URLs diagnostics-only and out of active camera control.
 - [x] Document that external tools remain the preview path for now.
-- [ ] Validate ONVIF RTSP URL discovery against Tenveo hardware after the preview removal.
-- [x] Run `npm run typecheck`.
-- [x] Run `npm run lint`.
+- [x] Validate ONVIF RTSP URL discovery against Tenveo hardware after the preview removal.
 
 ## Phase 3B: Open Source Project Readiness
 
-- [ ] Add `LICENSE`.
-- [ ] Rewrite `README.md` for end users and contributors.
-- [ ] Add screenshots or screenshot placeholders.
-- [ ] Link the docs index clearly from the README.
-- [ ] Add `CONTRIBUTING.md`.
+- [x] Add `LICENSE`.
+- [x] Rewrite `README.md` for end users and contributors.
+- [x] Add screenshots or screenshot placeholders.
+- [x] Link the docs index clearly from the README.
+- [x] Add `CONTRIBUTING.md`.
 - [ ] Add pull request template.
-- [ ] Add bug report issue template.
-- [ ] Add feature request issue template.
-- [ ] Add hardware validation issue template.
-- [ ] Add GitHub label taxonomy.
-- [ ] Add Renovate configuration.
-- [ ] Add Release Drafter configuration.
-- [ ] Add GitHub Actions workflow for `npm run lint`.
-- [ ] Add GitHub Actions workflow for `npm run typecheck`.
+- [x] Add GitHub label taxonomy.
+- [x] Add Renovate configuration.
+- [x] Add Release Drafter configuration.
+- [x] Add GitHub Actions workflow for `npm run lint`.
+- [ ] Add GitHub Actions workflow for `npm run type`.
 - [ ] Add package/build smoke workflow where practical.
 - [ ] Add `SECURITY.md` or document why it is deferred.
-- [ ] Add `CODE_OF_CONDUCT.md` or document why it is deferred.
+- [x] Add `CODE_OF_CONDUCT.md` or document why it is deferred.
 - [ ] Document release process and versioning expectations.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ## Phase 4: Production Integrations
 
@@ -292,8 +275,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Ensure integrations do not auto-enable after discovery or configuration.
 - [ ] Show integration errors without blocking PTZ control.
 - [ ] Document integration config storage behavior.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ### Phase 4B: Action and Feedback Foundation
 
@@ -304,8 +285,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Add structured action results for integrations.
 - [ ] Document which actions are safe, guarded, or destructive.
 - [ ] Add tests or focused validation for stop, preset recall, preset store, and camera selection through the action layer.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ### Phase 4C: OBS Integration
 
@@ -319,8 +298,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Add optional mapping from Panevo preset/action to OBS scene switch.
 - [ ] Ensure OBS disconnect does not affect PTZ control.
 - [ ] Document OBS setup and failure modes.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ### Phase 4D: Companion and Stream Deck Action Bridge
 
@@ -333,8 +310,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Provide basic feedback for active camera and connection state.
 - [ ] Prevent external triggers from bypassing safety checks.
 - [ ] Document setup and supported action IDs.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ### Phase 4E: Physical Operator Controls
 
@@ -348,8 +323,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Send stop on disconnect, stale input, app blur, or disabled mapping.
 - [ ] Ensure device input routes through the shared Panevo action layer.
 - [ ] Document physical control safety requirements.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ### Phase 4F: RotorHazard Integration
 
@@ -363,8 +336,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Keep RotorHazard assumptions generic and not Dutch Drone Squad specific.
 - [ ] Ensure RotorHazard disconnect pauses race-aware automation.
 - [ ] Document RotorHazard setup and failure modes.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.
 
 ### Phase 4G: Flexbar Investigation
 
@@ -385,5 +356,3 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Ensure stop overrides automation.
 - [ ] Ensure automation cannot run against an unknown or disconnected active camera.
 - [ ] Document automation safety rules.
-- [ ] Run `npm run typecheck`.
-- [ ] Run `npm run lint`.

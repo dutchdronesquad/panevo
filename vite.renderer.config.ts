@@ -7,8 +7,15 @@ import { resolve } from "node:path";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: {
-      "@": resolve(__dirname, "./src"),
-    },
+    alias: [
+      {
+        find: /^@\/assets\/(.*)$/,
+        replacement: `${resolve(__dirname, "./assets")}/$1`,
+      },
+      {
+        find: "@",
+        replacement: resolve(__dirname, "./src"),
+      },
+    ],
   },
 });
