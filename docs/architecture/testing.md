@@ -6,7 +6,7 @@ Panevo's MVP needs both technical validation and hardware validation. TypeScript
 
 ### Static Checks
 
-- TypeScript compile check with `npm run typecheck`.
+- TypeScript compile check with `npm run type`.
 - Linting with `npm run lint` once lint tooling is aligned with the active TypeScript version.
 - Production Vite build through Electron Forge packaging flow where possible.
 
@@ -87,7 +87,7 @@ Validate:
 
 Run this before marking an active phase complete:
 
-- [ ] `npm run typecheck`
+- [ ] `npm run type`
 - [ ] `npm run lint`
 - [ ] App launches in development mode.
 - [ ] Config persists after restart.

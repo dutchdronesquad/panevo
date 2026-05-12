@@ -254,7 +254,8 @@ button {
 }
 
 .sidebar-brand {
-  align-items: flex-start;
+  align-items: center;
+  min-height: 40px;
 }
 
 .sidebar-brand h1 {
@@ -402,11 +403,28 @@ button {
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid var(--panevo-border-strong);
+  border: 0;
   border-radius: 8px;
-  background: var(--panevo-surface-panel);
-  color: var(--panevo-signal-blue);
+  background: transparent;
   flex-shrink: 0;
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.brand-logo-full {
+  display: block;
+  width: 150px;
+  height: auto;
+}
+
+.brand-logo-icon {
+  display: none;
+  width: 38px;
+  height: 38px;
 }
 
 h1,
@@ -1816,6 +1834,14 @@ input:disabled {
     justify-content: center;
   }
 
+  .brand-logo-full {
+    display: none;
+  }
+
+  .brand-logo-icon {
+    display: block;
+  }
+
   .sidebar-brand > div:not(.brand-mark),
   .sidebar-nav-button span,
   .sidebar-status-label {
@@ -1878,6 +1904,15 @@ input:disabled {
 
   .sidebar-brand {
     justify-content: flex-start;
+  }
+
+  .brand-logo-full {
+    display: block;
+    width: 132px;
+  }
+
+  .brand-logo-icon {
+    display: none;
   }
 
   .sidebar-brand > div:not(.brand-mark) {

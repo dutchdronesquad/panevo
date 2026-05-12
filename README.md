@@ -1,144 +1,109 @@
-# Panevo
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/panevo-logo-color-darkbg.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/brand/panevo-logo-color-lightbg.svg">
+    <img alt="Panevo" src="assets/brand/panevo-logo-color-lightbg.svg" width="320">
+  </picture>
+</p>
 
-Panevo is a modern live production and PTZ control tool designed for race broadcasts, livestream operators, and camera automation workflows.
+<p align="center">
+  <strong>Live production control for PTZ cameras and race broadcast operators.</strong>
+</p>
 
-The first milestone is a desktop PTZ control MVP for VISCA over IP, targeting a Tenveo PTZ camera. The application is built as a future live production platform, not just a single-purpose camera controller.
+<p align="center">
+  <a href="https://github.com/dutchdronesquad/panevo/actions/workflows/linting.yaml"><img
+    src="https://github.com/dutchdronesquad/panevo/actions/workflows/linting.yaml/badge.svg"
+    alt="Linting"
+  /></a>
+  <a href="LICENSE"><img
+    src="https://img.shields.io/badge/license-MIT-blue"
+    alt="License"
+  /></a>
+</p>
 
-## Status
+<p align="center">
+  <a href="docs/index.md"><strong>Docs</strong></a>
+  &middot;
+  <a href="docs/product/roadmap.md"><strong>Roadmap</strong></a>
+  &middot;
+  <a href="docs/hardware/tenveo-hardware.md"><strong>Hardware notes</strong></a>
+</p>
 
-Phase 1 PTZ MVP is complete. Phase 2 is focused on product foundation, camera profiles, and ONVIF camera capability work.
+<p align="center">
+  Panevo is a desktop control surface for livestream operators who need fast,
+  reliable PTZ camera control during live events.
+</p>
 
-Implemented:
+> Product screenshots will be added after the first public visual QA pass.
 
-- Electron Forge desktop app
-- React + Vite + TypeScript renderer
-- IPC boundary between renderer and main process
-- VISCA over IP service architecture
-- Protocol-agnostic camera control service
-- Local JSON config storage
-- Mock mode for development without hardware
-- Multi-camera profiles
-- PTZ movement, zoom, focus, and preset controls
-- ONVIF probing for configured cameras
-- ONVIF PTZ control route
+## Project status
 
-Progress is tracked in:
+Panevo is in early active development. The PTZ control MVP is functional and has been tested with a Tenveo PTZ camera.
 
-- `docs/product/roadmap.md`
-- `docs/product/mvp-checklist.md`
-- `docs/hardware/tenveo-hardware.md`
+Current focus:
 
-## Screenshots
+- Reliable PTZ operation
+- Camera profiles
+- VISCA live control
+- ONVIF discovery and preset sync
+- Open source project readiness
 
-Screenshots should be stored in `docs/screenshots/` after the first visual QA pass.
+Video preview is intentionally handled outside Panevo for now.
 
-Planned MVP screenshots:
+## What you can do
 
-- Main operator surface.
-- Camera settings in mock mode.
-- Preset label editing.
+- 🎥 **Control PTZ cameras live** - use operator-focused controls for pan, tilt, zoom, focus, stop, and emergency stop
+- 🎛️ **Manage camera profiles** - configure and switch between multiple cameras from one desktop app
+- 📍 **Recall and store presets** - keep a local named preset list mapped to camera preset numbers
+- 🔎 **Probe cameras with ONVIF** - discover camera metadata, media profiles, RTSP stream URIs, and numeric presets where supported
+- ⚡ **Use VISCA for responsive movement** - keep VISCA as the default live control route for the tested Tenveo workflow
 
-Current repository status: screenshot location is prepared, but image capture still needs a local app run outside the Codex sandbox.
+## Tested hardware
 
-## Tested Hardware
+Panevo has been validated with a Tenveo PTZ camera.
 
-Initial MVP hardware validation has been done against a Tenveo PTZ camera using VISCA over IP.
+- VISCA over IP using UDP
+- VISCA port `52381`
+- ONVIF port `8080`
+- Pan speed range `1-24`
+- Tilt speed range `1-24`
+- Zoom speed range `1-8`
 
-Observed Tenveo behavior:
+Hardware validation notes live in [`docs/hardware/tenveo-hardware.md`](docs/hardware/tenveo-hardware.md).
 
-- Protocol: UDP VISCA over IP.
-- Default port: `52381`.
-- ONVIF endpoint observed on port `8080`.
-- Pan speed range: `1-24`.
-- Tilt speed range: `1-24`.
-- Zoom speed range: `1-8`.
-- Pan, tilt, diagonal movement, stop, zoom, preset recall, and preset store have been validated.
-- Panevo manages a dynamic local preset list that maps labels to camera preset numbers.
-- New configurations start with an empty preset list.
-- Preset entries can be added, renamed, removed from Panevo, recalled, and overwritten.
-- Preset labels are stored locally in Panevo config and are not camera-native preset names.
-- ONVIF probing, control, and numeric preset sync are implemented. ONVIF is the preferred route for discovery, metadata, and preset synchronization; VISCA is the default live control route for the tested Tenveo workflow because it feels more direct during operation.
+## How it works
 
-Preview is still handled outside Panevo during the MVP.
+1. **Add a camera profile** with the camera IP address and protocol settings.
+2. **Probe ONVIF when available** to discover metadata, stream URIs, media profiles, and numeric presets.
+3. **Select the active camera** before moving or recalling shots.
+4. **Operate the camera live** with PTZ, zoom, focus, stop, and preset controls.
+5. **Keep preview external** through OBS, NDI Studio Monitor, camera-native tools, or another confidence monitor.
 
-## Development
+## What's next
 
-Install dependencies:
+Panevo is being prepared for open source use and future production integrations. The next product steps are documented in the project roadmap rather than duplicated here.
 
-```bash
-npm install
-```
+Useful links:
 
-Start the app:
+- [`docs/product/roadmap.md`](docs/product/roadmap.md)
+- [`docs/product/mvp-checklist.md`](docs/product/mvp-checklist.md)
+- [`docs/integrations/integration-use-cases.md`](docs/integrations/integration-use-cases.md)
 
-```bash
-npm start
-```
+## Sponsors
 
-Run TypeScript checks:
+If Panevo helps your club, event, or race-day workflow, you can help fund continued development and maintenance.
 
-```bash
-npm run typecheck
-```
+- Support the project through [GitHub Sponsors](https://github.com/sponsors/klaasnicolaas)
+- Send a one-off contribution through [Ko-fi](https://ko-fi.com/klaasnicolaas)
 
-Package the app:
+## Contributing
 
-```bash
-npm run package
-```
+You are welcome to contribute to Panevo. You can find a guide on how to contribute in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Architecture
+<a href="https://github.com/dutchdronesquad/panevo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=dutchdronesquad/panevo" alt="Contributors" />
+</a>
 
-```text
-src/
-  main/
-    ipc/
-    services/
-      config/
-      camera-control/
-      visca/
-      onvif/
-  renderer/
-    components/
-    layouts/
-    types/
-  shared/
-```
+## License
 
-The renderer never constructs VISCA packets, calls ONVIF directly, or accesses Node.js networking APIs. The preload script exposes a typed `window.panevo` API, and the main process owns config persistence, IPC handlers, protocol adapters, command queueing, and network transport.
-
-## Documentation
-
-Start with `docs/index.md`.
-
-Key documents:
-
-- `docs/product/overview.md`: product vision, scope, principles, MVP discipline, and glossary.
-- `docs/architecture/architecture.md`: process boundaries, data flow, services, IPC, safety architecture, and future extension points.
-- `docs/product/roadmap.md`: phased roadmap and MVP completion criteria.
-- `docs/product/mvp-checklist.md`: operational checklist for tracking implementation progress.
-- `docs/hardware/visca.md`: VISCA client architecture, command strategy, vendor variance, package strategy, and discovery notes.
-- `docs/hardware/onvif.md`: ONVIF package decision, probing, control, auth, preset sync, and failure modes.
-- `docs/ui/ui-ux.md`: operator-focused design direction and UI framework strategy.
-- `docs/integrations/integrations.md`: deferred OBS, RotorHazard, operator-surface, preview, and automation integration plans.
-- `docs/integrations/integration-use-cases.md`: minimum useful workflows for future integrations.
-- `docs/integrations/preview.md`: external preview and ONVIF RTSP discovery scope.
-- `docs/project/open-source-readiness.md`: repository readiness, CI, labels, Renovate, and release automation.
-- `docs/architecture/development.md`: local development workflow and coding conventions.
-- `docs/architecture/testing.md`: static, mock, hardware, safety, and packaging validation strategy.
-- `docs/hardware/tenveo-hardware.md`: Tenveo hardware test notes and open questions.
-- `docs/product/decisions.md`: architectural decisions and deferred choices.
-
-## Roadmap Ideas
-
-- Multi-camera production workflows
-- Camera-native preset discovery/import
-- ONVIF discovery and preset import
-- OBS integration
-- RotorHazard integration
-- Stream Deck and Companion support
-- RTSP or NDI preview
-- Automation workflows
-- Race-aware production controls
-
-See the `docs/` folder before making architectural changes.
+Distributed under the **MIT** License - see [LICENSE](LICENSE) for details.

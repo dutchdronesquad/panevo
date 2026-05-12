@@ -17,6 +17,7 @@
     "isolatedModules": true,
     "types": ["node"],
     "paths": {
+      "@/assets/*": ["./assets/*"],
       "@/*": ["./src/*"]
     }
   },

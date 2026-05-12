@@ -18,18 +18,18 @@ Required before a public release:
 - User-friendly `README.md`
 - Contributor-oriented development setup
 - Linked documentation index
-- Issue templates
 - Pull request template
 - GitHub labels
 - Renovate configuration
 - Release Drafter configuration
-- GitHub Actions for lint/typecheck/package smoke checks
+- GitHub Actions for lint/type/package smoke checks
 
 Recommended before wider contribution:
 
 - `CONTRIBUTING.md`
 - `CODE_OF_CONDUCT.md`
 - `SECURITY.md`
+- Issue templates
 - `SUPPORT.md`
 - `FUNDING.yml` only if the project is ready to receive funding
 
@@ -57,7 +57,7 @@ The README should not become the full architecture document. Detailed technical 
 Initial workflows should be small and reliable:
 
 - `lint`: run `npm run lint`
-- `typecheck`: run `npm run typecheck`
+- `type`: run `npm run type`
 - `package-smoke`: run Electron Forge package/build where practical
 
 Packaging workflows may need platform-specific handling later because Electron packaging can depend on network access, native tooling, and signing requirements.
