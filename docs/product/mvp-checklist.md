@@ -250,11 +250,11 @@ Phase 2B hardware regression:
 - [x] Add Renovate configuration.
 - [x] Add Release Drafter configuration.
 - [x] Add GitHub Actions workflow for `npm run lint`.
-- [ ] Add GitHub Actions workflow for `npm run type`.
-- [ ] Add package/build smoke workflow where practical.
+- [x] Add GitHub Actions workflow for `npm run type`.
+- [x] Add package/build smoke workflow where practical.
 - [ ] Add `SECURITY.md` or document why it is deferred.
 - [x] Add `CODE_OF_CONDUCT.md` or document why it is deferred.
-- [ ] Document release process and versioning expectations.
+- [x] Document release process and versioning expectations.
 
 ## Phase 4: Production Integrations
 

@@ -1,0 +1,60 @@
+---
+name: Release
+
+# yamllint disable-line rule:truthy
+on:
+  release:
+    types:
+      - published
+
+env:
+  DEFAULT_NODE: 24
+  RELEASE_TAG: ${{ github.event.release.tag_name }}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  make:
+    name: Make ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS arm64
+            os: macos-latest
+            platform: macos
+          - name: Windows x64
+            os: windows-latest
+            platform: windows
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v6.0.2
+      - name: 🏗 Set up Node.js ${{ env.DEFAULT_NODE }}
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ env.DEFAULT_NODE }}
+      - name: 🏗 Install dependencies
+        run: npm ci
+      - name: 🏷 Use release tag version
+        shell: bash
+        run: |
+          npm version "${RELEASE_TAG#v}" \
+            --no-git-tag-version \
+            --allow-same-version
+      - name: 🚀 Make distributables
+        run: npm run make
+      - name: ⬆️ Upload release asset
+        uses: softprops/action-gh-release@v3.0.0
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            out/make/**/*.exe
+            out/make/**/*.dmg
+          fail_on_unmatched_files: true
+          overwrite_files: true

@@ -9,6 +9,7 @@ Panevo should be prepared as a usable open source desktop application, not only 
 - Add automation that catches common regressions before pull requests are merged.
 - Keep dependency updates visible and reviewable.
 - Make releases repeatable instead of ad hoc.
+- Document packaging assets and platform-specific release requirements before public builds.
 
 ## Repository Essentials
 
@@ -23,6 +24,7 @@ Required before a public release:
 - Renovate configuration
 - Release Drafter configuration
 - GitHub Actions for lint/type/package smoke checks
+- Electron Forge release packaging notes
 
 Recommended before wider contribution:
 
@@ -61,6 +63,8 @@ Initial workflows should be small and reliable:
 - `package-smoke`: run Electron Forge package/build where practical
 
 Packaging workflows may need platform-specific handling later because Electron packaging can depend on network access, native tooling, and signing requirements.
+
+Release packaging details, including app icon formats and macOS/Windows validation checks, live in `docs/project/release-packaging.md`.
 
 ## Renovate
 
