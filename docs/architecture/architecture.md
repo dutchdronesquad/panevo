@@ -17,6 +17,7 @@ Preload script
 
 Main process
   Electron lifecycle
+  Desktop app shell
   IPC handlers
   Config service
   Camera control service
@@ -47,8 +48,15 @@ This flow is intentionally longer than a direct socket call from the UI. The sep
 
 ```text
 src/
+  main.ts
+
   main/
-    index.ts
+    app/
+      asset-paths.ts
+      lifecycle.ts
+      main-window.ts
+      platform.ts
+      tray.ts
     ipc/
       camera-ipc.ts
       onvif-ipc.ts
@@ -67,8 +75,7 @@ src/
       config/
         config-service.ts
 
-  preload/
-    index.ts
+  preload.ts
 
   renderer/
     main.tsx
@@ -80,6 +87,7 @@ src/
 
 ## Boundary Rules
 
+- `src/main.ts` should stay a bootstrap file. App identity, platform behavior, window creation, and tray behavior belong in `src/main/app`.
 - Renderer code must not construct raw VISCA packets.
 - Renderer code must not choose protocol-specific control clients directly.
 - Renderer code must not access Node.js networking APIs.
@@ -94,13 +102,37 @@ src/
 
 ## Service Responsibilities
 
+### App Shell
+
+Owns Electron desktop lifecycle and platform-specific runtime behavior.
+
+Responsibilities:
+
+- Configure the Panevo application name and platform identity.
+- Create the main `BrowserWindow` with the correct runtime icon.
+- Keep close-to-tray behavior out of renderer code.
+- Create the system tray on platforms where Panevo should keep running in the background.
+- Centralize platform differences in `platform.ts` instead of scattering `process.platform` checks through the main process.
+
+Current platform behavior:
+
+- macOS uses normal Dock behavior and does not create a separate tray/menu-bar icon.
+- Windows and Linux keep Panevo running in the background when the main window is closed.
+- Windows sets an explicit App User Model ID so the installed app groups under the Panevo identity.
+
+Future responsibilities:
+
+- Add platform-specific menu behavior if Panevo needs native menus.
+- Add quit confirmation only if background workflows or automation make it necessary.
+- Add auto-start support as an explicit user preference, not as default behavior.
+
 ### ConfigService
 
 Owns local JSON persistence and normalization.
 
 Responsibilities:
 
-- Return defaults when no config exists.
+- Return an empty camera bank when no config exists.
 - Normalize port, protocol, IP address, and mock mode.
 - Preserve incomplete setup state while keeping values normalized.
 - Remain independent from React and VISCA packet construction.
