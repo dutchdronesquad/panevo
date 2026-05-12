@@ -36,6 +36,8 @@ npm run package
 
 Packaging may require network access because Electron Forge can download Electron packaging artifacts. A packaging failure caused by DNS or GitHub access is not automatically a code failure.
 
+Use packaged output, not `npm start`, when validating macOS Dock identity, Windows taskbar identity, installer icons, or final app metadata. See `docs/project/release-packaging.md` for the release packaging strategy and platform-specific icon requirements.
+
 ## Development Priorities
 
 During Phase 2E, development should prioritize:

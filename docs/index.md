@@ -36,6 +36,7 @@ Integrations:
 Project:
 
 - `project/open-source-readiness.md`: repository readiness, README direction, CI, labels, Renovate, and release automation.
+- `project/release-packaging.md`: Electron Forge packaging strategy, app icon assets, platform release checks, and signing requirements.
 
 ## Documentation Rules
 

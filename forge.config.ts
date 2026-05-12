@@ -1,22 +1,44 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
+import { MakerDMG } from "@electron-forge/maker-dmg";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
-import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import { resolve } from "node:path";
+
+const appIconBase = resolve(__dirname, "assets/app-icon/icon");
+const appIconIco = resolve(__dirname, "assets/app-icon/icon.ico");
+const appIconPng = resolve(__dirname, "assets/app-icon/icon-512.png");
 
 const config: ForgeConfig = {
   packagerConfig: {
+    appBundleId: "nl.dutchdronesquad.panevo",
     asar: true,
+    icon: appIconBase,
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
-    new MakerZIP({}, ["darwin"]),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerSquirrel({
+      name: "Panevo",
+      setupIcon: appIconIco,
+    }),
+    new MakerDMG({
+      name: "Panevo",
+      icon: appIconBase,
+      overwrite: true,
+    }),
+    new MakerRpm({
+      options: {
+        icon: appIconPng,
+      },
+    }),
+    new MakerDeb({
+      options: {
+        icon: appIconPng,
+      },
+    }),
   ],
   plugins: [
     new VitePlugin({
