@@ -7,8 +7,51 @@ Panevo's MVP needs both technical validation and hardware validation. TypeScript
 ### Static Checks
 
 - TypeScript compile check with `npm run type`.
+- Unit tests with `npm run test`.
 - Linting with `npm run lint` once lint tooling is aligned with the active TypeScript version.
 - Production Vite build through Electron Forge packaging flow where possible.
+
+### Unit Tests
+
+Vitest covers deterministic application logic that does not require an Electron window or camera hardware.
+
+Run tests:
+
+```bash
+npm run test
+```
+
+Run tests with coverage:
+
+```bash
+npm run test:coverage
+```
+
+Coverage reports are generated in `coverage/`:
+
+- terminal summary through the `text` reporter.
+- `coverage/index.html` for local inspection.
+- `coverage/lcov.info` for CI tooling.
+
+Current targets:
+
+- Config defaults, legacy migration, and value normalization.
+- Config import, export, and read-failure behavior.
+- VISCA command builder packet bytes and clamping behavior.
+- Command queue ordering, cancellation, and structured failures.
+- Protocol-agnostic `CameraControlService` routing for VISCA and ONVIF adapters.
+- VISCA client config validation, UDP connection reuse, packet dispatch, disconnect, and health-check behavior with mocked sockets.
+- VISCA client zoom, focus, preset, socket-create, and send-failure behavior.
+- ONVIF discovery and probe response normalization with mocked package responses.
+- ONVIF PTZ client health, movement, stop, focus, preset, reconnect, and command-failure behavior with mocked package responses.
+
+Good future targets:
+
+- Config import/export failure branches.
+- Additional ONVIF package warning branches.
+- UI component tests only after a clear renderer regression appears.
+
+Do not use unit tests as a substitute for hardware validation. They should lock down Panevo-owned logic; real camera behavior still belongs in hardware regression notes.
 
 ### Mock Mode Validation
 
@@ -88,6 +131,7 @@ Validate:
 Run this before marking an active phase complete:
 
 - [ ] `npm run type`
+- [ ] `npm run test`
 - [ ] `npm run lint`
 - [ ] App launches in development mode.
 - [ ] Config persists after restart.

@@ -60,6 +60,7 @@ Initial workflows should be small and reliable:
 
 - `lint`: run `npm run lint`
 - `type`: run `npm run type`
+- `testing`: run `npm run test`
 - `package-smoke`: run Electron Forge package/build where practical
 
 Packaging workflows may need platform-specific handling later because Electron packaging can depend on network access, native tooling, and signing requirements.
