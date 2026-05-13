@@ -251,6 +251,8 @@ Phase 2B hardware regression:
 - [x] Add Release Drafter configuration.
 - [x] Add GitHub Actions workflow for `npm run lint`.
 - [x] Add GitHub Actions workflow for `npm run type`.
+- [x] Add Vitest unit test foundation for config and VISCA command builders.
+- [x] Add GitHub Actions workflow for `npm run test`.
 - [x] Add package/build smoke workflow where practical.
 - [ ] Add `SECURITY.md` or document why it is deferred.
 - [x] Add `CODE_OF_CONDUCT.md` or document why it is deferred.

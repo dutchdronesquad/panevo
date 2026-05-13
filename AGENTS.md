@@ -19,6 +19,7 @@ Run the relevant checks after changes:
 
 ```bash
 npm run type
+npm run test
 npm run lint
 npm run format:check
 ```
@@ -27,6 +28,7 @@ Use judgment:
 
 - For docs-only changes, `format:check` on changed docs is usually enough.
 - For TypeScript, workflow, package, or config changes, run the full standard verification.
+- For protocol, config, or service logic changes, add or update focused Vitest coverage.
 - For camera-control changes, include hardware validation notes when possible.
 
 ## Coding Rules
