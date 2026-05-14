@@ -45,6 +45,9 @@ Current Phase 4A implementation:
 - Test actions are intentionally disabled until individual integration adapters and the action layer exist.
 - Saving configuration adds an integration as configured; it does not auto-enable.
 - Integration read/write errors are shown on the Integrations page and do not block PTZ control.
+- Phase 4B adds a main-process `ActionDispatcher` and shared action/feedback types for future integration adapters.
+- Camera and preset actions dispatched by integrations route through `ConfigService` and `CameraControlService`.
+- OBS and automation actions are defined but intentionally return unsupported results until their implementation phases.
 - No integration currently connects to external software or hardware.
 - No integration currently affects PTZ control.
 
