@@ -49,14 +49,14 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4A: Integration Management UI.
+The active phase is Phase 4B: Action and Feedback Foundation.
 
 Current priority:
 
-1. Establish a shared Integrations sidebar view before building individual integrations.
-2. Keep integration configuration separate from camera profiles.
-3. Keep PTZ control usable when every integration is disabled or disconnected.
-4. Route future integration actions through a shared Panevo action layer.
+1. Keep integrations routed through normalized Panevo actions instead of renderer or protocol internals.
+2. Keep the feedback model useful for operator surfaces and future external controls.
+3. Preserve active-camera validation, command queues, speed clamps, and stop behavior through the action dispatcher.
+4. Treat OBS and automation actions as defined but unsupported until their adapter phases start.
 
 Still deferred:
 

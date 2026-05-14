@@ -27,24 +27,34 @@ Panevo state
 
 The first useful action set should include:
 
-- Select active camera.
-- Recall preset.
-- Store preset with confirmation where appropriate.
-- Stop movement.
-- Pan, tilt, diagonal movement, and zoom.
-- Set focus mode and focus in/out where supported.
-- Trigger an OBS scene action.
-- Enable or disable an automation profile.
+- `camera.select`: select the active camera.
+- `camera.ptz.move`: pan, tilt, and diagonal movement.
+- `camera.zoom.move`: zoom in or out.
+- `camera.stop`: stop movement, zoom, focus, or all live motion channels.
+- `camera.focus.mode`: set auto/manual focus mode.
+- `camera.focus.move`: focus in or out.
+- `preset.recall`: recall a camera preset.
+- `preset.store`: store a camera preset with confirmation where appropriate.
+- `preset.remove`: remove a camera-native preset where the sync/control route supports it.
+- `obs.scene.switch`: trigger an OBS scene action. Defined in Phase 4B, implemented in the OBS phase.
+- `automation.profile.set-enabled`: enable or disable an automation profile. Defined in Phase 4B, implemented in the automation phase.
+
+Action safety classes:
+
+| Safety      | Actions                                                                                                                           | Operator meaning                                                             |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Safe        | `camera.select`, `camera.stop`, `camera.focus.mode`                                                                               | Should not start motion or overwrite camera state.                           |
+| Guarded     | `camera.ptz.move`, `camera.zoom.move`, `camera.focus.move`, `preset.recall`, `obs.scene.switch`, `automation.profile.set-enabled` | Can affect live output or camera movement and must preserve manual override. |
+| Destructive | `preset.store`, `preset.remove`                                                                                                   | Can overwrite or remove camera-native state and should stay explicit.        |
 
 The first useful feedback set should include:
 
-- Active camera.
-- Camera connection state.
-- Control protocol.
-- Current preset list.
-- Last command status.
-- Automation enabled/disabled state.
-- Integration connected/disconnected state.
+- Active camera id, label, control protocol, and sync protocol.
+- Camera connection state. Phase 4B exposes an `unknown` snapshot state; active checks still happen through existing health-check paths.
+- Current preset list for the active camera.
+- Last action status, command name, and completion timestamp.
+- Integration lifecycle state for configured integrations.
+- Future automation enabled/disabled state once automation profiles exist.
 
 ## OBS
 

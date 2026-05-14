@@ -6,6 +6,7 @@ import type {
   IntegrationConfig,
   OnvifDiscoveryInput,
   OnvifProbeInput,
+  PanevoAction,
   PanevoApi,
 } from "./shared/types";
 
@@ -17,6 +18,9 @@ const panevo: PanevoApi = {
     ipcRenderer.invoke("panevo:get-integration-config"),
   saveIntegrationConfig: (config: IntegrationConfig) =>
     ipcRenderer.invoke("panevo:save-integration-config", config),
+  dispatchAction: (action: PanevoAction) =>
+    ipcRenderer.invoke("panevo:dispatch-action", action),
+  getPanevoFeedbackState: () => ipcRenderer.invoke("panevo:get-feedback-state"),
   importConfig: () => ipcRenderer.invoke("panevo:import-config"),
   exportConfig: () => ipcRenderer.invoke("panevo:export-config"),
   testConnection: () => ipcRenderer.invoke("panevo:test-connection"),

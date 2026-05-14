@@ -51,6 +51,158 @@ export interface IntegrationConfig {
   integrations: IntegrationConfigEntry[];
 }
 
+export type PanevoActionSource =
+  | "operator"
+  | "integration"
+  | "automation"
+  | "system";
+
+export type PanevoActionSafety = "safe" | "guarded" | "destructive";
+
+export type PanevoPtzDirection =
+  | "pan-left"
+  | "pan-right"
+  | "tilt-up"
+  | "tilt-down"
+  | "up-left"
+  | "up-right"
+  | "down-left"
+  | "down-right";
+
+interface PanevoActionBase {
+  id?: string;
+  source?: PanevoActionSource;
+  requestedAt?: string;
+}
+
+export interface PanevoSelectCameraAction extends PanevoActionBase {
+  type: "camera.select";
+  cameraId: string;
+}
+
+export interface PanevoPtzMoveAction extends PanevoActionBase {
+  type: "camera.ptz.move";
+  direction: PanevoPtzDirection;
+  speed?: number;
+  panSpeed?: number;
+  tiltSpeed?: number;
+}
+
+export interface PanevoZoomMoveAction extends PanevoActionBase {
+  type: "camera.zoom.move";
+  direction: "in" | "out";
+  speed: number;
+}
+
+export interface PanevoStopAction extends PanevoActionBase {
+  type: "camera.stop";
+  target: "movement" | "zoom" | "focus" | "all";
+}
+
+export interface PanevoFocusModeAction extends PanevoActionBase {
+  type: "camera.focus.mode";
+  mode: FocusMode;
+}
+
+export interface PanevoFocusMoveAction extends PanevoActionBase {
+  type: "camera.focus.move";
+  direction: "in" | "out";
+  speed: number;
+}
+
+export interface PanevoPresetRecallAction extends PanevoActionBase {
+  type: "preset.recall";
+  presetNumber: number;
+}
+
+export interface PanevoPresetStoreAction extends PanevoActionBase {
+  type: "preset.store";
+  presetNumber: number;
+  presetLabel?: string;
+}
+
+export interface PanevoPresetRemoveAction extends PanevoActionBase {
+  type: "preset.remove";
+  presetNumber: number;
+}
+
+export interface PanevoObsSceneAction extends PanevoActionBase {
+  type: "obs.scene.switch";
+  sceneName: string;
+}
+
+export interface PanevoAutomationProfileAction extends PanevoActionBase {
+  type: "automation.profile.set-enabled";
+  profileId: string;
+  enabled: boolean;
+}
+
+export type PanevoAction =
+  | PanevoSelectCameraAction
+  | PanevoPtzMoveAction
+  | PanevoZoomMoveAction
+  | PanevoStopAction
+  | PanevoFocusModeAction
+  | PanevoFocusMoveAction
+  | PanevoPresetRecallAction
+  | PanevoPresetStoreAction
+  | PanevoPresetRemoveAction
+  | PanevoObsSceneAction
+  | PanevoAutomationProfileAction;
+
+export interface PanevoActionDispatchResult {
+  actionId: string;
+  actionType: PanevoAction["type"];
+  source: PanevoActionSource;
+  safety: PanevoActionSafety;
+  status: "completed";
+  requestedAt: string;
+  completedAt: string;
+  cameraId?: string;
+  command?: CommandResponse;
+  message: string;
+  feedback: PanevoFeedbackState;
+}
+
+export interface PanevoCameraFeedback {
+  id: string;
+  label: string;
+  controlProtocol: CameraControlProtocol;
+  syncProtocol: CameraSyncProtocol;
+}
+
+export interface PanevoConnectionFeedback {
+  status: "unknown" | "connected" | "disconnected" | "error";
+  message: string;
+  controlProtocol?: CameraControlProtocol;
+  checkedAt?: string;
+}
+
+export interface PanevoLastCommandFeedback {
+  actionId: string;
+  actionType: PanevoAction["type"];
+  status: "completed" | "failed" | "unsupported";
+  message: string;
+  completedAt: string;
+  command?: string;
+}
+
+export interface PanevoIntegrationFeedback {
+  id: string;
+  integrationId: string;
+  lifecycleState: IntegrationLifecycleState;
+  lastError?: string;
+}
+
+export interface PanevoFeedbackState {
+  activeCamera: PanevoCameraFeedback | null;
+  connection: PanevoConnectionFeedback;
+  presets: CameraPreset[];
+  integrations: PanevoIntegrationFeedback[];
+  lastCommand?: PanevoLastCommandFeedback;
+  updatedAt: string;
+}
+
 export interface CameraConnectionStatus {
   connected: boolean;
   protocol: CameraProtocol;
@@ -155,6 +307,10 @@ export interface PanevoApi {
   saveIntegrationConfig: (
     config: IntegrationConfig,
   ) => Promise<PanevoResult<IntegrationConfig>>;
+  dispatchAction: (
+    action: PanevoAction,
+  ) => Promise<PanevoResult<PanevoActionDispatchResult>>;
+  getPanevoFeedbackState: () => Promise<PanevoResult<PanevoFeedbackState>>;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;

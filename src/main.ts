@@ -5,6 +5,7 @@ import {
   createAppShell,
   registerAppLifecycle,
 } from "./main/app/lifecycle";
+import { registerActionIpc } from "./main/ipc/action-ipc";
 import { registerCameraIpc } from "./main/ipc/camera-ipc";
 import { registerIntegrationIpc } from "./main/ipc/integration-ipc";
 import { registerOnvifIpc } from "./main/ipc/onvif-ipc";
@@ -21,6 +22,7 @@ registerAppLifecycle();
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  registerActionIpc();
   registerCameraIpc();
   registerIntegrationIpc();
   registerOnvifIpc();

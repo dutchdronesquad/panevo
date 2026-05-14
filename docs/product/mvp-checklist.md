@@ -280,13 +280,13 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 
 ### Phase 4B: Action and Feedback Foundation
 
-- [ ] Define the internal Panevo action model for camera, preset, stop, focus, OBS, and automation actions.
-- [ ] Define the internal Panevo feedback/state model for active camera, connection state, last command, preset list, and integration status.
-- [ ] Add a main-process action dispatcher that routes normalized actions to existing services.
-- [ ] Ensure action dispatch uses existing safety checks, speed clamps, command queues, and active-camera validation.
-- [ ] Add structured action results for integrations.
-- [ ] Document which actions are safe, guarded, or destructive.
-- [ ] Add tests or focused validation for stop, preset recall, preset store, and camera selection through the action layer.
+- [x] Define the internal Panevo action model for camera, preset, stop, focus, OBS, and automation actions.
+- [x] Define the internal Panevo feedback/state model for active camera, connection state, last command, preset list, and integration status.
+- [x] Add a main-process action dispatcher that routes normalized actions to existing services.
+- [x] Ensure action dispatch uses existing safety checks, speed clamps, command queues, and active-camera validation.
+- [x] Add structured action results for integrations.
+- [x] Document which actions are safe, guarded, or destructive.
+- [x] Add tests or focused validation for stop, preset recall, preset store, and camera selection through the action layer.
 
 ### Phase 4C: OBS Integration
 

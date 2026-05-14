@@ -173,6 +173,24 @@ Future responsibilities:
 - Normalize adapter-specific stop, preset, focus, and zoom semantics into Panevo-level behavior.
 - Add a vendor-specific preset delete provider only after a camera model exposes a verified delete path.
 
+### ActionDispatcher
+
+Owns the shared Panevo action and feedback boundary for integrations and future external operator surfaces.
+
+Responsibilities:
+
+- Receive normalized Panevo actions such as `camera.select`, `camera.stop`, `preset.recall`, `preset.store`, `obs.scene.switch`, and `automation.profile.set-enabled`.
+- Route camera and preset actions through `ConfigService` and `CameraControlService` so active-camera validation, speed clamps, command queues, stop behavior, and selected control adapters stay centralized.
+- Return structured action results with action id, source, safety class, command result, and a feedback snapshot.
+- Expose feedback state for active camera, connection snapshot, active-camera presets, integration lifecycle states, and last action status.
+- Treat OBS and automation actions as defined but unsupported until their dedicated adapter phases exist.
+
+Current constraints:
+
+- The renderer's existing camera IPC remains available for the operator UI.
+- Future integration adapters should use `ActionDispatcher` instead of calling renderer components, VISCA, ONVIF, or camera IPC directly.
+- The Phase 4B feedback connection state is a snapshot and does not replace explicit camera health checks.
+
 ### ViscaClient
 
 Owns camera connection state, transport choice, queueing entrypoints, and high-level camera actions.

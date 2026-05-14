@@ -179,3 +179,24 @@ Implementation constraints:
 - Presets are treated as camera-native references where the selected adapter can support the operation. Add/store should update the camera before local Panevo state changes.
 - ONVIF preset delete is camera-native. VISCA preset delete removes only Panevo's local mapping because CAM_Memory Reset did not work on the tested camera.
 - Preset behavior must remain explicit because ONVIF preset tokens may not match Panevo's numeric preset entries.
+
+## ADR-012: Route Integrations Through a Shared Panevo Action Dispatcher
+
+Status: accepted for Phase 4B.
+
+Panevo uses a main-process `ActionDispatcher` as the shared boundary for future integrations, automation, and external operator surfaces. Integrations emit normalized Panevo actions and consume Panevo feedback snapshots instead of calling renderer components, camera IPC handlers, VISCA, ONVIF, or future OBS services directly.
+
+Rationale:
+
+- Integrations need one stable action vocabulary for cameras, presets, stop, focus, OBS, and automation.
+- Live-control safety depends on preserving the existing active-camera validation, speed clamps, stop behavior, and command queues.
+- External controls such as Companion, Stream Deck, Flexbar, physical controls, and automation need feedback state without coupling to React component state.
+- OBS and automation actions can be named now while remaining unsupported until their adapter phases start.
+
+Implementation constraints:
+
+- Camera and preset actions route through `ConfigService` and `CameraControlService`.
+- `camera.stop` supports movement, zoom, focus, and all live motion channels.
+- `preset.store` and `preset.remove` are destructive action classes because they can overwrite or remove camera-native state.
+- `obs.scene.switch` and `automation.profile.set-enabled` return structured unsupported results until Phase 4C and Phase 4H.
+- Feedback snapshots include active camera, connection snapshot, active-camera presets, integration lifecycle states, and last action status.
