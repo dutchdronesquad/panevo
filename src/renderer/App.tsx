@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/renderer/components/ui/tooltip";
 import { MainLayout } from "./layouts/MainLayout";
 import { CamerasView } from "./views/CamerasView";
 import { ControlView } from "./views/ControlView";
+import { IntegrationsView } from "./views/IntegrationsView";
 import { SettingsView, type Theme } from "./views/SettingsView";
 import type {
   CameraConfig,
@@ -948,7 +949,9 @@ export const App = () => {
         : "Control"
       : activeView === "cameras"
         ? "Camera Profiles"
-        : "Settings";
+        : activeView === "integrations"
+          ? "Integrations"
+          : "Settings";
 
   return (
     <TooltipProvider>
@@ -992,6 +995,7 @@ export const App = () => {
                 onTestCamera={testCamera}
               />
             )}
+            {activeView === "integrations" && <IntegrationsView />}
             {activeView === "settings" && (
               <SettingsView theme={theme} onThemeChange={setTheme} />
             )}

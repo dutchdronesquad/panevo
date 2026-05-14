@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   CircleOff,
   Gamepad2,
+  Plug,
   Settings,
 } from "lucide-react";
 import {
@@ -16,7 +17,7 @@ import panevoLogoDark from "@/assets/brand/panevo-logo-color-darkbg.svg";
 import panevoLogoLight from "@/assets/brand/panevo-logo-color-lightbg.svg";
 import type { CameraConnectionStatus, CameraProfile } from "../../types/camera";
 
-export type AppView = "control" | "cameras" | "settings";
+export type AppView = "control" | "cameras" | "integrations" | "settings";
 
 interface AppSidebarProps {
   activeView: AppView;
@@ -108,6 +109,7 @@ export const AppSidebar = ({
       <nav className="sidebar-nav" aria-label="Panevo views">
         {navBtn("control", <Gamepad2 size={16} />, "Control")}
         {navBtn("cameras", <Camera size={16} />, "Cameras")}
+        {navBtn("integrations", <Plug size={16} />, "Integrations")}
         {navBtn("settings", <Settings size={16} />, "Settings")}
       </nav>
 

@@ -30,6 +30,27 @@ export interface CameraConfig {
   cameras: CameraProfile[];
 }
 
+export type IntegrationLifecycleState =
+  | "not-configured"
+  | "configured"
+  | "enabled"
+  | "connected"
+  | "error"
+  | "disabled";
+
+export interface IntegrationConfigEntry {
+  id: string;
+  integrationId: string;
+  lifecycleState: IntegrationLifecycleState;
+  settings: Record<string, unknown>;
+  lastError?: string;
+  updatedAt: string;
+}
+
+export interface IntegrationConfig {
+  integrations: IntegrationConfigEntry[];
+}
+
 export interface CameraConnectionStatus {
   connected: boolean;
   protocol: CameraProtocol;
@@ -130,6 +151,10 @@ export interface ConfigFileResponse {
 export interface PanevoApi {
   getConfig: () => Promise<PanevoResult<CameraConfig>>;
   saveConfig: (config: CameraConfig) => Promise<PanevoResult<CameraConfig>>;
+  getIntegrationConfig: () => Promise<PanevoResult<IntegrationConfig>>;
+  saveIntegrationConfig: (
+    config: IntegrationConfig,
+  ) => Promise<PanevoResult<IntegrationConfig>>;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;

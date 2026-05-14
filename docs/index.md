@@ -49,20 +49,19 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 3B: Open Source Project Readiness.
+The active phase is Phase 4A: Integration Management UI.
 
 Current priority:
 
-1. Keep in-app preview out of the active codebase.
-2. Keep ONVIF RTSP stream discovery available for diagnostics and future integrations.
-3. Make the repository ready for public open source use.
-4. Add README, license, contribution, dependency, release, and CI foundations before Phase 4 integrations.
+1. Establish a shared Integrations sidebar view before building individual integrations.
+2. Keep integration configuration separate from camera profiles.
+3. Keep PTZ control usable when every integration is disabled or disconnected.
+4. Route future integration actions through a shared Panevo action layer.
 
 Still deferred:
 
 - In-app video preview.
 - Multi-camera preview grid.
-- Integration management UI.
 - OBS control.
 - RotorHazard integration.
 - Stream Deck, Companion, Flexbar, and physical operator control integrations.

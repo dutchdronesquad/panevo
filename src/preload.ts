@@ -3,6 +3,7 @@ import type {
   CameraConfig,
   CameraProfile,
   FocusMode,
+  IntegrationConfig,
   OnvifDiscoveryInput,
   OnvifProbeInput,
   PanevoApi,
@@ -12,6 +13,10 @@ const panevo: PanevoApi = {
   getConfig: () => ipcRenderer.invoke("panevo:get-config"),
   saveConfig: (config: CameraConfig) =>
     ipcRenderer.invoke("panevo:save-config", config),
+  getIntegrationConfig: () =>
+    ipcRenderer.invoke("panevo:get-integration-config"),
+  saveIntegrationConfig: (config: IntegrationConfig) =>
+    ipcRenderer.invoke("panevo:save-integration-config", config),
   importConfig: () => ipcRenderer.invoke("panevo:import-config"),
   exportConfig: () => ipcRenderer.invoke("panevo:export-config"),
   testConnection: () => ipcRenderer.invoke("panevo:test-connection"),
