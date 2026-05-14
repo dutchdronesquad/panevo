@@ -6,6 +6,7 @@ import {
   registerAppLifecycle,
 } from "./main/app/lifecycle";
 import { registerCameraIpc } from "./main/ipc/camera-ipc";
+import { registerIntegrationIpc } from "./main/ipc/integration-ipc";
 import { registerOnvifIpc } from "./main/ipc/onvif-ipc";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -21,6 +22,7 @@ registerAppLifecycle();
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   registerCameraIpc();
+  registerIntegrationIpc();
   registerOnvifIpc();
   createAppShell();
 });

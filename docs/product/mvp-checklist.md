@@ -264,19 +264,19 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 
 ### Phase 4A: Integration Management UI
 
-- [ ] Add `Integrations` sidebar view.
-- [ ] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Physical Controls, Flexbar, and Automation.
-- [ ] Define integration lifecycle states: not configured, configured, enabled, connected, error, disabled.
-- [ ] Add integration cards/list rows with name, description, status, and primary action.
-- [ ] Add shared configure dialog pattern.
-- [ ] Add enable/disable action.
-- [ ] Add test connection action placeholder.
-- [ ] Add reset/remove configuration action.
-- [ ] Store integration configuration separately from camera configuration.
-- [ ] Add `panevo-integrations.json` config service or equivalent integration config storage.
-- [ ] Ensure integrations do not auto-enable after discovery or configuration.
-- [ ] Show integration errors without blocking PTZ control.
-- [ ] Document integration config storage behavior.
+- [x] Add `Integrations` sidebar view.
+- [x] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Physical Controls, Flexbar, and Automation.
+- [x] Define integration lifecycle states: not configured, configured, enabled, connected, error, disabled.
+- [x] Add integration cards/list rows with name, description, status, and primary action.
+- [x] Add shared configure dialog pattern.
+- [x] Add enable/disable action.
+- [x] Add test connection action placeholder.
+- [x] Add reset/remove configuration action.
+- [x] Store integration configuration separately from camera configuration.
+- [x] Add `panevo-integrations.json` config service or equivalent integration config storage.
+- [x] Ensure integrations do not auto-enable after discovery or configuration.
+- [x] Show integration errors without blocking PTZ control.
+- [x] Document integration config storage behavior.
 
 ### Phase 4B: Action and Feedback Foundation
 

@@ -26,6 +26,28 @@ Before starting any integration, answer:
 
 Panevo should get an `Integrations` sidebar page before individual integrations become active features. This page is the operator-facing home for adding, configuring, testing, enabling, disabling, and removing integrations.
 
+Current Phase 4A implementation:
+
+- The renderer has an `Integrations` sidebar view.
+- The view is backed by a static integration registry in `src/renderer/types/integration.ts`.
+- Initial registry entries exist for OBS, RotorHazard, Companion / Stream Deck, Physical Controls, Flexbar, and Automation Rules.
+- Lifecycle labels and status-chip mapping are centralized in the registry module.
+- The main Integrations page starts empty and only shows integrations the operator has added.
+- Operators choose integrations from an Add Integration dialog backed by the registry.
+- Choosing an integration opens a setup wizard/detail panel instead of immediately adding it.
+- Registry entries define the first local setup fields for each integration type.
+- Each configured integration row shows name, description, saved setup summary, lifecycle status, category, planned phase, and primary action.
+- A shared setup wizard pattern exists as the first UI surface and persists local setup details after review.
+- Configured integrations are persisted in a separate `panevo-integrations.json` file through `IntegrationConfigService`.
+- Camera profiles remain in `panevo-config.json`; integration state does not live inside camera configuration.
+- Enable, disable, configure, and remove actions persist integration lifecycle state through integration IPC.
+- Remove is a visible row action and requires confirmation before deleting the local integration entry.
+- Test actions are intentionally disabled until individual integration adapters and the action layer exist.
+- Saving configuration adds an integration as configured; it does not auto-enable.
+- Integration read/write errors are shown on the Integrations page and do not block PTZ control.
+- No integration currently connects to external software or hardware.
+- No integration currently affects PTZ control.
+
 Minimum lifecycle states:
 
 - `Not configured`
