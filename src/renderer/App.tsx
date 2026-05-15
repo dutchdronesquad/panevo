@@ -14,6 +14,7 @@ import type {
   CameraProfile,
   CommandResponse,
   FocusMode,
+  IntegrationConfig,
   OnvifProbeState,
   OnvifProbeResult,
   PanevoResult,
@@ -37,6 +38,10 @@ const fallbackCamera: CameraProfile = {
 const fallbackConfig: CameraConfig = {
   activeCameraId: "",
   cameras: [],
+};
+
+const fallbackIntegrationConfig: IntegrationConfig = {
+  integrations: [],
 };
 
 const HEALTH_CHECK_INTERVAL_MS = 15_000;
@@ -137,6 +142,9 @@ const shouldAutoProbeOnvif = (camera: CameraProfile): boolean => {
 
 export const App = () => {
   const [config, setConfig] = useState<CameraConfig>(fallbackConfig);
+  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig>(
+    fallbackIntegrationConfig,
+  );
   const [status, setStatus] = useState<CameraConnectionStatus>({
     connected: false,
     protocol: "udp",
@@ -153,6 +161,15 @@ export const App = () => {
   >({});
   const activeCamera = useMemo(() => getActiveCamera(config), [config]);
   const hasActiveCamera = config.cameras.length > 0;
+  const obsIntegration = useMemo(
+    () =>
+      integrationConfig.integrations.find(
+        (integration) =>
+          integration.integrationId === "obs" &&
+          ["enabled", "connected"].includes(integration.lifecycleState),
+      ),
+    [integrationConfig],
+  );
 
   const saveConfigState = useCallback(async (nextConfig: CameraConfig) => {
     setConfig(nextConfig);
@@ -232,6 +249,15 @@ export const App = () => {
 
   useEffect(() => {
     void (async () => {
+      const integrationResult = await window.panevo.getIntegrationConfig();
+      if (integrationResult.ok) {
+        setIntegrationConfig(integrationResult.data);
+      } else {
+        setError(
+          `${integrationResult.error.code}: ${integrationResult.error.message}`,
+        );
+      }
+
       const configResult = await window.panevo.getConfig();
       if (!configResult.ok) {
         setError(configResult.error.message);
@@ -983,6 +1009,7 @@ export const App = () => {
                 onSpeedChange={setSpeed}
                 onZoomSpeedChange={setZoomSpeed}
                 onOpenCameras={() => setActiveView("cameras")}
+                obsIntegration={obsIntegration}
               />
             )}
             {activeView === "cameras" && (
@@ -995,7 +1022,11 @@ export const App = () => {
                 onTestCamera={testCamera}
               />
             )}
-            {activeView === "integrations" && <IntegrationsView />}
+            {activeView === "integrations" && (
+              <IntegrationsView
+                onIntegrationConfigChange={setIntegrationConfig}
+              />
+            )}
             {activeView === "settings" && (
               <SettingsView theme={theme} onThemeChange={setTheme} />
             )}

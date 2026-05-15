@@ -290,16 +290,16 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 
 ### Phase 4C: OBS Integration
 
-- [ ] Decide OBS connection strategy and package choice.
-- [ ] Add isolated OBS service boundary in the main process.
-- [ ] Add OBS connection settings.
-- [ ] Add OBS connection test.
-- [ ] Read OBS scene list.
-- [ ] Show OBS connected/disconnected/error state in the UI.
-- [ ] Add normalized action for switching OBS scenes.
+- [x] Decide OBS connection strategy and package choice.
+- [x] Add isolated OBS service boundary in the main process.
+- [x] Add OBS connection settings.
+- [x] Add OBS connection test.
+- [x] Read OBS scene list.
+- [x] Show OBS connected/disconnected/error state in the UI.
+- [x] Add normalized action for switching OBS scenes.
 - [ ] Add optional mapping from Panevo preset/action to OBS scene switch.
-- [ ] Ensure OBS disconnect does not affect PTZ control.
-- [ ] Document OBS setup and failure modes.
+- [x] Ensure OBS disconnect does not affect PTZ control.
+- [x] Document OBS setup and failure modes.
 
 ### Phase 4D: Companion and Stream Deck Action Bridge
 

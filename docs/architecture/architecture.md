@@ -181,15 +181,35 @@ Responsibilities:
 
 - Receive normalized Panevo actions such as `camera.select`, `camera.stop`, `preset.recall`, `preset.store`, `obs.scene.switch`, and `automation.profile.set-enabled`.
 - Route camera and preset actions through `ConfigService` and `CameraControlService` so active-camera validation, speed clamps, command queues, stop behavior, and selected control adapters stay centralized.
+- Route `obs.scene.switch` through the enabled OBS adapter without requiring an active camera.
 - Return structured action results with action id, source, safety class, command result, and a feedback snapshot.
 - Expose feedback state for active camera, connection snapshot, active-camera presets, integration lifecycle states, and last action status.
-- Treat OBS and automation actions as defined but unsupported until their dedicated adapter phases exist.
+- Treat automation actions as defined but unsupported until their dedicated adapter phase exists.
 
 Current constraints:
 
 - The renderer's existing camera IPC remains available for the operator UI.
 - Future integration adapters should use `ActionDispatcher` instead of calling renderer components, VISCA, ONVIF, or camera IPC directly.
 - The Phase 4B feedback connection state is a snapshot and does not replace explicit camera health checks.
+
+### ObsService
+
+Owns the OBS websocket boundary for Phase 4C production integrations.
+
+Responsibilities:
+
+- Connect to OBS websocket v5 from the main process only.
+- Keep OBS host, port, secure flag, password authentication, timeout handling, and request/response parsing isolated from renderer code.
+- Expose Panevo-level operations for connection testing, scene-list loading, and current program scene switching.
+- Return structured `PanevoResult` errors such as `OBS_AUTH_REQUIRED`, `OBS_CONNECTION_TIMEOUT`, and `OBS_REQUEST_FAILED`.
+- Close the OBS websocket after each MVP operation so OBS failures do not affect camera connections, PTZ queues, or active-camera state.
+
+Current constraints:
+
+- OBS is not a camera preview backend.
+- Renderer code may call OBS only through typed preload IPC.
+- The Control view may show an OBS Scenes section only when OBS is enabled.
+- Preset-to-scene mapping is deferred until automation or explicit mapping scope is designed.
 
 ### ViscaClient
 

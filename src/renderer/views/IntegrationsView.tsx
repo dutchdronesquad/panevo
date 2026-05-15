@@ -29,7 +29,10 @@ import {
   type IntegrationCategory,
   type IntegrationDefinition,
 } from "../types/integration";
-import type { IntegrationConfigEntry } from "../types/camera";
+import type {
+  IntegrationConfig,
+  IntegrationConfigEntry,
+} from "../types/camera";
 
 const categoryLabels: Record<IntegrationCategory, string> = {
   production: "Production",
@@ -47,6 +50,12 @@ type ConfigurationDialogState = {
 type SetupStep = "details" | "setup" | "review";
 
 type IntegrationSettingsDraft = Record<string, string>;
+type ObsTestState = {
+  status: "loading" | "success" | "error";
+  message: string;
+  currentProgramSceneName?: string;
+  scenes?: string[];
+};
 
 const setupSteps: { id: SetupStep; label: string }[] = [
   { id: "details", label: "Details" },
@@ -101,7 +110,38 @@ const getSettingsSummary = (
   return visibleSettings.slice(0, 2).join(" / ");
 };
 
-export const IntegrationsView = () => {
+const getObsInputFromSettings = (
+  settings: Record<string, unknown>,
+): { host: string; port: number; password?: string } | null => {
+  const host = typeof settings.host === "string" ? settings.host.trim() : "";
+  const port = Number(settings.port);
+
+  if (!host || !Number.isFinite(port)) {
+    return null;
+  }
+
+  return {
+    host,
+    port,
+    password:
+      typeof settings.password === "string" && settings.password
+        ? settings.password
+        : undefined,
+  };
+};
+
+const getObsInputFromDraft = (
+  draft: IntegrationSettingsDraft,
+): { host: string; port: number; password?: string } | null =>
+  getObsInputFromSettings(draft);
+
+interface IntegrationsViewProps {
+  onIntegrationConfigChange?: (config: IntegrationConfig) => void;
+}
+
+export const IntegrationsView = ({
+  onIntegrationConfigChange,
+}: IntegrationsViewProps) => {
   const [configurationDialog, setConfigurationDialog] =
     useState<ConfigurationDialogState | null>(null);
   const [setupStep, setSetupStep] = useState<SetupStep>("details");
@@ -115,6 +155,11 @@ export const IntegrationsView = () => {
     IntegrationConfigEntry[]
   >([]);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [obsTestStates, setObsTestStates] = useState<
+    Record<string, ObsTestState>
+  >({});
+  const [configurationObsTestState, setConfigurationObsTestState] =
+    useState<ObsTestState | null>(null);
 
   const configuredIntegrations = useMemo(
     () =>
@@ -197,13 +242,14 @@ export const IntegrationsView = () => {
       }
 
       setConfiguredEntries(result.data.integrations);
+      onIntegrationConfigChange?.(result.data);
       setConfigError(null);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [onIntegrationConfigChange]);
 
   const saveIntegrationEntries = async (
     entries: IntegrationConfigEntry[],
@@ -219,6 +265,7 @@ export const IntegrationsView = () => {
     }
 
     setConfiguredEntries(result.data.integrations);
+    onIntegrationConfigChange?.(result.data);
     setConfigError(null);
     return true;
   };
@@ -232,6 +279,7 @@ export const IntegrationsView = () => {
     );
 
     setSettingsDraft(createSettingsDraft(integration, entry));
+    setConfigurationObsTestState(null);
     setConfigurationDialog({ integration, mode });
     setSetupStep(mode === "create" ? "details" : "setup");
   };
@@ -270,6 +318,7 @@ export const IntegrationsView = () => {
       const saved = await saveIntegrationEntries(nextEntries);
       if (saved) {
         setConfigurationDialog(null);
+        setConfigurationObsTestState(null);
         setSetupStep("details");
       }
     })();
@@ -317,8 +366,86 @@ export const IntegrationsView = () => {
     );
     if (configurationDialog?.integration.id === integrationId) {
       setConfigurationDialog(null);
+      setConfigurationObsTestState(null);
     }
     setIntegrationToRemove(null);
+  };
+
+  const testObsDraft = () => {
+    void (async () => {
+      const input = getObsInputFromDraft(settingsDraft);
+
+      if (!input) {
+        setConfigurationObsTestState({
+          status: "error",
+          message: "OBS host and websocket port are required.",
+        });
+        return;
+      }
+
+      setConfigurationObsTestState({
+        status: "loading",
+        message: "Testing OBS websocket...",
+      });
+
+      const result = await window.panevo.getObsSceneList(input);
+
+      setConfigurationObsTestState(
+        result.ok
+          ? {
+              status: "success",
+              message: `${result.data.scenes.length} OBS scenes available.`,
+              currentProgramSceneName: result.data.currentProgramSceneName,
+              scenes: result.data.scenes.map((scene) => scene.name).slice(0, 6),
+            }
+          : {
+              status: "error",
+              message: `${result.error.code}: ${result.error.message}`,
+            },
+      );
+    })();
+  };
+
+  const testObsIntegration = (entry: IntegrationConfigEntry) => {
+    void (async () => {
+      const input = getObsInputFromSettings(entry.settings);
+
+      if (!input) {
+        setObsTestStates((states) => ({
+          ...states,
+          [entry.id]: {
+            status: "error",
+            message: "OBS host and websocket port are required.",
+          },
+        }));
+        return;
+      }
+
+      setObsTestStates((states) => ({
+        ...states,
+        [entry.id]: {
+          status: "loading",
+          message: "Testing OBS websocket...",
+        },
+      }));
+
+      const result = await window.panevo.getObsSceneList(input);
+
+      setObsTestStates((states) => ({
+        ...states,
+        [entry.id]: result.ok
+          ? {
+              status: "success",
+              message: `${result.data.scenes.length} OBS scenes available${result.data.currentProgramSceneName ? `, live: ${result.data.currentProgramSceneName}` : ""}.`,
+              currentProgramSceneName: result.data.currentProgramSceneName,
+              scenes: result.data.scenes.map((scene) => scene.name).slice(0, 4),
+            }
+          : {
+              status: "error",
+              message: `${result.error.code}: ${result.error.message}`,
+            },
+      }));
+    })();
   };
 
   return (
@@ -335,9 +462,9 @@ export const IntegrationsView = () => {
           <small>Stored configs live outside camera profiles</small>
         </div>
         <div className="camera-metric">
-          <span>Enabled</span>
+          <span>Active</span>
           <strong>{metrics.enabled}</strong>
-          <small>Integrations never auto-enable after setup</small>
+          <small>Only active integrations appear in Control</small>
         </div>
       </div>
 
@@ -381,6 +508,9 @@ export const IntegrationsView = () => {
               entry.lifecycleState,
             );
             const settingsSummary = getSettingsSummary(integration, entry);
+            const obsTestState = obsTestStates[entry.id];
+            const canTestObs =
+              integration.id === "obs" && obsTestState?.status !== "loading";
 
             return (
               <article
@@ -405,10 +535,17 @@ export const IntegrationsView = () => {
                       {settingsSummary}
                     </div>
                   )}
-                  <div className="integration-meta">
-                    <span>{categoryLabels[integration.category]}</span>
-                    <span>{integration.phase}</span>
-                  </div>
+                  {obsTestState && (
+                    <div
+                      className={`integration-test-result integration-test-result-${obsTestState.status}`}
+                    >
+                      <span>{obsTestState.message}</span>
+                      {obsTestState.scenes &&
+                        obsTestState.scenes.length > 0 && (
+                          <small>{obsTestState.scenes.join(" / ")}</small>
+                        )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="integration-actions">
@@ -418,7 +555,7 @@ export const IntegrationsView = () => {
                     size="sm"
                     onClick={() => toggleIntegration(integration.id)}
                   >
-                    {enabled ? "Disable" : "Enable"}
+                    {enabled ? "Disable in Control" : "Enable in Control"}
                   </Button>
                   <Button
                     type="button"
@@ -429,9 +566,17 @@ export const IntegrationsView = () => {
                     <Settings2 />
                     {integration.primaryAction}
                   </Button>
-                  <Button type="button" variant="ghost" size="sm" disabled>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={!canTestObs}
+                    onClick={() => testObsIntegration(entry)}
+                  >
                     <PlugZap />
-                    {integration.testActionLabel}
+                    {obsTestState?.status === "loading"
+                      ? "Testing..."
+                      : integration.testActionLabel}
                   </Button>
                   <Button
                     type="button"
@@ -501,6 +646,7 @@ export const IntegrationsView = () => {
         onOpenChange={(open) => {
           if (!open) {
             setConfigurationDialog(null);
+            setConfigurationObsTestState(null);
             setSetupStep("details");
           }
         }}
@@ -536,34 +682,53 @@ export const IntegrationsView = () => {
                         </span>
                         <div>
                           <strong>
-                            {
-                              categoryLabels[
-                                configurationDialog.integration.category
-                              ]
-                            }
+                            {configurationDialog.integration.id === "obs"
+                              ? "OBS Scenes in Control"
+                              : categoryLabels[
+                                  configurationDialog.integration.category
+                                ]}
                           </strong>
-                          <span>{configurationDialog.integration.phase}</span>
+                          <span>
+                            {configurationDialog.integration.id === "obs"
+                              ? "Configure first, then enable when you want it visible."
+                              : configurationDialog.integration.phase}
+                          </span>
                         </div>
                       </div>
 
                       <p>{configurationDialog.integration.description}</p>
 
                       <div className="integration-dialog-grid">
-                        <div>
-                          <span>Lifecycle</span>
-                          <strong>
-                            {
-                              integrationLifecycleLabels[
-                                configurationEntry?.lifecycleState ??
-                                  "not-configured"
-                              ]
-                            }
-                          </strong>
-                        </div>
-                        <div>
-                          <span>Activation</span>
-                          <strong>Manual enable</strong>
-                        </div>
+                        {configurationDialog.integration.id === "obs" ? (
+                          <>
+                            <div>
+                              <span>Control view</span>
+                              <strong>Shows an OBS Scenes section</strong>
+                            </div>
+                            <div>
+                              <span>Enable in Control</span>
+                              <strong>Makes scene switching available</strong>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <span>Status</span>
+                              <strong>
+                                {
+                                  integrationLifecycleLabels[
+                                    configurationEntry?.lifecycleState ??
+                                      "not-configured"
+                                  ]
+                                }
+                              </strong>
+                            </div>
+                            <div>
+                              <span>Control availability</span>
+                              <strong>Enable after setup</strong>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       <div className="integration-capabilities">
@@ -609,12 +774,18 @@ export const IntegrationsView = () => {
                                 value={settingsDraft[setting.key] ?? ""}
                                 placeholder={setting.placeholder}
                                 required={setting.required}
-                                onChange={(event) =>
+                                onChange={(event) => {
+                                  if (
+                                    configurationDialog.integration.id === "obs"
+                                  ) {
+                                    setConfigurationObsTestState(null);
+                                  }
+
                                   setSettingsDraft((currentDraft) => ({
                                     ...currentDraft,
                                     [setting.key]: event.target.value,
-                                  }))
-                                }
+                                  }));
+                                }}
                               />
                               {setting.helperText && (
                                 <span>{setting.helperText}</span>
@@ -623,6 +794,59 @@ export const IntegrationsView = () => {
                           ),
                         )}
                       </div>
+
+                      {configurationDialog.integration.id === "obs" && (
+                        <div className="integration-obs-check">
+                          <div className="integration-detail-heading">
+                            <div>
+                              <strong>OBS websocket check</strong>
+                              <span>
+                                Loads scenes and the current program scene from
+                                OBS.
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              configurationObsTestState?.status === "loading"
+                            }
+                            onClick={testObsDraft}
+                          >
+                            <PlugZap />
+                            {configurationObsTestState?.status === "loading"
+                              ? "Testing..."
+                              : "Test and load scenes"}
+                          </Button>
+
+                          {configurationObsTestState && (
+                            <div
+                              className={`integration-test-result integration-test-result-${configurationObsTestState.status}`}
+                            >
+                              <span>{configurationObsTestState.message}</span>
+                              {configurationObsTestState.currentProgramSceneName && (
+                                <strong>
+                                  Current program scene:{" "}
+                                  {
+                                    configurationObsTestState.currentProgramSceneName
+                                  }
+                                </strong>
+                              )}
+                              {configurationObsTestState.scenes &&
+                                configurationObsTestState.scenes.length > 0 && (
+                                  <small>
+                                    {configurationObsTestState.scenes.join(
+                                      " / ",
+                                    )}
+                                  </small>
+                                )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -657,6 +881,19 @@ export const IntegrationsView = () => {
                           },
                         )}
                       </div>
+
+                      {configurationDialog.integration.id === "obs" && (
+                        <div className="integration-dialog-grid">
+                          <div>
+                            <span>Control view</span>
+                            <strong>OBS Scenes section</strong>
+                          </div>
+                          <div>
+                            <span>Scene switching</span>
+                            <strong>Manual click-to-switch</strong>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

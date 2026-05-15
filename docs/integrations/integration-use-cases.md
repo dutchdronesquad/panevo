@@ -36,7 +36,7 @@ The first useful action set should include:
 - `preset.recall`: recall a camera preset.
 - `preset.store`: store a camera preset with confirmation where appropriate.
 - `preset.remove`: remove a camera-native preset where the sync/control route supports it.
-- `obs.scene.switch`: trigger an OBS scene action. Defined in Phase 4B, implemented in the OBS phase.
+- `obs.scene.switch`: switch the configured OBS current program scene. Defined in Phase 4B and implemented in Phase 4C.
 - `automation.profile.set-enabled`: enable or disable an automation profile. Defined in Phase 4B, implemented in the automation phase.
 
 Action safety classes:

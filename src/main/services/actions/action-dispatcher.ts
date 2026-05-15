@@ -3,16 +3,19 @@ import type {
   CameraProfile,
   CommandResponse,
   IntegrationConfig,
+  IntegrationConfigEntry,
+  ObsConnectionInput,
   PanevoAction,
   PanevoActionDispatchResult,
   PanevoActionSafety,
   PanevoFeedbackState,
   PanevoLastCommandFeedback,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 import { CameraControlService } from "../camera-control/camera-control-service";
 import { ConfigService } from "../config/config-service";
 import { IntegrationConfigService } from "../integrations/integration-config-service";
+import { ObsService } from "../obs/obs-service";
 
 type ConfigStore = Pick<
   ConfigService,
@@ -44,11 +47,13 @@ type CameraActions = Pick<
 >;
 
 type IntegrationStore = Pick<IntegrationConfigService, "getConfig">;
+type ObsActions = Pick<ObsService, "switchScene">;
 
 interface ActionDispatcherDependencies {
   configService?: ConfigStore;
   cameraControlService?: CameraActions;
   integrationConfigService?: IntegrationStore;
+  obsService?: ObsActions;
 }
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
@@ -76,7 +81,6 @@ const actionSafety: Record<PanevoAction["type"], PanevoActionSafety> = {
 };
 
 const unsupportedActionTypes: PanevoAction["type"][] = [
-  "obs.scene.switch",
   "automation.profile.set-enabled",
 ];
 
@@ -84,6 +88,7 @@ export class ActionDispatcher {
   private readonly configService: ConfigStore;
   private readonly cameraControlService: CameraActions;
   private readonly integrationConfigService: IntegrationStore;
+  private readonly obsService: ObsActions;
   private lastCommand?: PanevoLastCommandFeedback;
 
   constructor(dependencies: ActionDispatcherDependencies = {}) {
@@ -92,6 +97,7 @@ export class ActionDispatcher {
       dependencies.cameraControlService ?? new CameraControlService();
     this.integrationConfigService =
       dependencies.integrationConfigService ?? new IntegrationConfigService();
+    this.obsService = dependencies.obsService ?? new ObsService();
   }
 
   async getFeedbackState(): Promise<PanevoResult<PanevoFeedbackState>> {
@@ -145,7 +151,7 @@ export class ActionDispatcher {
       actionId,
       actionType: action.type,
       status: "completed",
-      message: command ? command.command : commandResult.data.message,
+      message: commandResult.data.message,
       completedAt,
       command: command?.command,
     };
@@ -179,6 +185,15 @@ export class ActionDispatcher {
   > {
     if (action.type === "camera.select") {
       return this.selectCamera(action.cameraId);
+    }
+    if (action.type === "obs.scene.switch") {
+      return this.switchObsScene(action.sceneName);
+    }
+    if (action.type === "automation.profile.set-enabled") {
+      return failure(
+        "ACTION_UNSUPPORTED",
+        `${action.type} is defined but no adapter is implemented yet.`,
+      );
     }
 
     const cameraResult = await this.configService.getActiveCameraConfig();
@@ -238,7 +253,12 @@ export class ActionDispatcher {
 
   private executeCameraAction(
     camera: CameraProfile,
-    action: Exclude<PanevoAction, { type: "camera.select" }>,
+    action: Exclude<
+      PanevoAction,
+      | { type: "camera.select" }
+      | { type: "obs.scene.switch" }
+      | { type: "automation.profile.set-enabled" }
+    >,
   ): Promise<PanevoResult<CommandResponse>> {
     switch (action.type) {
       case "camera.ptz.move":
@@ -271,15 +291,93 @@ export class ActionDispatcher {
           camera,
           action.presetNumber,
         );
-      case "obs.scene.switch":
-      case "automation.profile.set-enabled":
-        return Promise.resolve(
-          failure(
-            "ACTION_UNSUPPORTED",
-            `${action.type} is defined but no adapter is implemented yet.`,
-          ),
-        );
     }
+  }
+
+  private async switchObsScene(
+    sceneName: string,
+  ): Promise<PanevoResult<{ command: CommandResponse; message: string }>> {
+    const obsInputResult = await this.getObsConnectionInput();
+    if (!obsInputResult.ok) {
+      return obsInputResult;
+    }
+
+    const commandResult = await this.obsService.switchScene(
+      obsInputResult.data,
+      sceneName,
+    );
+    if (!commandResult.ok) {
+      return commandResult;
+    }
+
+    return success({
+      command: commandResult.data,
+      message: commandResult.data.command,
+    });
+  }
+
+  private async getObsConnectionInput(): Promise<
+    PanevoResult<ObsConnectionInput>
+  > {
+    const configResult = await this.integrationConfigService.getConfig();
+    if (!configResult.ok) {
+      return configResult;
+    }
+
+    const obsIntegration = configResult.data.integrations.find(
+      (integration) => integration.integrationId === "obs",
+    );
+    if (!obsIntegration || obsIntegration.lifecycleState === "not-configured") {
+      return failure(
+        "OBS_NOT_CONFIGURED",
+        "Configure OBS before dispatching OBS scene actions.",
+      );
+    }
+    if (!["enabled", "connected"].includes(obsIntegration.lifecycleState)) {
+      return failure(
+        "OBS_NOT_ENABLED",
+        "Enable OBS in Control before dispatching OBS scene actions.",
+      );
+    }
+
+    return this.normalizeObsSettings(obsIntegration);
+  }
+
+  private normalizeObsSettings(
+    integration: IntegrationConfigEntry,
+  ): PanevoResult<ObsConnectionInput> {
+    const host =
+      typeof integration.settings.host === "string"
+        ? integration.settings.host.trim()
+        : "";
+    const rawPort = integration.settings.port;
+    const port =
+      typeof rawPort === "number"
+        ? rawPort
+        : typeof rawPort === "string"
+          ? Number(rawPort)
+          : Number.NaN;
+
+    if (!host || !Number.isFinite(port)) {
+      return failure(
+        "OBS_INVALID_SETTINGS",
+        "OBS host and websocket port must be configured before scene actions can run.",
+      );
+    }
+
+    return success({
+      host,
+      port,
+      password:
+        typeof integration.settings.password === "string" &&
+        integration.settings.password
+          ? integration.settings.password
+          : undefined,
+      secure:
+        typeof integration.settings.secure === "boolean"
+          ? integration.settings.secure
+          : undefined,
+    });
   }
 
   private dispatchPtzMove(

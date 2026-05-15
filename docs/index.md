@@ -49,14 +49,14 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4B: Action and Feedback Foundation.
+The active phase is Phase 4C: OBS Integration.
 
 Current priority:
 
-1. Keep integrations routed through normalized Panevo actions instead of renderer or protocol internals.
-2. Keep the feedback model useful for operator surfaces and future external controls.
+1. Keep OBS routed through the isolated main-process adapter and typed preload IPC.
+2. Keep integrations routed through normalized Panevo actions instead of renderer or protocol internals.
 3. Preserve active-camera validation, command queues, speed clamps, and stop behavior through the action dispatcher.
-4. Treat OBS and automation actions as defined but unsupported until their adapter phases start.
+4. Treat automation actions as defined but unsupported until their adapter phase starts.
 
 Still deferred:
 

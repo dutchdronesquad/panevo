@@ -4,6 +4,7 @@ import type {
   CameraProfile,
   FocusMode,
   IntegrationConfig,
+  ObsConnectionInput,
   OnvifDiscoveryInput,
   OnvifProbeInput,
   PanevoAction,
@@ -21,6 +22,10 @@ const panevo: PanevoApi = {
   dispatchAction: (action: PanevoAction) =>
     ipcRenderer.invoke("panevo:dispatch-action", action),
   getPanevoFeedbackState: () => ipcRenderer.invoke("panevo:get-feedback-state"),
+  testObsConnection: (input: ObsConnectionInput) =>
+    ipcRenderer.invoke("panevo:test-obs-connection", input),
+  getObsSceneList: (input: ObsConnectionInput) =>
+    ipcRenderer.invoke("panevo:get-obs-scene-list", input),
   importConfig: () => ipcRenderer.invoke("panevo:import-config"),
   exportConfig: () => ipcRenderer.invoke("panevo:export-config"),
   testConnection: () => ipcRenderer.invoke("panevo:test-connection"),

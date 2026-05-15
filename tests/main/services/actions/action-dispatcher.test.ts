@@ -4,9 +4,10 @@ import type {
   CameraProfile,
   CommandResponse,
   IntegrationConfig,
+  ObsConnectionInput,
   PanevoResult,
-} from "../../../../src/shared/types";
-import { ActionDispatcher } from "../../../../src/main/services/actions/action-dispatcher";
+} from "@/shared/types";
+import { ActionDispatcher } from "@/main/services/actions/action-dispatcher";
 
 vi.mock("electron", () => ({
   app: {
@@ -77,6 +78,12 @@ describe("ActionDispatcher", () => {
     storePreset: ReturnType<typeof vi.fn>;
     removePreset: ReturnType<typeof vi.fn>;
   };
+  let obsService: {
+    switchScene: (
+      input: ObsConnectionInput,
+      sceneName: string,
+    ) => Promise<PanevoResult<CommandResponse>>;
+  };
 
   const createDispatcher = () => {
     const configService = {
@@ -116,6 +123,7 @@ describe("ActionDispatcher", () => {
         configService,
         cameraControlService: cameraControlService as never,
         integrationConfigService,
+        obsService,
       }),
       configService,
     };
@@ -132,7 +140,11 @@ describe("ActionDispatcher", () => {
           id: "integration-obs",
           integrationId: "obs",
           lifecycleState: "enabled",
-          settings: {},
+          settings: {
+            host: "127.0.0.1",
+            port: "4455",
+            password: "secret",
+          },
           updatedAt: "2026-05-14T10:00:00.000Z",
         },
       ],
@@ -158,6 +170,9 @@ describe("ActionDispatcher", () => {
       recallPreset: vi.fn(async () => command("recall-preset-1")),
       storePreset: vi.fn(async () => command("store-preset-1")),
       removePreset: vi.fn(async () => command("remove-preset-1")),
+    };
+    obsService = {
+      switchScene: vi.fn(async () => command("obs.scene.switch:Race")),
     };
   });
 
@@ -466,7 +481,7 @@ describe("ActionDispatcher", () => {
     expect(cameraControlService.disconnect).not.toHaveBeenCalled();
   });
 
-  it("returns a structured unsupported result for future OBS actions", async () => {
+  it("routes OBS scene switches through the configured OBS integration", async () => {
     const { dispatcher } = createDispatcher();
 
     const result = await dispatcher.dispatch({
@@ -475,6 +490,83 @@ describe("ActionDispatcher", () => {
       source: "integration",
       sceneName: "Race",
     });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(obsService.switchScene).toHaveBeenCalledWith(
+      {
+        host: "127.0.0.1",
+        port: 4455,
+        password: "secret",
+        secure: undefined,
+      },
+      "Race",
+    );
+    expect(cameraControlService.recallPreset).not.toHaveBeenCalled();
+    expect(result.data.command?.command).toBe("obs.scene.switch:Race");
+    expect(result.data.cameraId).toBeUndefined();
+    expect(result.data.safety).toBe("guarded");
+    expect(result.data.feedback.lastCommand).toMatchObject({
+      actionId: "switch-obs-scene",
+      actionType: "obs.scene.switch",
+      status: "completed",
+    });
+  });
+
+  it("returns a structured error when OBS scene switching is not configured", async () => {
+    integrationConfig = {
+      integrations: [],
+    };
+    const { dispatcher } = createDispatcher();
+
+    const result = await dispatcher.dispatch({
+      id: "switch-obs-missing",
+      type: "obs.scene.switch",
+      source: "integration",
+      sceneName: "Race",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "OBS_NOT_CONFIGURED",
+        message: "Configure OBS before dispatching OBS scene actions.",
+      },
+    });
+    expect(obsService.switchScene).not.toHaveBeenCalled();
+  });
+
+  it("returns a structured error when OBS scene switching is configured but inactive", async () => {
+    integrationConfig.integrations[0].lifecycleState = "configured";
+    const { dispatcher } = createDispatcher();
+
+    const result = await dispatcher.dispatch({
+      id: "switch-obs-inactive",
+      type: "obs.scene.switch",
+      source: "integration",
+      sceneName: "Race",
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      error: {
+        code: "OBS_NOT_ENABLED",
+        message: "Enable OBS in Control before dispatching OBS scene actions.",
+      },
+    });
+    expect(obsService.switchScene).not.toHaveBeenCalled();
+  });
+
+  it("keeps future automation actions unsupported until their adapter exists", async () => {
+    const { dispatcher } = createDispatcher();
+
+    const result = await dispatcher.dispatch({
+      id: "enable-automation",
+      type: "automation.profile.set-enabled",
+      source: "integration",
+      profileId: "race",
+      enabled: true,
+    });
     const feedback = await dispatcher.getFeedbackState();
 
     expect(result).toEqual({
@@ -482,14 +574,14 @@ describe("ActionDispatcher", () => {
       error: {
         code: "ACTION_UNSUPPORTED",
         message:
-          "obs.scene.switch is defined but no adapter is implemented yet.",
+          "automation.profile.set-enabled is defined but no adapter is implemented yet.",
       },
     });
     expect(feedback.ok).toBe(true);
     if (!feedback.ok) return;
     expect(feedback.data.lastCommand).toMatchObject({
-      actionId: "switch-obs-scene",
-      actionType: "obs.scene.switch",
+      actionId: "enable-automation",
+      actionType: "automation.profile.set-enabled",
       status: "unsupported",
     });
   });
