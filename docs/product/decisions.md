@@ -191,12 +191,34 @@ Rationale:
 - Integrations need one stable action vocabulary for cameras, presets, stop, focus, OBS, and automation.
 - Live-control safety depends on preserving the existing active-camera validation, speed clamps, stop behavior, and command queues.
 - External controls such as Companion, Stream Deck, Flexbar, physical controls, and automation need feedback state without coupling to React component state.
-- OBS and automation actions can be named now while remaining unsupported until their adapter phases start.
+- OBS and automation actions can be named before their adapters exist; `obs.scene.switch` becomes active in Phase 4C.
 
 Implementation constraints:
 
 - Camera and preset actions route through `ConfigService` and `CameraControlService`.
 - `camera.stop` supports movement, zoom, focus, and all live motion channels.
 - `preset.store` and `preset.remove` are destructive action classes because they can overwrite or remove camera-native state.
-- `obs.scene.switch` and `automation.profile.set-enabled` return structured unsupported results until Phase 4C and Phase 4H.
+- `obs.scene.switch` routes through the Phase 4C OBS adapter when OBS is enabled; `automation.profile.set-enabled` returns structured unsupported results until Phase 4H.
 - Feedback snapshots include active camera, connection snapshot, active-camera presets, integration lifecycle states, and last action status.
+
+## ADR-013: OBS Uses an Isolated Main-Process Websocket Adapter
+
+Status: accepted for Phase 4C.
+
+Panevo implements the first OBS integration with a small source-owned OBS websocket v5 adapter in the main process. The adapter owns authentication, request IDs, timeouts, connection testing, scene-list loading, and `SetCurrentProgramScene`.
+
+Rationale:
+
+- Phase 4C needs only a narrow subset of OBS websocket behavior.
+- Keeping the adapter source-owned avoids adding a broad dependency before the integration surface is proven.
+- The boundary remains replaceable if a package such as `obs-websocket-js` becomes useful later.
+- Renderer code must not depend on OBS websocket protocol details.
+
+Implementation constraints:
+
+- OBS calls are exposed through typed preload IPC.
+- `obs.scene.switch` is a guarded action routed by `ActionDispatcher`.
+- The Control view can expose a standalone OBS Scenes section for manual scene switching when OBS is enabled.
+- Preset-to-scene mapping remains deferred until automation or explicit mapping scope is designed.
+- OBS connection failures return structured errors and must not affect PTZ control, active-camera validation, or camera command queues.
+- OBS is not used as a preview backend.

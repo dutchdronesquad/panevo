@@ -8,6 +8,7 @@ import {
 import { registerActionIpc } from "./main/ipc/action-ipc";
 import { registerCameraIpc } from "./main/ipc/camera-ipc";
 import { registerIntegrationIpc } from "./main/ipc/integration-ipc";
+import { registerObsIpc } from "./main/ipc/obs-ipc";
 import { registerOnvifIpc } from "./main/ipc/onvif-ipc";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -25,6 +26,7 @@ app.whenReady().then(() => {
   registerActionIpc();
   registerCameraIpc();
   registerIntegrationIpc();
+  registerObsIpc();
   registerOnvifIpc();
   createAppShell();
 });

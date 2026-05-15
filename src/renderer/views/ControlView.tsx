@@ -1,11 +1,17 @@
 import { Camera } from "lucide-react";
 import { Button } from "@/renderer/components/ui/button";
 import { FocusControls } from "../components/controls/FocusControls";
+import { ObsScenesPanel } from "../components/obs/ObsScenesPanel";
 import { PtzControls } from "../components/controls/PtzControls";
 import { SpeedSelector } from "../components/controls/SpeedSelector";
 import { ZoomControls } from "../components/controls/ZoomControls";
 import { PresetGrid } from "../components/presets/PresetGrid";
-import type { CameraPreset, CameraProfile, FocusMode } from "../types/camera";
+import type {
+  CameraPreset,
+  CameraProfile,
+  FocusMode,
+  IntegrationConfigEntry,
+} from "../types/camera";
 
 interface ControlActions {
   panLeft: () => void;
@@ -44,6 +50,7 @@ interface ControlViewProps {
   onSpeedChange: (speed: number) => void;
   onZoomSpeedChange: (speed: number) => void;
   onOpenCameras: () => void;
+  obsIntegration?: IntegrationConfigEntry;
 }
 
 export const ControlView = ({
@@ -56,6 +63,7 @@ export const ControlView = ({
   onSpeedChange,
   onZoomSpeedChange,
   onOpenCameras,
+  obsIntegration,
 }: ControlViewProps) => {
   if (!hasActiveCamera) {
     return (
@@ -125,6 +133,7 @@ export const ControlView = ({
             syncProtocol={activeCamera.syncProtocol}
             actions={actions}
           />
+          {obsIntegration && <ObsScenesPanel obsIntegration={obsIntegration} />}
         </div>
       </div>
     </main>

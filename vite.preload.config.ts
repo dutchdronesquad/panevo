@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from "vite";
+import { resolve } from "node:path";
 
 const disablePreloadCodeSplitting = (): Plugin => ({
   name: "panevo:disable-preload-code-splitting",
@@ -21,4 +22,9 @@ const disablePreloadCodeSplitting = (): Plugin => ({
 // https://vitejs.dev/config
 export default defineConfig({
   plugins: [disablePreloadCodeSplitting()],
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "./src"),
+    },
+  },
 });

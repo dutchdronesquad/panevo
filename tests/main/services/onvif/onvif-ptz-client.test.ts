@@ -294,6 +294,9 @@ describe("OnvifPtzClient", () => {
   });
 
   it("returns structured command failures", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
     onvifMock.state.cam.continuousMove.mockImplementationOnce(
       (_options: unknown, callback: Callback) =>
         callback(new Error("camera busy")),
@@ -307,6 +310,11 @@ describe("OnvifPtzClient", () => {
         message: "ONVIF command failed: pan-left",
       },
     });
+    expect(consoleError).toHaveBeenCalledWith(
+      "[onvif-queue] Command failed: pan-left",
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
   });
 
   it("disconnects and reconnects on the next command", async () => {

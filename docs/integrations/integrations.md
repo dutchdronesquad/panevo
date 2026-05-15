@@ -36,18 +36,18 @@ Current Phase 4A implementation:
 - Operators choose integrations from an Add Integration dialog backed by the registry.
 - Choosing an integration opens a setup wizard/detail panel instead of immediately adding it.
 - Registry entries define the first local setup fields for each integration type.
-- Each configured integration row shows name, description, saved setup summary, lifecycle status, category, planned phase, and primary action.
+- Each configured integration row shows name, description, saved setup summary, lifecycle status, and primary action.
 - A shared setup wizard pattern exists as the first UI surface and persists local setup details after review.
 - Configured integrations are persisted in a separate `panevo-integrations.json` file through `IntegrationConfigService`.
 - Camera profiles remain in `panevo-config.json`; integration state does not live inside camera configuration.
 - Enable, disable, configure, and remove actions persist integration lifecycle state through integration IPC.
 - Remove is a visible row action and requires confirmation before deleting the local integration entry.
-- Test actions are intentionally disabled until individual integration adapters and the action layer exist.
+- Test actions are available only for adapters that have been implemented.
 - Saving configuration adds an integration as configured; it does not auto-enable.
 - Integration read/write errors are shown on the Integrations page and do not block PTZ control.
 - Phase 4B adds a main-process `ActionDispatcher` and shared action/feedback types for future integration adapters.
 - Camera and preset actions dispatched by integrations route through `ConfigService` and `CameraControlService`.
-- OBS and automation actions are defined but intentionally return unsupported results until their implementation phases.
+- Phase 4C adds the first OBS adapter. `obs.scene.switch` now routes through the enabled OBS websocket connection; automation actions remain unsupported until their implementation phase.
 - No integration currently connects to external software or hardware.
 - No integration currently affects PTZ control.
 
@@ -116,18 +116,33 @@ Potential features:
 - Scene-aware camera presets
 - Production macros
 
-OBS integration should likely use obs-websocket and remain isolated in a dedicated main-process service.
+OBS integration uses the OBS websocket v5 JSON protocol and remains isolated in a dedicated main-process service. Panevo owns a narrow client for the MVP instead of taking a broad package dependency, so the boundary can still be replaced by `obs-websocket-js` later if the adapter grows.
 
-Possible architecture:
+Current architecture:
 
 ```text
 services/obs/
-  obs-client.ts
-  obs-types.ts
+  obs-errors.ts
+  obs-protocol.ts
+  obs-session.ts
+  obs-service.ts
+
+ipc/
   obs-ipc.ts
 ```
 
 OBS should initially be used for state awareness and simple actions, not as a required preview path for the PTZ MVP.
+
+Phase 4C supports:
+
+- Local OBS websocket settings, defaulting to `127.0.0.1:4455`.
+- Optional OBS websocket password authentication.
+- Connection testing from the integrations table.
+- Reading the OBS scene list and current program scene.
+- Switching the current program scene through the normalized `obs.scene.switch` Panevo action when OBS is enabled.
+- Showing a Control-view OBS Scenes section where operators can see the current program scene and click a scene to switch manually when OBS is enabled.
+
+Failure modes should stay local to the OBS adapter. A missing password returns `OBS_AUTH_REQUIRED`; connection timeouts return `OBS_CONNECTION_TIMEOUT`; failed OBS requests return `OBS_REQUEST_FAILED`. These failures must not disconnect the active camera, stop the camera command queue, or change PTZ control state.
 
 ## RotorHazard
 

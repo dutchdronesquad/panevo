@@ -116,6 +116,9 @@ describe("IntegrationConfigService", () => {
 
   it("returns a structured read error for invalid JSON", async () => {
     await writeFile(configPath, "{", "utf8");
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
 
     const service = new IntegrationConfigService(configPath);
 
@@ -126,9 +129,17 @@ describe("IntegrationConfigService", () => {
         message: "Unable to read local Panevo integration configuration.",
       },
     });
+    expect(consoleError).toHaveBeenCalledWith(
+      "[integrations] Failed to read config",
+      expect.any(SyntaxError),
+    );
+    consoleError.mockRestore();
   });
 
   it("returns a structured write error when the destination is invalid", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
     const service = new IntegrationConfigService(testDir);
     const result = await service.saveConfig({
       integrations: [
@@ -149,5 +160,10 @@ describe("IntegrationConfigService", () => {
         message: "Unable to save local Panevo integration configuration.",
       },
     });
+    expect(consoleError).toHaveBeenCalledWith(
+      "[integrations] Failed to save config",
+      expect.any(Error),
+    );
+    consoleError.mockRestore();
   });
 });

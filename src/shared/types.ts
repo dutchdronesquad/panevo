@@ -51,6 +51,37 @@ export interface IntegrationConfig {
   integrations: IntegrationConfigEntry[];
 }
 
+export interface ObsConnectionInput {
+  host: string;
+  port: number;
+  password?: string;
+  secure?: boolean;
+  timeoutMs?: number;
+}
+
+export interface ObsConnectionStatus {
+  connected: boolean;
+  host: string;
+  port: number;
+  secure: boolean;
+  message: string;
+  checkedAt: string;
+  obsStudioVersion?: string;
+  obsWebSocketVersion?: string;
+  negotiatedRpcVersion?: number;
+}
+
+export interface ObsSceneInfo {
+  name: string;
+  uuid?: string;
+}
+
+export interface ObsSceneListResult extends ObsConnectionStatus {
+  currentProgramSceneName?: string;
+  currentPreviewSceneName?: string;
+  scenes: ObsSceneInfo[];
+}
+
 export type PanevoActionSource =
   | "operator"
   | "integration"
@@ -311,6 +342,12 @@ export interface PanevoApi {
     action: PanevoAction,
   ) => Promise<PanevoResult<PanevoActionDispatchResult>>;
   getPanevoFeedbackState: () => Promise<PanevoResult<PanevoFeedbackState>>;
+  testObsConnection: (
+    input: ObsConnectionInput,
+  ) => Promise<PanevoResult<ObsConnectionStatus>>;
+  getObsSceneList: (
+    input: ObsConnectionInput,
+  ) => Promise<PanevoResult<ObsSceneListResult>>;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;
