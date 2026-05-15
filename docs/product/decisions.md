@@ -222,3 +222,24 @@ Implementation constraints:
 - Preset-to-scene mapping remains deferred until automation or explicit mapping scope is designed.
 - OBS connection failures return structured errors and must not affect PTZ control, active-camera validation, or camera command queues.
 - OBS is not used as a preview backend.
+
+## ADR-014: Keyboard Shortcuts Are Settings, Not Integrations
+
+Status: accepted for Phase 4E.
+
+Panevo treats built-in keyboard shortcuts as local operator preferences instead of integration entries. External devices such as HDZero radios, gamepads, joysticks, MIDI controllers, and HID button boxes remain future integrations or device adapters.
+
+Rationale:
+
+- Keyboard shortcuts are part of Panevo's own operator UI and do not need discovery, external connection state, or plugin lifecycle labels.
+- Operators need direct control over key mappings without opening the Integrations workflow.
+- Hardware devices still need adapter-specific validation, stale-input handling, disconnect behavior, and optional mapping profiles.
+
+Implementation constraints:
+
+- Keyboard preferences are stored in `panevo-preferences.json`, separate from camera profiles and integration configuration.
+- Settings owns the user-editable mapping UI and prevents duplicate enabled key assignments.
+- Global preset shortcut bindings must include Alt or Ctrl. Foreground Control-view bindings may use direct keys because they only run while Panevo has focus and can observe key release.
+- Settings provides a kill switch to disable all keyboard shortcut handling.
+- Preset shortcuts are registered globally in the main process and dispatch normalized Panevo actions through `ActionDispatcher`.
+- PTZ movement, zoom, and stop remain foreground Control-view shortcuts because they need reliable keydown/keyup behavior.

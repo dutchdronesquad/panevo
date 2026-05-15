@@ -14,9 +14,10 @@ interface ZoomActions {
 
 interface ZoomControlsProps {
   actions: ZoomActions;
+  keyboardZoom?: "in" | "out" | null;
 }
 
-export const ZoomControls = ({ actions }: ZoomControlsProps) => {
+export const ZoomControls = ({ actions, keyboardZoom }: ZoomControlsProps) => {
   const activePointerId = useRef<number | null>(null);
 
   const stopIfActive = () => {
@@ -45,6 +46,7 @@ export const ZoomControls = ({ actions }: ZoomControlsProps) => {
             type="button"
             className="zoom-button"
             aria-label="Zoom out"
+            data-active={keyboardZoom === "out" || undefined}
             {...pressEvents(actions.zoomOut)}
           >
             <Minus size={22} />
@@ -58,6 +60,7 @@ export const ZoomControls = ({ actions }: ZoomControlsProps) => {
             type="button"
             className="zoom-button"
             aria-label="Zoom in"
+            data-active={keyboardZoom === "in" || undefined}
             {...pressEvents(actions.zoomIn)}
           >
             <Plus size={22} />

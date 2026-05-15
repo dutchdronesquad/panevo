@@ -6,6 +6,7 @@ import { PtzControls } from "../components/controls/PtzControls";
 import { SpeedSelector } from "../components/controls/SpeedSelector";
 import { ZoomControls } from "../components/controls/ZoomControls";
 import { PresetGrid } from "../components/presets/PresetGrid";
+import type { PanevoPtzDirection } from "@/shared/types";
 import type {
   CameraPreset,
   CameraProfile,
@@ -51,6 +52,8 @@ interface ControlViewProps {
   onZoomSpeedChange: (speed: number) => void;
   onOpenCameras: () => void;
   obsIntegration?: IntegrationConfigEntry;
+  keyboardPtzDirection?: PanevoPtzDirection | null;
+  keyboardZoom?: "in" | "out" | null;
 }
 
 export const ControlView = ({
@@ -64,6 +67,8 @@ export const ControlView = ({
   onZoomSpeedChange,
   onOpenCameras,
   obsIntegration,
+  keyboardPtzDirection,
+  keyboardZoom,
 }: ControlViewProps) => {
   if (!hasActiveCamera) {
     return (
@@ -92,12 +97,12 @@ export const ControlView = ({
         <div className="ptz-column">
           <div className="ctrl-section-first">
             <span className="ctrl-section-label">PTZ</span>
-            <PtzControls actions={actions} />
+            <PtzControls actions={actions} keyboardDirection={keyboardPtzDirection} />
           </div>
 
           <div className="ctrl-section">
             <span className="ctrl-section-label">Zoom</span>
-            <ZoomControls actions={actions} />
+            <ZoomControls actions={actions} keyboardZoom={keyboardZoom} />
           </div>
 
           <div className="ctrl-section">

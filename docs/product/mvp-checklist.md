@@ -99,12 +99,12 @@ Local verification:
 
 - [ ] NDI preview playback backend.
 - [ ] RTSP preview as an in-app mode.
-- [ ] OBS integration.
+- [ ] OBS advanced automation and preset-to-scene mapping.
 - [ ] RotorHazard integration.
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
 - [ ] Flexbar integration.
-- [ ] Physical operator controls such as HDZero radio, gamepad, joystick, MIDI, keyboard shortcuts, and HID button boxes.
+- [ ] Physical operator controls such as HDZero radio, gamepad, joystick, MIDI, and HID button boxes.
 - [ ] Automation workflows.
 - [ ] TCP VISCA support.
 - [ ] Replacing VISCA internals with an npm package.
@@ -315,16 +315,21 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 
 ### Phase 4E: Physical Operator Controls
 
-- [ ] Decide first physical input path: Gamepad API, HID, MIDI, keyboard shortcuts, or another standard OS input route.
-- [ ] Treat HDZero radio as a concrete test case only if it exposes a standard input path.
+- [x] Decide first physical input path: keyboard shortcuts before hardware-specific adapters.
+- [x] Treat HDZero radio as a concrete test case only if it exposes a standard input path.
+- [x] Add configurable keyboard shortcut mappings in Settings.
+- [x] Persist keyboard shortcut preferences locally.
+- [x] Add a Settings kill switch and require modifier-based bindings for global preset shortcuts.
+- [x] Register preset shortcuts globally from the main process.
+- [x] Keep PTZ, zoom, and stop shortcuts foreground-only for reliable key release behavior.
 - [ ] Add input-device discovery/status.
 - [ ] Add local device mapping profiles.
 - [ ] Map axes to pan/tilt with deadzone, inversion, curves, and speed limits.
 - [ ] Map buttons or switches to zoom, stop, active-camera selection, and preset recall.
 - [ ] Require deadman/enable input before movement commands are sent.
-- [ ] Send stop on disconnect, stale input, app blur, or disabled mapping.
-- [ ] Ensure device input routes through the shared Panevo action layer.
-- [ ] Document physical control safety requirements.
+- [x] Send stop on key release, app blur, or visibility loss for keyboard movement and zoom.
+- [x] Ensure device input routes through the shared Panevo action layer.
+- [x] Document physical control safety requirements.
 
 ### Phase 4F: RotorHazard Integration
 

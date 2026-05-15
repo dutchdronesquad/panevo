@@ -49,14 +49,14 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4C: OBS Integration.
+The active phase is Phase 4E: Physical Operator Controls.
 
 Current priority:
 
-1. Keep OBS routed through the isolated main-process adapter and typed preload IPC.
-2. Keep integrations routed through normalized Panevo actions instead of renderer or protocol internals.
-3. Preserve active-camera validation, command queues, speed clamps, and stop behavior through the action dispatcher.
-4. Treat automation actions as defined but unsupported until their adapter phase starts.
+1. Keep preset shortcuts global, while PTZ, zoom, and stop shortcuts stay foreground-only for reliable key release behavior.
+2. Treat HDZero radio support as a hardware validation spike until it exposes a standard input path.
+3. Keep physical input routed through normalized Panevo actions instead of renderer camera IPC or protocol internals.
+4. Preserve active-camera validation, command queues, speed clamps, key-up stop, app-blur stop, and emergency stop behavior.
 
 Still deferred:
 

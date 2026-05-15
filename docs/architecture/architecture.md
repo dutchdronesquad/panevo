@@ -190,7 +190,42 @@ Current constraints:
 
 - The renderer's existing camera IPC remains available for the operator UI.
 - Future integration adapters should use `ActionDispatcher` instead of calling renderer components, VISCA, ONVIF, or camera IPC directly.
+- Keyboard shortcuts are treated as a Phase 4E physical input route and dispatch normalized Panevo actions from the main process rather than renderer camera IPC calls.
 - The Phase 4B feedback connection state is a snapshot and does not replace explicit camera health checks.
+
+### PreferencesService
+
+Owns local operator preferences that are not camera profiles and not external integration setup.
+
+Responsibilities:
+
+- Store Panevo preferences in `panevo-preferences.json`.
+- Normalize keyboard shortcut mappings against the current built-in shortcut definitions.
+- Preserve incomplete or older preference files by merging them with current defaults.
+- Keep renderer preference changes behind typed preload IPC.
+
+### Keyboard Shortcuts
+
+Own the first Phase 4E physical input route across renderer and main process.
+
+Responsibilities:
+
+- Use foreground renderer keydown/keyup handling for PTZ movement, zoom, and stop-all while the Control view is active.
+- Register only preset shortcuts with Electron `globalShortcut` so preset recall can work while Panevo is in the tray or another app is focused.
+- Keep built-in defaults direct for foreground control: WASD for PTZ, Q/E for zoom, X for stop-all, and Alt + number keys for global preset recall.
+- Require Alt or Ctrl only for global preset shortcut bindings so they do not conflict with other applications.
+- Provide a Settings kill switch to disable all keyboard shortcut handling.
+- Prevent duplicate enabled key assignments in the Settings UI.
+- Route foreground and global shortcuts through `ActionDispatcher` so active-camera validation, speed clamps, command queues, and protocol adapters stay centralized.
+- Stop foreground movement and zoom on key release, app blur, and document visibility loss.
+- Refresh registered global shortcuts after Settings saves keyboard preferences.
+
+Current constraints:
+
+- Keyboard shortcuts are app preferences, not integrations. They are stored separately from camera configuration and integration configuration.
+- Global shortcuts are limited to preset recall because Electron global shortcuts do not provide reliable key-up events for continuous PTZ or zoom control.
+- Per-device mapping profiles are deferred until hardware-specific adapters exist.
+- Keyboard input is not a substitute for HDZero or joystick validation. Hardware-specific adapters should be added only after the device exposes a standard input path.
 
 ### ObsService
 

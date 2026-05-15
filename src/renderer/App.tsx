@@ -7,6 +7,8 @@ import { CamerasView } from "./views/CamerasView";
 import { ControlView } from "./views/ControlView";
 import { IntegrationsView } from "./views/IntegrationsView";
 import { SettingsView, type Theme } from "./views/SettingsView";
+import { useControlKeyboardShortcuts } from "./hooks/useControlKeyboardShortcuts";
+import { defaultPanevoPreferences } from "@/shared/keyboard-shortcuts";
 import type {
   CameraConfig,
   CameraConnectionStatus,
@@ -18,6 +20,7 @@ import type {
   OnvifProbeState,
   OnvifProbeResult,
   PanevoResult,
+  PanevoPreferences,
 } from "./types/camera";
 
 const fallbackCamera: CameraProfile = {
@@ -145,6 +148,9 @@ export const App = () => {
   const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfig>(
     fallbackIntegrationConfig,
   );
+  const [preferences, setPreferences] = useState<PanevoPreferences>(
+    defaultPanevoPreferences,
+  );
   const [status, setStatus] = useState<CameraConnectionStatus>({
     connected: false,
     protocol: "udp",
@@ -183,6 +189,32 @@ export const App = () => {
     setError(null);
     return result;
   }, []);
+
+  const { activePtzDirection, activeZoom: activeKeyboardZoom } =
+    useControlKeyboardShortcuts({
+      enabled: activeView === "control" && hasActiveCamera,
+      speed,
+      zoomSpeed,
+      config: preferences.keyboardShortcuts,
+      onCommand: setLastCommand,
+      onError: (message) => setError(message || null),
+    });
+
+  const savePreferencesState = useCallback(
+    async (nextPreferences: PanevoPreferences): Promise<boolean> => {
+      setPreferences(nextPreferences);
+      const result = await window.panevo.savePreferences(nextPreferences);
+      if (!result.ok) {
+        setError(`${result.error.code}: ${result.error.message}`);
+        return false;
+      }
+
+      setPreferences(result.data);
+      setError(null);
+      return true;
+    },
+    [],
+  );
 
   const probeOnvifCamera = useCallback(
     async (
@@ -249,6 +281,15 @@ export const App = () => {
 
   useEffect(() => {
     void (async () => {
+      const preferencesResult = await window.panevo.getPreferences();
+      if (preferencesResult.ok) {
+        setPreferences(preferencesResult.data);
+      } else {
+        setError(
+          `${preferencesResult.error.code}: ${preferencesResult.error.message}`,
+        );
+      }
+
       const integrationResult = await window.panevo.getIntegrationConfig();
       if (integrationResult.ok) {
         setIntegrationConfig(integrationResult.data);
@@ -1010,6 +1051,8 @@ export const App = () => {
                 onZoomSpeedChange={setZoomSpeed}
                 onOpenCameras={() => setActiveView("cameras")}
                 obsIntegration={obsIntegration}
+                keyboardPtzDirection={activePtzDirection}
+                keyboardZoom={activeKeyboardZoom}
               />
             )}
             {activeView === "cameras" && (
@@ -1028,7 +1071,12 @@ export const App = () => {
               />
             )}
             {activeView === "settings" && (
-              <SettingsView theme={theme} onThemeChange={setTheme} />
+              <SettingsView
+                theme={theme}
+                preferences={preferences}
+                onThemeChange={setTheme}
+                onPreferencesChange={savePreferencesState}
+              />
             )}
           </div>
         </div>

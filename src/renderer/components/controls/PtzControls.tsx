@@ -134,13 +134,17 @@ const spokes = SPOKE_ANGLES.map((deg) => {
   return { x1, y1, x2, y2 };
 });
 
-export const PtzControls = ({ actions }: PtzControlsProps) => {
+export const PtzControls = ({ actions, keyboardDirection }: PtzControlsProps) => {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [handle, setHandle] = useState({ x: 0, y: 0 });
   const [visualDir, setVisualDir] = useState<Direction | null>(null);
   const [dragging, setDragging] = useState(false);
   const activeDirRef = useRef<Direction | null>(null);
   const draggingRef = useRef(false);
+
+  const keyDir = keyboardDirection
+    ? ptzDirectionToRoseDirection[keyboardDirection]
+    : null;
 
   const applyDir = (dir: Direction | null) => {
     if (dir === activeDirRef.current) return;
@@ -173,7 +177,7 @@ export const PtzControls = ({ actions }: PtzControlsProps) => {
     setHandle({ x: 0, y: 0 });
   };
 
-  const is = (dir: Direction) => visualDir === dir;
+  const is = (dir: Direction) => visualDir === dir || keyDir === dir;
 
   return (
     <div className="wind-rose" aria-label="PTZ movement controls">
@@ -333,6 +337,20 @@ export const PtzControls = ({ actions }: PtzControlsProps) => {
   );
 };
 
+import type { PanevoPtzDirection } from "@/shared/types";
+
+const ptzDirectionToRoseDirection: Record<PanevoPtzDirection, Direction> = {
+  "tilt-up": "up",
+  "tilt-down": "down",
+  "pan-left": "left",
+  "pan-right": "right",
+  "up-left": "upLeft",
+  "up-right": "upRight",
+  "down-left": "downLeft",
+  "down-right": "downRight",
+};
+
 interface PtzControlsProps {
   actions: PtzActions;
+  keyboardDirection?: PanevoPtzDirection | null;
 }
