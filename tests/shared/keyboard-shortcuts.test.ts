@@ -35,7 +35,9 @@ describe("normalizeKeyboardShortcutKey", () => {
 
   it("enforces canonical modifier order (Ctrl, Alt, Shift, Meta)", () => {
     expect(normalizeKeyboardShortcutKey("Alt+Ctrl+KeyA")).toBe("Ctrl+Alt+KeyA");
-    expect(normalizeKeyboardShortcutKey("Shift+Alt+KeyA")).toBe("Alt+Shift+KeyA");
+    expect(normalizeKeyboardShortcutKey("Shift+Alt+KeyA")).toBe(
+      "Alt+Shift+KeyA",
+    );
     expect(normalizeKeyboardShortcutKey("Meta+Alt+KeyL")).toBe("Alt+Meta+KeyL");
   });
 
@@ -103,7 +105,12 @@ describe("isKeyboardShortcutModifierCode", () => {
 describe("toKeyboardShortcutKey", () => {
   const makeEvent = (
     code: string,
-    modifiers: { altKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; metaKey?: boolean } = {},
+    modifiers: {
+      altKey?: boolean;
+      ctrlKey?: boolean;
+      shiftKey?: boolean;
+      metaKey?: boolean;
+    } = {},
   ) => ({
     code,
     altKey: modifiers.altKey ?? false,
@@ -113,8 +120,12 @@ describe("toKeyboardShortcutKey", () => {
   });
 
   it("returns null for modifier-only codes", () => {
-    expect(toKeyboardShortcutKey(makeEvent("AltLeft", { altKey: true }))).toBeNull();
-    expect(toKeyboardShortcutKey(makeEvent("ControlLeft", { ctrlKey: true }))).toBeNull();
+    expect(
+      toKeyboardShortcutKey(makeEvent("AltLeft", { altKey: true })),
+    ).toBeNull();
+    expect(
+      toKeyboardShortcutKey(makeEvent("ControlLeft", { ctrlKey: true })),
+    ).toBeNull();
   });
 
   it("returns bare key for key without modifiers", () => {
@@ -123,15 +134,23 @@ describe("toKeyboardShortcutKey", () => {
   });
 
   it("includes active modifiers in canonical order", () => {
-    expect(toKeyboardShortcutKey(makeEvent("KeyA", { altKey: true }))).toBe("Alt+KeyA");
-    expect(toKeyboardShortcutKey(makeEvent("KeyA", { ctrlKey: true }))).toBe("Ctrl+KeyA");
+    expect(toKeyboardShortcutKey(makeEvent("KeyA", { altKey: true }))).toBe(
+      "Alt+KeyA",
+    );
+    expect(toKeyboardShortcutKey(makeEvent("KeyA", { ctrlKey: true }))).toBe(
+      "Ctrl+KeyA",
+    );
     expect(
-      toKeyboardShortcutKey(makeEvent("Digit1", { altKey: true, ctrlKey: true })),
+      toKeyboardShortcutKey(
+        makeEvent("Digit1", { altKey: true, ctrlKey: true }),
+      ),
     ).toBe("Ctrl+Alt+Digit1");
   });
 
   it("includes Shift modifier", () => {
-    expect(toKeyboardShortcutKey(makeEvent("KeyA", { shiftKey: true }))).toBe("Shift+KeyA");
+    expect(toKeyboardShortcutKey(makeEvent("KeyA", { shiftKey: true }))).toBe(
+      "Shift+KeyA",
+    );
   });
 });
 
@@ -180,6 +199,8 @@ describe("formatKeyboardShortcutKeys", () => {
   });
 
   it("joins multiple keys with ' / '", () => {
-    expect(formatKeyboardShortcutKeys(["KeyA", "ArrowUp"])).toBe("A / Arrow Up");
+    expect(formatKeyboardShortcutKeys(["KeyA", "ArrowUp"])).toBe(
+      "A / Arrow Up",
+    );
   });
 });

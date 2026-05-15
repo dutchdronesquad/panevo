@@ -134,7 +134,10 @@ const spokes = SPOKE_ANGLES.map((deg) => {
   return { x1, y1, x2, y2 };
 });
 
-export const PtzControls = ({ actions, keyboardDirection }: PtzControlsProps) => {
+export const PtzControls = ({
+  actions,
+  keyboardDirection,
+}: PtzControlsProps) => {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [handle, setHandle] = useState({ x: 0, y: 0 });
   const [visualDir, setVisualDir] = useState<Direction | null>(null);

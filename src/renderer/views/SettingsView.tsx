@@ -332,7 +332,8 @@ export const SettingsView = ({
                               className="keyboard-shortcut-registration-error"
                               title="Could not register this shortcut — it may be in use by another app."
                             >
-                              {" "}· Not registered
+                              {" "}
+                              · Not registered
                             </span>
                           )}
                         </span>

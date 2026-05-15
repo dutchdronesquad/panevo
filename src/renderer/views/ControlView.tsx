@@ -97,7 +97,10 @@ export const ControlView = ({
         <div className="ptz-column">
           <div className="ctrl-section-first">
             <span className="ctrl-section-label">PTZ</span>
-            <PtzControls actions={actions} keyboardDirection={keyboardPtzDirection} />
+            <PtzControls
+              actions={actions}
+              keyboardDirection={keyboardPtzDirection}
+            />
           </div>
 
           <div className="ctrl-section">

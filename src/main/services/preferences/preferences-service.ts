@@ -69,7 +69,10 @@ export class PreferencesService {
         error instanceof SyntaxError
       ) {
         if (error instanceof SyntaxError) {
-          console.warn("[preferences] Corrupt preferences file, using defaults", error);
+          console.warn(
+            "[preferences] Corrupt preferences file, using defaults",
+            error,
+          );
         }
         return success(defaultPanevoPreferences);
       }
@@ -90,7 +93,11 @@ export class PreferencesService {
     try {
       const tmpPath = `${this.preferencesPath}.tmp`;
       await mkdir(dirname(this.preferencesPath), { recursive: true });
-      await writeFile(tmpPath, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
+      await writeFile(
+        tmpPath,
+        `${JSON.stringify(normalized, null, 2)}\n`,
+        "utf8",
+      );
       await rename(tmpPath, this.preferencesPath);
       return success(normalized);
     } catch (error) {

@@ -85,14 +85,14 @@ export const defaultKeyboardShortcutDefinitions: ShortcutDefinition[] = [
     label: "Zoom in",
     group: "zoom",
     mode: "hold",
-    keys: ["KeyE"],
+    keys: ["Equal"],
   },
   {
     id: "zoom.out",
     label: "Zoom out",
     group: "zoom",
     mode: "hold",
-    keys: ["KeyQ"],
+    keys: ["Minus"],
   },
   ...presetShortcutDefinitions,
   {
