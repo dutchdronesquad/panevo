@@ -82,6 +82,50 @@ export interface ObsSceneListResult extends ObsConnectionStatus {
   scenes: ObsSceneInfo[];
 }
 
+export type KeyboardShortcutGroup = "movement" | "zoom" | "presets" | "safety";
+
+export type KeyboardShortcutMode = "hold" | "press";
+
+export type KeyboardShortcutActionId =
+  | "ptz.tilt-up"
+  | "ptz.tilt-down"
+  | "ptz.pan-left"
+  | "ptz.pan-right"
+  | "ptz.up-left"
+  | "ptz.up-right"
+  | "ptz.down-left"
+  | "ptz.down-right"
+  | "zoom.in"
+  | "zoom.out"
+  | "preset.1"
+  | "preset.2"
+  | "preset.3"
+  | "preset.4"
+  | "preset.5"
+  | "preset.6"
+  | "preset.7"
+  | "preset.8"
+  | "preset.9"
+  | "stop.all";
+
+export interface KeyboardShortcutBinding {
+  id: KeyboardShortcutActionId;
+  label: string;
+  group: KeyboardShortcutGroup;
+  mode: KeyboardShortcutMode;
+  enabled: boolean;
+  keys: string[];
+}
+
+export interface KeyboardShortcutConfig {
+  enabled: boolean;
+  bindings: KeyboardShortcutBinding[];
+}
+
+export interface PanevoPreferences {
+  keyboardShortcuts: KeyboardShortcutConfig;
+}
+
 export type PanevoActionSource =
   | "operator"
   | "integration"
@@ -331,9 +375,20 @@ export interface ConfigFileResponse {
   path: string;
 }
 
+export interface ShortcutRegistrationStatus {
+  failedIds: string[];
+}
+
 export interface PanevoApi {
   getConfig: () => Promise<PanevoResult<CameraConfig>>;
   saveConfig: (config: CameraConfig) => Promise<PanevoResult<CameraConfig>>;
+  getPreferences: () => Promise<PanevoResult<PanevoPreferences>>;
+  savePreferences: (
+    preferences: PanevoPreferences,
+  ) => Promise<PanevoResult<PanevoPreferences>>;
+  getShortcutRegistrationStatus: () => Promise<
+    PanevoResult<ShortcutRegistrationStatus>
+  >;
   getIntegrationConfig: () => Promise<PanevoResult<IntegrationConfig>>;
   saveIntegrationConfig: (
     config: IntegrationConfig,

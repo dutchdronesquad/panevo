@@ -46,7 +46,9 @@ Current focus:
 - Camera profiles
 - VISCA live control
 - ONVIF discovery and preset sync
-- Open source project readiness
+- Optional OBS scene control
+- Configurable operator shortcuts
+- Physical operator input validation
 
 Video preview is intentionally handled outside Panevo for now.
 
@@ -57,6 +59,8 @@ Video preview is intentionally handled outside Panevo for now.
 - 📍 **Recall and store presets** - keep a local named preset list mapped to camera preset numbers
 - 🔎 **Probe cameras with ONVIF** - discover camera metadata, media profiles, RTSP stream URIs, and numeric presets where supported
 - ⚡ **Use VISCA for responsive movement** - keep VISCA as the default live control route for the tested Tenveo workflow
+- 🎬 **Switch OBS scenes** - connect to OBS websocket, show the active scene, and switch scenes from the Control view
+- ⌨️ **Configure operator shortcuts** - use foreground PTZ/zoom shortcuts in Control and global preset shortcuts while Panevo runs in the background
 
 ## Tested hardware
 
@@ -77,13 +81,10 @@ Hardware validation notes live in [`docs/hardware/tenveo-hardware.md`](docs/hard
 2. **Probe ONVIF when available** to discover metadata, stream URIs, media profiles, and numeric presets.
 3. **Select the active camera** before moving or recalling shots.
 4. **Operate the camera live** with PTZ, zoom, focus, stop, and preset controls.
-5. **Keep preview external** through OBS, NDI Studio Monitor, camera-native tools, or another confidence monitor.
+5. **Configure integrations and shortcuts** when you want OBS scene switching or keyboard-based operator controls.
+6. **Keep preview external** through OBS, NDI Studio Monitor, camera-native tools, or another confidence monitor.
 
-## What's next
-
-Panevo is being prepared for open source use and future production integrations. The next product steps are documented in the project roadmap rather than duplicated here.
-
-Useful links:
+## Useful links
 
 - [`docs/product/roadmap.md`](docs/product/roadmap.md)
 - [`docs/product/mvp-checklist.md`](docs/product/mvp-checklist.md)

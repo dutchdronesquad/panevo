@@ -9,12 +9,18 @@ import type {
   OnvifProbeInput,
   PanevoAction,
   PanevoApi,
+  PanevoPreferences,
 } from "./shared/types";
 
 const panevo: PanevoApi = {
   getConfig: () => ipcRenderer.invoke("panevo:get-config"),
   saveConfig: (config: CameraConfig) =>
     ipcRenderer.invoke("panevo:save-config", config),
+  getPreferences: () => ipcRenderer.invoke("panevo:get-preferences"),
+  savePreferences: (preferences: PanevoPreferences) =>
+    ipcRenderer.invoke("panevo:save-preferences", preferences),
+  getShortcutRegistrationStatus: () =>
+    ipcRenderer.invoke("panevo:get-shortcut-registration-status"),
   getIntegrationConfig: () =>
     ipcRenderer.invoke("panevo:get-integration-config"),
   saveIntegrationConfig: (config: IntegrationConfig) =>

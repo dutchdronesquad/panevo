@@ -48,7 +48,7 @@ Current Phase 4A implementation:
 - Phase 4B adds a main-process `ActionDispatcher` and shared action/feedback types for future integration adapters.
 - Camera and preset actions dispatched by integrations route through `ConfigService` and `CameraControlService`.
 - Phase 4C adds the first OBS adapter. `obs.scene.switch` now routes through the enabled OBS websocket connection; automation actions remain unsupported until their implementation phase.
-- No integration currently connects to external software or hardware.
+- OBS is the only integration that currently connects to external software.
 - No integration currently affects PTZ control.
 
 Minimum lifecycle states:
@@ -169,7 +169,7 @@ Potential features:
 - Stream Deck plugin investigation
 - Status feedback on hardware keys
 - Flexbar integration investigation
-- Physical input devices such as gamepads, joysticks, MIDI controllers, button boxes, keyboards, or radio-style controllers
+- Physical input devices such as gamepads, joysticks, MIDI controllers, button boxes, or radio-style controllers
 - Touch panel pages for camera banks, presets, zoom, and race-aware actions
 
 Panevo should expose stable action concepts before committing to a plugin API.
@@ -183,7 +183,7 @@ Potential device classes:
 - HDZero radio connected over Bluetooth, if it exposes a standard input path.
 - Gamepad or joystick.
 - MIDI controller.
-- Keyboard shortcut surface.
+- Keyboard shortcuts as a built-in Settings feature, not an external integration.
 - Custom HID button box.
 - Future generic control panels.
 
@@ -208,6 +208,24 @@ Safety constraints:
 
 - Do not assume a flight radio is safe to share with camera operation during an active race.
 - Do not bypass speed clamps, command queues, active-camera checks, or emergency stop handling.
+
+Phase 4E starts with keyboard shortcuts as the first physical input route:
+
+- PTZ movement, zoom, and stop shortcuts work only while Panevo is focused on the Control view, where real keydown/keyup events are available.
+- Preset shortcuts are registered globally in the main process and can work while Panevo is in the tray, another app is focused, or any Panevo screen is open.
+- Shortcuts are configured from Settings and stored in local Panevo preferences.
+- Shortcuts can be turned off completely from Settings.
+- Global preset shortcut bindings must include Alt or Ctrl. Foreground Control-view bindings may use direct keys.
+- WASD sends held PTZ movement actions through `ActionDispatcher`.
+- Q/E sends held zoom actions through `ActionDispatcher`.
+- Alt + number keys 1 through 9 recall presets globally through `ActionDispatcher`.
+- X sends a foreground stop-all action.
+- Key release, app blur, or visibility loss stops held foreground movement or zoom.
+
+Keyboard shortcuts are intentionally not modeled as an integration because they are part of Panevo's own operator UI. External devices such as HDZero radios, gamepads, joysticks, MIDI controllers, and HID button boxes should remain optional integrations or device adapters.
+
+HDZero radio support should follow only after local hardware validation confirms that the radio appears as a standard Gamepad, HID, MIDI, serial, or Bluetooth input device.
+
 - Unknown devices should start unmapped.
 - Device disconnect must result in stop where a movement command may be active.
 

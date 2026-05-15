@@ -5,10 +5,10 @@ import type {
   PanevoFeedbackState,
   PanevoResult,
 } from "../../shared/types";
-import { ActionDispatcher } from "../services/actions/action-dispatcher";
+import { getActionDispatcher } from "../services/actions/action-dispatcher-instance";
 
 export const registerActionIpc = (): void => {
-  const actionDispatcher = new ActionDispatcher();
+  const actionDispatcher = getActionDispatcher();
 
   ipcMain.handle(
     "panevo:dispatch-action",

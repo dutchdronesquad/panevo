@@ -21,6 +21,7 @@ export type {
   OnvifProbeResult,
   OnvifPresetInfo,
   OnvifProfileInfo,
+  PanevoPreferences,
   PanevoResult,
 } from "../../shared/types";
 
