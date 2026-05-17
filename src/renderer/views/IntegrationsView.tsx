@@ -21,7 +21,12 @@ import {
 } from "@/renderer/components/ui/dialog";
 import { Input } from "@/renderer/components/ui/input";
 import { Label } from "@/renderer/components/ui/label";
+import {
+  DeviceStatusPanel,
+  type DeviceSelection,
+} from "@/renderer/components/input/DeviceStatusPanel";
 import { Stepper } from "@/renderer/components/Stepper";
+import { defaultInputDeviceMappingProfile } from "@/shared/input-devices";
 import {
   integrationLifecycleChipClass,
   integrationLifecycleLabels,
@@ -38,8 +43,13 @@ const categoryLabels: Record<IntegrationCategory, string> = {
   production: "Production",
   race: "Race",
   "control-surface": "Control surface",
-  "physical-input": "Physical input",
+  "input-device": "Input device",
   automation: "Automation",
+};
+
+const setupStateLabels: Record<IntegrationDefinition["setupState"], string> = {
+  available: "Available",
+  planned: "Planned",
 };
 
 type ConfigurationDialogState = {
@@ -63,6 +73,66 @@ const setupSteps: { id: SetupStep; label: string }[] = [
   { id: "review", label: "Review" },
 ];
 
+const getSetupHeading = (integration: IntegrationDefinition): string => {
+  if (integration.id === "obs") {
+    return "OBS scenes in Control";
+  }
+
+  if (integration.id === "input-devices") {
+    return "Input device";
+  }
+
+  return categoryLabels[integration.category];
+};
+
+const getSetupSubtext = (integration: IntegrationDefinition): string => {
+  if (integration.id === "obs") {
+    return "Connect OBS, then enable it when scene switching should be visible.";
+  }
+
+  if (integration.id === "input-devices") {
+    return "Select a device here. Configure mappings from Control Devices in the sidebar.";
+  }
+
+  return "This integration is planned but not configurable in this build.";
+};
+
+const getSetupSummaryCards = (
+  integration: IntegrationDefinition,
+  configurationEntry?: IntegrationConfigEntry,
+): { label: string; value: string }[] => {
+  if (integration.id === "obs") {
+    return [
+      {
+        label: "Control view",
+        value: "Adds an OBS Scenes section",
+      },
+      {
+        label: "Scene switching",
+        value: "Uses the OBS WebSocket connection",
+      },
+    ];
+  }
+
+  if (integration.id === "input-devices") {
+    return [];
+  }
+
+  return [
+    {
+      label: "Availability",
+      value: setupStateLabels[integration.setupState],
+    },
+    {
+      label: "Current status",
+      value:
+        integrationLifecycleLabels[
+          configurationEntry?.lifecycleState ?? "not-configured"
+        ],
+    },
+  ];
+};
+
 const createSettingsDraft = (
   integration: IntegrationDefinition,
   entry?: IntegrationConfigEntry,
@@ -83,14 +153,45 @@ const buildStoredSettings = (
   integration: IntegrationDefinition,
   draft: IntegrationSettingsDraft,
 ): Record<string, unknown> =>
-  Object.fromEntries(
-    integration.settings.map((setting) => [setting.key, draft[setting.key]]),
-  );
+  integration.id === "input-devices"
+    ? {
+        selectedDeviceKey: draft.selectedDeviceKey,
+        selectedDeviceName: draft.selectedDeviceName,
+        selectedDeviceIndex: draft.selectedDeviceIndex,
+        selectedDeviceMapping: draft.selectedDeviceMapping,
+        inputProfile:
+          draft.inputProfile || defaultInputDeviceMappingProfile.name,
+        activeMappingProfileId: defaultInputDeviceMappingProfile.id,
+        mappingProfile: defaultInputDeviceMappingProfile,
+        mappingProfiles: [defaultInputDeviceMappingProfile],
+      }
+    : Object.fromEntries(
+        integration.settings.map((setting) => [
+          setting.key,
+          draft[setting.key],
+        ]),
+      );
 
 const getSettingsSummary = (
   integration: IntegrationDefinition,
   entry: IntegrationConfigEntry,
 ): string => {
+  if (integration.id === "input-devices") {
+    const deviceName = entry.settings.selectedDeviceName;
+    const inputProfile = entry.settings.inputProfile;
+
+    return [
+      typeof deviceName === "string" && deviceName.trim().length > 0
+        ? `Device: ${deviceName}`
+        : null,
+      typeof inputProfile === "string" && inputProfile.trim().length > 0
+        ? `Profile: ${inputProfile}`
+        : null,
+    ]
+      .filter((setting): setting is string => Boolean(setting))
+      .join(" / ");
+  }
+
   const visibleSettings = integration.settings
     .map((setting) => {
       const value = entry.settings[setting.key];
@@ -196,7 +297,9 @@ export const IntegrationsView = ({
   );
 
   const metrics = useMemo(() => {
-    const available = integrationRegistry.length;
+    const available = integrationRegistry.filter(
+      (integration) => integration.setupState === "available",
+    ).length;
     const configured = configuredEntries.length;
     const enabled = configuredEntries.filter((entry) =>
       ["enabled", "connected"].includes(entry.lifecycleState),
@@ -226,6 +329,9 @@ export const IntegrationsView = ({
         !setting.required || settingsDraft[setting.key]?.trim().length > 0,
     );
   }, [configurationDialog, settingsDraft]);
+
+  const isInputDevicesSetup =
+    configurationDialog?.integration.id === "input-devices";
 
   useEffect(() => {
     let cancelled = false;
@@ -285,6 +391,10 @@ export const IntegrationsView = ({
   };
 
   const startIntegrationSetup = (integration: IntegrationDefinition) => {
+    if (integration.setupState !== "available") {
+      return;
+    }
+
     setAddDialogOpen(false);
     openConfigurationDialog(
       integration,
@@ -302,11 +412,24 @@ export const IntegrationsView = ({
       const existingEntry = configuredEntries.find(
         (entry) => entry.integrationId === integration.id,
       );
+      const settings = buildStoredSettings(integration, settingsDraft);
+      if (integration.id === "input-devices" && existingEntry) {
+        settings.inputProfile =
+          existingEntry.settings.inputProfile ?? settings.inputProfile;
+        settings.activeMappingProfileId =
+          existingEntry.settings.activeMappingProfileId ??
+          settings.activeMappingProfileId;
+        settings.mappingProfile =
+          existingEntry.settings.mappingProfile ?? settings.mappingProfile;
+        settings.mappingProfiles =
+          existingEntry.settings.mappingProfiles ?? settings.mappingProfiles;
+      }
+
       const nextEntry: IntegrationConfigEntry = {
         id: existingEntry?.id ?? `integration-${integration.id}`,
         integrationId: integration.id,
-        lifecycleState: existingEntry?.lifecycleState ?? "configured",
-        settings: buildStoredSettings(integration, settingsDraft),
+        lifecycleState: existingEntry?.lifecycleState ?? "enabled",
+        settings,
         updatedAt: new Date().toISOString(),
       };
       const nextEntries = existingEntry
@@ -322,6 +445,17 @@ export const IntegrationsView = ({
         setSetupStep("details");
       }
     })();
+  };
+
+  const selectInputDevice = (device: DeviceSelection) => {
+    setSettingsDraft((currentDraft) => ({
+      ...currentDraft,
+      selectedDeviceKey: device.key,
+      selectedDeviceName: device.name,
+      selectedDeviceIndex: String(device.index),
+      selectedDeviceMapping: device.mapping,
+      inputProfile: currentDraft.inputProfile || "Default profile",
+    }));
   };
 
   const moveSetupStep = (direction: "back" | "next") => {
@@ -452,19 +586,19 @@ export const IntegrationsView = ({
     <main className="integrations-view">
       <div className="camera-overview integration-overview">
         <div className="camera-metric">
-          <span>Integration registry</span>
+          <span>Available</span>
           <strong>{metrics.available}</strong>
-          <small>Known integration targets</small>
+          <small>Ready to configure</small>
         </div>
         <div className="camera-metric">
           <span>Configured</span>
           <strong>{metrics.configured}</strong>
-          <small>Stored configs live outside camera profiles</small>
+          <small>Saved on this machine</small>
         </div>
         <div className="camera-metric">
           <span>Active</span>
           <strong>{metrics.enabled}</strong>
-          <small>Only active integrations appear in Control</small>
+          <small>Enabled for operator use</small>
         </div>
       </div>
 
@@ -555,7 +689,7 @@ export const IntegrationsView = ({
                     size="sm"
                     onClick={() => toggleIntegration(integration.id)}
                   >
-                    {enabled ? "Disable in Control" : "Enable in Control"}
+                    {enabled ? "Disable" : "Enable"}
                   </Button>
                   <Button
                     type="button"
@@ -599,8 +733,7 @@ export const IntegrationsView = ({
           <DialogHeader>
             <DialogTitle>Add integration</DialogTitle>
             <DialogDescription>
-              Choose an integration to configure. It will stay disabled until
-              you explicitly enable it.
+              Choose an integration that is available in this build.
             </DialogDescription>
           </DialogHeader>
 
@@ -616,11 +749,13 @@ export const IntegrationsView = ({
 
             {availableIntegrations.map((integration) => {
               const IntegrationIcon = integration.icon;
+              const isPlanned = integration.setupState === "planned";
 
               return (
                 <button
                   type="button"
                   className="integration-picker-row"
+                  disabled={isPlanned}
                   key={integration.id}
                   onClick={() => startIntegrationSetup(integration)}
                 >
@@ -632,7 +767,7 @@ export const IntegrationsView = ({
                     <span>{integration.description}</span>
                   </span>
                   <span className="integration-picker-meta">
-                    {categoryLabels[integration.category]}
+                    {setupStateLabels[integration.setupState]}
                   </span>
                 </button>
               );
@@ -660,7 +795,7 @@ export const IntegrationsView = ({
                 </DialogTitle>
                 <DialogDescription>
                   {configurationDialog.mode === "create"
-                    ? "New integration setup"
+                    ? getSetupSubtext(configurationDialog.integration)
                     : configurationDialog.integration.description}
                 </DialogDescription>
               </DialogHeader>
@@ -682,58 +817,39 @@ export const IntegrationsView = ({
                         </span>
                         <div>
                           <strong>
-                            {configurationDialog.integration.id === "obs"
-                              ? "OBS Scenes in Control"
-                              : categoryLabels[
-                                  configurationDialog.integration.category
-                                ]}
+                            {getSetupHeading(configurationDialog.integration)}
                           </strong>
                           <span>
-                            {configurationDialog.integration.id === "obs"
-                              ? "Configure first, then enable when you want it visible."
-                              : configurationDialog.integration.phase}
+                            {getSetupSubtext(configurationDialog.integration)}
                           </span>
                         </div>
                       </div>
 
                       <p>{configurationDialog.integration.description}</p>
 
-                      <div className="integration-dialog-grid">
-                        {configurationDialog.integration.id === "obs" ? (
-                          <>
-                            <div>
-                              <span>Control view</span>
-                              <strong>Shows an OBS Scenes section</strong>
+                      {getSetupSummaryCards(
+                        configurationDialog.integration,
+                        configurationEntry,
+                      ).length > 0 && (
+                        <div className="integration-dialog-grid">
+                          {getSetupSummaryCards(
+                            configurationDialog.integration,
+                            configurationEntry,
+                          ).map((card) => (
+                            <div key={card.label}>
+                              <span>{card.label}</span>
+                              <strong>{card.value}</strong>
                             </div>
-                            <div>
-                              <span>Enable in Control</span>
-                              <strong>Makes scene switching available</strong>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div>
-                              <span>Status</span>
-                              <strong>
-                                {
-                                  integrationLifecycleLabels[
-                                    configurationEntry?.lifecycleState ??
-                                      "not-configured"
-                                  ]
-                                }
-                              </strong>
-                            </div>
-                            <div>
-                              <span>Control availability</span>
-                              <strong>Enable after setup</strong>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="integration-capabilities">
                         <span className="ctrl-section-label">
-                          Expected capability
+                          {configurationDialog.integration.setupState ===
+                          "available"
+                            ? "What this enables"
+                            : "Planned capability"}
                         </span>
                         <ul>
                           {configurationDialog.integration.capabilities.map(
@@ -750,50 +866,57 @@ export const IntegrationsView = ({
                     <div className="integration-detail-panel">
                       <div className="integration-detail-heading">
                         <div>
-                          <strong>Local setup</strong>
-                          <span>Stored in panevo-integrations.json</span>
+                          <strong>
+                            {isInputDevicesSetup
+                              ? "Choose device"
+                              : "Connection details"}
+                          </strong>
+                          <span>Saved locally on this machine</span>
                         </div>
                       </div>
 
-                      <div className="integration-settings-form">
-                        {configurationDialog.integration.settings.map(
-                          (setting) => (
-                            <div
-                              className="integration-field"
-                              key={setting.key}
-                            >
-                              <Label htmlFor={`integration-${setting.key}`}>
-                                {setting.label}
-                                {setting.required && (
-                                  <span aria-hidden="true">*</span>
-                                )}
-                              </Label>
-                              <Input
-                                id={`integration-${setting.key}`}
-                                type={setting.type}
-                                value={settingsDraft[setting.key] ?? ""}
-                                placeholder={setting.placeholder}
-                                required={setting.required}
-                                onChange={(event) => {
-                                  if (
-                                    configurationDialog.integration.id === "obs"
-                                  ) {
-                                    setConfigurationObsTestState(null);
-                                  }
+                      {!isInputDevicesSetup && (
+                        <div className="integration-settings-form">
+                          {configurationDialog.integration.settings.map(
+                            (setting) => (
+                              <div
+                                className="integration-field"
+                                key={setting.key}
+                              >
+                                <Label htmlFor={`integration-${setting.key}`}>
+                                  {setting.label}
+                                  {setting.required && (
+                                    <span aria-hidden="true">*</span>
+                                  )}
+                                </Label>
+                                <Input
+                                  id={`integration-${setting.key}`}
+                                  type={setting.type}
+                                  value={settingsDraft[setting.key] ?? ""}
+                                  placeholder={setting.placeholder}
+                                  required={setting.required}
+                                  onChange={(event) => {
+                                    if (
+                                      configurationDialog.integration.id ===
+                                      "obs"
+                                    ) {
+                                      setConfigurationObsTestState(null);
+                                    }
 
-                                  setSettingsDraft((currentDraft) => ({
-                                    ...currentDraft,
-                                    [setting.key]: event.target.value,
-                                  }));
-                                }}
-                              />
-                              {setting.helperText && (
-                                <span>{setting.helperText}</span>
-                              )}
-                            </div>
-                          ),
-                        )}
-                      </div>
+                                    setSettingsDraft((currentDraft) => ({
+                                      ...currentDraft,
+                                      [setting.key]: event.target.value,
+                                    }));
+                                  }}
+                                />
+                                {setting.helperText && (
+                                  <span>{setting.helperText}</span>
+                                )}
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      )}
 
                       {configurationDialog.integration.id === "obs" && (
                         <div className="integration-obs-check">
@@ -847,6 +970,14 @@ export const IntegrationsView = ({
                           )}
                         </div>
                       )}
+
+                      {isInputDevicesSetup && (
+                        <DeviceStatusPanel
+                          mode="select"
+                          selectedDeviceKey={settingsDraft.selectedDeviceKey}
+                          onDeviceSelect={selectInputDevice}
+                        />
+                      )}
                     </div>
                   )}
 
@@ -864,21 +995,40 @@ export const IntegrationsView = ({
                       </div>
 
                       <div className="integration-review-list">
-                        {configurationDialog.integration.settings.map(
-                          (setting) => {
-                            const value = settingsDraft[setting.key]?.trim();
-                            const displayValue =
-                              setting.type === "password" && value
-                                ? "Set"
-                                : value || "Not set";
+                        {isInputDevicesSetup ? (
+                          <>
+                            <div>
+                              <span>Device</span>
+                              <strong>
+                                {settingsDraft.selectedDeviceName ||
+                                  "Not selected"}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>Profile</span>
+                              <strong>
+                                {settingsDraft.inputProfile ||
+                                  "Default profile"}
+                              </strong>
+                            </div>
+                          </>
+                        ) : (
+                          configurationDialog.integration.settings.map(
+                            (setting) => {
+                              const value = settingsDraft[setting.key]?.trim();
+                              const displayValue =
+                                setting.type === "password" && value
+                                  ? "Set"
+                                  : value || "Not set";
 
-                            return (
-                              <div key={setting.key}>
-                                <span>{setting.label}</span>
-                                <strong>{displayValue}</strong>
-                              </div>
-                            );
-                          },
+                              return (
+                                <div key={setting.key}>
+                                  <span>{setting.label}</span>
+                                  <strong>{displayValue}</strong>
+                                </div>
+                              );
+                            },
+                          )
                         )}
                       </div>
 

@@ -7,7 +7,7 @@ import type {
   ConfigFileResponse,
   FocusMode,
   PanevoResult,
-} from "../../shared/types";
+} from "@/shared/types";
 import { CameraControlService } from "../services/camera-control/camera-control-service";
 import { ConfigService } from "../services/config/config-service";
 

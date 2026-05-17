@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { CommandQueue } from "../../../../src/main/services/camera-control/command-queue";
+import { CommandQueue } from "@/main/services/camera-control/command-queue";
 
 const deferred = <T>() => {
   let resolve!: (value: T) => void;

@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import type { IntegrationConfig, PanevoResult } from "../../shared/types";
+import type { IntegrationConfig, PanevoResult } from "@/shared/types";
 import { IntegrationConfigService } from "../services/integrations/integration-config-service";
 
 export const registerIntegrationIpc = (): void => {

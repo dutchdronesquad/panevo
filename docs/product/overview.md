@@ -98,7 +98,7 @@ Excluded from the MVP:
 
 - NDI preview
 - RTSP preview
-- OBS control
+- OBS preview/source automation beyond manual scene switching
 - RotorHazard integration
 - Stream Deck or Companion plugins
 - Flexbar integration

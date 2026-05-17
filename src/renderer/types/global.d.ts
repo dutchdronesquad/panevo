@@ -1,4 +1,4 @@
-import type { PanevoApi } from "../../shared/types";
+import type { PanevoApi } from "@/shared/types";
 
 declare global {
   interface Window {

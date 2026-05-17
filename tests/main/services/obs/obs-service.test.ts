@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ObsService } from "../../../../src/main/services/obs/obs-service";
+import { ObsService } from "@/main/services/obs/obs-service";
 import type {
   ObsWebSocket,
   ObsWebSocketFactory,
-} from "../../../../src/main/services/obs/obs-session";
+} from "@/main/services/obs/obs-session";
 
 type FakeObsScenario = {
   authentication?: {

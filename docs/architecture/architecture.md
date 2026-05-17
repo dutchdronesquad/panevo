@@ -190,7 +190,7 @@ Current constraints:
 
 - The renderer's existing camera IPC remains available for the operator UI.
 - Future integration adapters should use `ActionDispatcher` instead of calling renderer components, VISCA, ONVIF, or camera IPC directly.
-- Keyboard shortcuts are treated as a Phase 4E physical input route and dispatch normalized Panevo actions from the main process rather than renderer camera IPC calls.
+- Keyboard shortcuts are treated as a Phase 4E operator input route and dispatch normalized Panevo actions instead of calling renderer camera IPC directly.
 - The Phase 4B feedback connection state is a snapshot and does not replace explicit camera health checks.
 
 ### PreferencesService
@@ -206,13 +206,13 @@ Responsibilities:
 
 ### Keyboard Shortcuts
 
-Own the first Phase 4E physical input route across renderer and main process.
+Own the first Phase 4E control device route across renderer and main process.
 
 Responsibilities:
 
 - Use foreground renderer keydown/keyup handling for PTZ movement, zoom, and stop-all while the Control view is active.
 - Register only preset shortcuts with Electron `globalShortcut` so preset recall can work while Panevo is in the tray or another app is focused.
-- Keep built-in defaults direct for foreground control: WASD for PTZ, Q/E for zoom, X for stop-all, and Alt + number keys for global preset recall.
+- Keep built-in defaults direct for foreground control: arrow keys for PTZ, plus/minus for zoom, X for stop-all, and Alt + number keys for global preset recall.
 - Require Alt or Ctrl only for global preset shortcut bindings so they do not conflict with other applications.
 - Provide a Settings kill switch to disable all keyboard shortcut handling.
 - Prevent duplicate enabled key assignments in the Settings UI.
@@ -224,8 +224,32 @@ Current constraints:
 
 - Keyboard shortcuts are app preferences, not integrations. They are stored separately from camera configuration and integration configuration.
 - Global shortcuts are limited to preset recall because Electron global shortcuts do not provide reliable key-up events for continuous PTZ or zoom control.
-- Per-device mapping profiles are deferred until hardware-specific adapters exist.
+- Keyboard shortcuts do not use Control Devices mapping profiles.
 - Keyboard input is not a substitute for HDZero or joystick validation. Hardware-specific adapters should be added only after the device exposes a standard input path.
+
+### Input Device Controls
+
+Own optional external operator devices such as HDZero radios, gamepads, joysticks, MIDI controllers, and HID button boxes.
+
+Responsibilities:
+
+- Discover standard gamepad/joystick devices from the renderer setup UI using the browser Gamepad API.
+- Show detected device name, connection status, live axis values, and button states before and after mapping.
+- Keep the integration dialog limited to device selection; place mapping, calibration, deadman assignment, and action binding in the dedicated Control Devices sidebar view.
+- Persist a local mapping profile with axis assignments, button assignments, deadzone, inversion, and max-speed settings.
+- Require an active deadman input before dispatching movement or zoom commands.
+- Dispatch live input-device commands through `ActionDispatcher`, not renderer camera IPC.
+- Stop movement and zoom when deadman is released, the device disconnects, the window blurs, the document is hidden, or the Control Devices view unmounts.
+- Keep unknown input devices inert until they have a local mapping profile.
+- Route future mapped device commands through `ActionDispatcher` so camera validation, speed clamps, command queues, OBS actions, and safety behavior stay centralized.
+
+Current constraints:
+
+- Phase 4E.2 provides discovery/status, local mapping profiles, and live dispatch for standard Gamepad API devices.
+- Live dispatch currently covers pan, tilt, speed-based zoom, stop-all, and zoom buttons. Camera selection and preset recall mappings are still deferred.
+- Absolute zoom position mapping is not supported in this phase because hardware behavior was not smooth or reliable enough during validation.
+- HDZero support remains a validation target, not a direct HDZero-specific control path.
+- MIDI, custom HID, serial, Bluetooth adapters, and stale-input timeout handling are deferred until their input path and safety behavior are validated locally.
 
 ### ObsService
 

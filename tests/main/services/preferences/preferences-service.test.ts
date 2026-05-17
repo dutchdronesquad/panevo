@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   defaultKeyboardShortcutBindings,
   defaultPanevoPreferences,
-} from "../../../../src/shared/keyboard-shortcuts";
-import type { PanevoPreferences } from "../../../../src/shared/types";
-import { PreferencesService } from "../../../../src/main/services/preferences/preferences-service";
+} from "@/shared/keyboard-shortcuts";
+import type { PanevoPreferences } from "@/shared/types";
+import { PreferencesService } from "@/main/services/preferences/preferences-service";
 
 vi.mock("electron", () => ({
   app: {

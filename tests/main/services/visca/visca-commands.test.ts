@@ -9,7 +9,7 @@ import {
   buildStorePresetCommand,
   buildZoomCommand,
   buildZoomStopCommand,
-} from "../../../../src/main/services/visca/visca-commands";
+} from "@/main/services/visca/visca-commands";
 
 const bytes = (buffer: Buffer): number[] => Array.from(buffer);
 

@@ -5,7 +5,7 @@ import type {
   CommandResponse,
   FocusMode,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 import { CommandQueue } from "../camera-control/command-queue";
 
 const DEFAULT_TIMEOUT_MS = 5000;

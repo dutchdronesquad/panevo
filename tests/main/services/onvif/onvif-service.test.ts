@@ -124,8 +124,7 @@ vi.mock("onvif", () => ({
   Discovery: onvifMock.Discovery,
 }));
 
-const { OnvifService } =
-  await import("../../../../src/main/services/onvif/onvif-service");
+const { OnvifService } = await import("@/main/services/onvif/onvif-service");
 
 describe("OnvifService", () => {
   beforeEach(() => {

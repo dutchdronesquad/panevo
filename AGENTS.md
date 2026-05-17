@@ -33,6 +33,7 @@ Use judgment:
 
 ## Coding Rules
 
+- Use the `@/...` alias for imports that cross into `src` namespaces, for example `@/shared/types` or `@/main/services/...`, instead of long relative paths like `../../../shared/types`.
 - Keep renderer code away from raw VISCA, ONVIF, sockets, filesystem access, and Node networking APIs.
 - Route camera actions through typed preload IPC and main-process services.
 - Preserve stop, emergency stop, command queue, speed clamp, and active-camera validation behavior.

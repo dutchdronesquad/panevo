@@ -1,5 +1,5 @@
 import type { PanDirection, TiltDirection } from "./visca-types";
-import type { FocusMode } from "../../../shared/types";
+import type { FocusMode } from "@/shared/types";
 
 const VISCA_CAMERA_ADDRESS = 0x81;
 const VISCA_TERMINATOR = 0xff;
