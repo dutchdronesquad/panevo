@@ -249,14 +249,15 @@ Exit criteria:
 
 ### Phase 2E: VISCA Compatibility
 
-Status: active.
+Status: complete for the current Tenveo/UDP scope; revisit when adding a new camera model or after TCP hardware validation creates a concrete need.
 
 Phase 2E keeps camera control reliable while preparing for broader camera support. This phase should stay focused on command behavior, vendor variation, and protocol decisions.
 
-- Vendor-specific VISCA compatibility options.
-- VISCA npm package evaluation.
-- Optional TCP VISCA support.
-- Safer preset overwrite flows.
+- Keep Panevo's local VISCA implementation behind `ViscaClient` for now.
+- Do not adopt a third-party VISCA package until it solves a demonstrated problem such as ACK/completion handling, TCP support, retries, or a verified vendor quirk.
+- Keep TCP VISCA deferred for the tested Tenveo camera until hardware validation shows that it works and improves reliability or command feedback.
+- Track vendor-specific VISCA compatibility through camera-profile capabilities and service-layer adapters, not renderer conditionals.
+- Keep safer preset overwrite flows as an operator UX topic; it should not require replacing VISCA internals.
 
 Exit criteria:
 
@@ -339,6 +340,8 @@ Recommended Phase 4 order:
 7. Add RotorHazard read-only race state.
 8. Add first guarded trigger/action automation.
 9. Investigate Flexbar once the shared action and feedback model exists.
+
+Direct preset-to-OBS scene mapping is intentionally not part of the OBS integration phase. That behavior belongs in automation, where trigger source, action ordering, failure behavior, and manual override can be represented explicitly.
 
 ## Phase 5: Automation Platform
 

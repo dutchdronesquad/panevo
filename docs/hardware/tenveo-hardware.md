@@ -53,7 +53,7 @@ The following items should be checked only after testing against a real Tenveo c
 
 - What practical maximum preset range should Panevo expose by default?
 - Does the camera send useful ACK/completion packets over UDP?
-- Does TCP VISCA work on this model, and is it useful enough to implement later?
+- Does TCP VISCA work on this model, and does it provide a concrete benefit over the validated UDP route?
 - Does ONVIF probing on port `8080` require credentials for device information, PTZ nodes, or preset discovery?
 - Does ONVIF ContinuousMove behave consistently at Panevo's mapped speed ranges?
 - Do ONVIF preset tokens match numeric preset numbers, or does Panevo need preset token discovery before using ONVIF presets safely?
@@ -74,7 +74,7 @@ Add dated test notes here.
 - Tested commands: VISCA PTZ, zoom, focus, stop, emergency stop, ONVIF probe, ONVIF startup sync, ONVIF numeric preset import/store/remove.
 - Results: VISCA remains the preferred live control route. ONVIF is suitable for discovery, credentials-backed startup sync, numeric preset synchronization, and camera-native preset removal.
 - Issues: ONVIF PTZ movement works but feels less native/direct than VISCA on this camera, so it remains optional for live control.
-- Follow-up: retry `npm run package` with working network access and record firmware/model details when available.
+- Follow-up: retry `npm run package` with working network access, record firmware/model details when available, and validate TCP VISCA only if UDP reliability or camera feedback becomes insufficient.
 
 ### YYYY-MM-DD
 

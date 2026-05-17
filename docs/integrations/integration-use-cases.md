@@ -68,7 +68,6 @@ The operator wants camera actions and broadcast scene actions to stay aligned. F
 - Test connection and show OBS status.
 - Read the scene list.
 - Switch to a selected scene.
-- Optionally map a Panevo preset recall to an OBS scene switch.
 
 ### Not First Scope
 
@@ -76,6 +75,7 @@ The operator wants camera actions and broadcast scene actions to stay aligned. F
 - Full OBS source editor.
 - Streaming/recording control as the first feature.
 - Complex macro engine before the Panevo action layer exists.
+- Direct preset-to-scene mapping. A preset recall that also switches OBS belongs in automation, where triggers, action order, failures, and manual override can be designed explicitly.
 
 ### Failure Behavior
 
@@ -230,6 +230,7 @@ The operator wants repeatable production behavior: race events, camera presets, 
 - Simple trigger/action rules.
 - Triggers from RotorHazard, OBS state, manual buttons, or device input.
 - Actions through Panevo's shared action layer.
+- Sequenced actions, such as recalling a camera preset and then switching an OBS scene.
 - Global automation enable/disable.
 - Visible last-triggered rule and last action result.
 

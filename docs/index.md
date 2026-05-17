@@ -49,7 +49,7 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4E: Operator Controls.
+The active phase is Phase 4E close-out plus Phase 2E VISCA compatibility documentation.
 
 Current priority:
 
@@ -57,12 +57,14 @@ Current priority:
 2. Keep input device setup limited to device selection, with mapping profiles owned by the Control Devices view.
 3. Keep input devices routed through normalized Panevo actions instead of renderer camera IPC or protocol internals.
 4. Preserve active-camera validation, command queues, speed clamps, deadman release stop, app-blur stop, and emergency stop behavior.
+5. Keep Panevo's local VISCA implementation unless a third-party package solves a demonstrated hardware or protocol problem.
+6. Keep TCP VISCA deferred until Tenveo hardware validation shows a concrete benefit.
 
 Still deferred:
 
 - In-app video preview.
 - Multi-camera preview grid.
-- Preset-to-OBS scene automation.
+- Direct preset-to-OBS scene mapping outside automation workflows.
 - RotorHazard integration.
 - Stream Deck, Companion, Flexbar, MIDI, custom HID, serial, and Bluetooth device adapters.
 - Automation workflows.
