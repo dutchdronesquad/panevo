@@ -82,6 +82,69 @@ export interface ObsSceneListResult extends ObsConnectionStatus {
   scenes: ObsSceneInfo[];
 }
 
+export interface RotorHazardConnectionInput {
+  host: string;
+  port?: number;
+  timeoutMs?: number;
+}
+
+export interface RotorHazardConnectionStatus {
+  connected: boolean;
+  baseUrl: string;
+  transport: "socket.io";
+  message: string;
+  checkedAt: string;
+  socketId?: string;
+}
+
+export type PanevoRaceStatus =
+  | "unknown"
+  | "staging"
+  | "racing"
+  | "finished"
+  | "done"
+  | "stale";
+
+export interface PanevoRaceHeat {
+  id?: string;
+  name?: string;
+  round?: number;
+}
+
+export interface PanevoRacePilot {
+  id?: string;
+  callsign?: string;
+  lane?: number;
+  channel?: string;
+}
+
+export interface PanevoRaceState {
+  source: "rotorhazard";
+  status: PanevoRaceStatus;
+  activeHeat?: PanevoRaceHeat;
+  pilots: PanevoRacePilot[];
+  stale: boolean;
+  updatedAt: string;
+}
+
+export type PanevoRaceEventType =
+  | "race.staging"
+  | "race.started"
+  | "race.finished"
+  | "race.done"
+  | "race.lap-recorded"
+  | "race.active-heat-changed"
+  | "race.data-stale";
+
+export interface PanevoRaceEvent {
+  id: string;
+  type: PanevoRaceEventType;
+  source: "rotorhazard";
+  occurredAt: string;
+  raceState: PanevoRaceState;
+  payload?: Record<string, unknown>;
+}
+
 export type KeyboardShortcutGroup = "movement" | "zoom" | "presets" | "safety";
 
 export type KeyboardShortcutMode = "hold" | "press";
@@ -403,6 +466,9 @@ export interface PanevoApi {
   getObsSceneList: (
     input: ObsConnectionInput,
   ) => Promise<PanevoResult<ObsSceneListResult>>;
+  testRotorHazardConnection: (
+    input: RotorHazardConnectionInput,
+  ) => Promise<PanevoResult<RotorHazardConnectionStatus>>;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;

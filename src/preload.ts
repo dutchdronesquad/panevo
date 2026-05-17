@@ -10,6 +10,7 @@ import type {
   PanevoAction,
   PanevoApi,
   PanevoPreferences,
+  RotorHazardConnectionInput,
 } from "./shared/types";
 
 const panevo: PanevoApi = {
@@ -32,6 +33,8 @@ const panevo: PanevoApi = {
     ipcRenderer.invoke("panevo:test-obs-connection", input),
   getObsSceneList: (input: ObsConnectionInput) =>
     ipcRenderer.invoke("panevo:get-obs-scene-list", input),
+  testRotorHazardConnection: (input: RotorHazardConnectionInput) =>
+    ipcRenderer.invoke("panevo:test-rotorhazard-connection", input),
   importConfig: () => ipcRenderer.invoke("panevo:import-config"),
   exportConfig: () => ipcRenderer.invoke("panevo:export-config"),
   testConnection: () => ipcRenderer.invoke("panevo:test-connection"),

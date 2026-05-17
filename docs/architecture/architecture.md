@@ -474,6 +474,30 @@ Panevo should not treat UDP socket creation as proof that a camera is online. He
 
 The renderer should display these states differently. `Verified` is suitable for confident live operation; `Transport` means operator verification is still required.
 
+## Race Event Architecture
+
+RotorHazard race state is a Phase 4F input to future automation. Panevo should treat RotorHazard as an external event source and normalize it before renderer or automation code sees it.
+
+Data flow:
+
+```text
+RotorHazard Socket.IO
+  -> main/services/rotorhazard transport adapter
+  -> Panevo race state and race events
+  -> renderer integration status
+  -> future automation triggers
+```
+
+If the built-in RotorHazard Socket.IO surface is not stable or complete enough, the next option is an optional RotorHazard plugin. That plugin would use RHAPI inside RotorHazard and publish Panevo-namespaced Socket.IO events from the RotorHazard server. The desktop app should still connect outbound to RotorHazard; Panevo should not require RotorHazard to push into a listener opened by the desktop app.
+
+Boundary rules:
+
+- Renderer code must not depend on RotorHazard event names, Socket.IO payload shapes, RHAPI objects, or database models.
+- Automation must consume normalized Panevo race events and state.
+- HTTP polling is not a RotorHazard race-state fallback.
+- Phase 4F is read-only. Panevo should not edit RotorHazard pilots, heats, rounds, race formats, timing data, or race control state.
+- Stale or disconnected RotorHazard state should pause future race-aware automation, but manual PTZ, presets, stop, OBS, and camera configuration must remain available.
+
 ## Future Expansion
 
 The service layout should support future modules without restructuring the app:

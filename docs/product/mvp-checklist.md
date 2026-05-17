@@ -349,12 +349,14 @@ Phase 4E close-out:
 
 ### Phase 4F: RotorHazard Integration
 
-- [ ] Decide RotorHazard API/event strategy.
-- [ ] Add isolated RotorHazard service boundary in the main process.
-- [ ] Add RotorHazard connection settings.
+- [x] Decide RotorHazard API/event strategy: use RotorHazard's existing Socket.IO server first; consider an RHAPI plugin only if the built-in live events are insufficient.
+- [x] Keep RotorHazard transport behind a Panevo race-state/event adapter so future automation does not depend on RotorHazard payloads.
+- [x] Add isolated RotorHazard service boundary in the main process.
+- [x] Add RotorHazard host and port connection settings with default port `5000`.
 - [ ] Read current race state.
 - [ ] Read active heat, pilot, lane, and channel metadata where available.
 - [ ] Normalize race lifecycle events into Panevo events.
+- [x] Define the normalized Panevo race-state and race-event types used by Phase 4H automation.
 - [ ] Show RotorHazard connected/disconnected/stale state.
 - [ ] Keep RotorHazard assumptions generic and not Dutch Drone Squad specific.
 - [ ] Ensure RotorHazard disconnect pauses race-aware automation.

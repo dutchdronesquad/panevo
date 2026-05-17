@@ -49,16 +49,16 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4E close-out plus Phase 2E VISCA compatibility documentation.
+The active phase is Phase 4F: RotorHazard Integration.
 
 Current priority:
 
-1. Keep preset shortcuts global, while PTZ, zoom, and stop shortcuts stay foreground-only for reliable key release behavior.
-2. Keep input device setup limited to device selection, with mapping profiles owned by the Control Devices view.
-3. Keep input devices routed through normalized Panevo actions instead of renderer camera IPC or protocol internals.
-4. Preserve active-camera validation, command queues, speed clamps, deadman release stop, app-blur stop, and emergency stop behavior.
-5. Keep Panevo's local VISCA implementation unless a third-party package solves a demonstrated hardware or protocol problem.
-6. Keep TCP VISCA deferred until Tenveo hardware validation shows a concrete benefit.
+1. Use RotorHazard's existing Socket.IO connection as the first integration route.
+2. Keep RotorHazard integration read-only in Phase 4F: race state, active heat, pilot/lane/channel metadata, and lifecycle events.
+3. Normalize RotorHazard concepts into Panevo race events before they can trigger automation.
+4. Keep RotorHazard disconnect or stale state from affecting manual PTZ, presets, stop, OBS, or camera configuration.
+5. Defer Companion/Stream Deck bridge work until the target Stream Deck UX and feedback model are concrete enough.
+6. Start Phase 4H automation only after RotorHazard can provide a stable normalized race-state/event source.
 
 Still deferred:
 

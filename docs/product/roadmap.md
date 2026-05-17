@@ -335,13 +335,15 @@ Recommended Phase 4 order:
 2. Define the Panevo action/event layer and feedback model.
 3. Add OBS read-only connection and scene discovery.
 4. Add OBS scene switch action.
-5. Add Companion/Stream Deck friendly action bridge for core camera actions.
-6. Add a control device spike using standard Gamepad/HID or MIDI behavior.
-7. Add RotorHazard read-only race state.
-8. Add first guarded trigger/action automation.
+5. Add a control device spike using standard Gamepad/HID or MIDI behavior.
+6. Add RotorHazard read-only race state through RotorHazard's existing Socket.IO server.
+7. Add first guarded trigger/action automation.
+8. Add Companion/Stream Deck friendly action bridge for core camera actions once the Stream Deck UX and feedback model are concrete.
 9. Investigate Flexbar once the shared action and feedback model exists.
 
 Direct preset-to-OBS scene mapping is intentionally not part of the OBS integration phase. That behavior belongs in automation, where trigger source, action ordering, failure behavior, and manual override can be represented explicitly.
+
+RotorHazard should be integrated through its existing Socket.IO server first. A RotorHazard-side RHAPI plugin should only be added if the built-in Socket.IO events and request/response calls do not expose the race state, lifecycle events, or normalized payloads Panevo needs. HTTP polling is not a fallback path for Phase 4F.
 
 ## Phase 5: Automation Platform
 

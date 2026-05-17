@@ -284,3 +284,28 @@ Implementation constraints:
 - TCP VISCA remains deferred until real hardware validation shows that it works and improves reliability, feedback, or camera compatibility.
 - Vendor-specific behavior should be represented as camera-profile capabilities and service-layer adapter behavior, not UI conditionals.
 - Preset delete remains local-only for VISCA unless a verified vendor-specific delete path is added behind a dedicated provider.
+
+## ADR-017: Normalize RotorHazard Race State Behind a Transport Adapter
+
+Status: accepted for Phase 4F.
+
+Panevo should integrate RotorHazard behind a main-process transport adapter that emits Panevo-level race state and race events. The first transport should be RotorHazard's existing Socket.IO server. A custom RotorHazard plugin should only be added if the built-in live socket surface does not expose the race state, lifecycle events, or payload stability Panevo needs.
+
+Rationale:
+
+- RotorHazard already runs Flask-SocketIO for its own UI updates, so Panevo can listen to the same live race-state channel before requiring users to install a custom plugin.
+- Race lifecycle events need a live event source. Socket.IO is the Phase 4F transport for timing-sensitive automation triggers.
+- A main-process Socket.IO client keeps the renderer decoupled from RotorHazard payloads while still letting Panevo normalize race concepts.
+- A transport adapter keeps Phase 4H automation independent from whether events came from built-in RotorHazard Socket.IO events or a future RotorHazard plugin.
+- Keeping Phase 4F read-only avoids accidental race-management side effects during live production.
+
+Implementation constraints:
+
+- Panevo's Electron main process owns the `services/rotorhazard` connection boundary.
+- Renderer code must consume Panevo-level race state and integration status, not RotorHazard Socket.IO payloads.
+- Automation rules must consume Panevo race events such as `race.staging`, `race.started`, `race.finished`, `race.done`, `race.lap-recorded`, `race.active-heat-changed`, and `race.data-stale`.
+- The Phase 4F scope is read-only: current race state, active heat, pilot/lane/channel metadata, lifecycle events, and stale/disconnect state.
+- RotorHazard disconnect or stale data should pause future race-aware automation but must not block manual PTZ, presets, stop, OBS, or camera configuration.
+- HTTP polling is not a fallback path for RotorHazard race state or lifecycle events.
+- A RotorHazard plugin remains the explicit next design option if the built-in Socket.IO surface is not stable or complete enough for Panevo's normalized race event model.
+- If a RotorHazard plugin is added, it should use RHAPI inside RotorHazard and publish Panevo-namespaced Socket.IO events from the RotorHazard server. Panevo should remain the connecting client instead of requiring inbound connections to the Panevo desktop app.

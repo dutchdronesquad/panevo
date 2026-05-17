@@ -11,6 +11,7 @@ import { registerIntegrationIpc } from "./main/ipc/integration-ipc";
 import { registerObsIpc } from "./main/ipc/obs-ipc";
 import { registerOnvifIpc } from "./main/ipc/onvif-ipc";
 import { registerPreferencesIpc } from "./main/ipc/preferences-ipc";
+import { registerRotorHazardIpc } from "./main/ipc/rotorhazard-ipc";
 import { getGlobalShortcutService } from "./main/services/shortcuts/global-shortcut-service";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -31,6 +32,7 @@ app.whenReady().then(() => {
   registerObsIpc();
   registerOnvifIpc();
   registerPreferencesIpc();
+  registerRotorHazardIpc();
   void getGlobalShortcutService().start();
   createAppShell();
 });
