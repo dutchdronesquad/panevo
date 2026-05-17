@@ -114,6 +114,77 @@ describe("GlobalShortcutService", () => {
     );
   });
 
+  it("does not register shortcuts when the keyboard shortcut kill switch is off", async () => {
+    const registrar = createRegistrar();
+    const service = new GlobalShortcutService({
+      registrar,
+      preferencesService: {
+        getPreferences: async () =>
+          ({
+            ok: true,
+            data: createPreferences({
+              enabled: false,
+              bindings: [
+                {
+                  id: "preset.1",
+                  label: "Recall preset 1",
+                  group: "presets",
+                  mode: "press",
+                  enabled: true,
+                  keys: ["Alt+Digit1"],
+                },
+              ],
+            }),
+          }) as const,
+      },
+      dispatcher: {
+        dispatch: vi.fn(),
+      },
+    });
+
+    await service.start();
+
+    expect(registrar.register).not.toHaveBeenCalled();
+    expect(service.getFailedRegistrations()).toEqual([]);
+  });
+
+  it("tracks preset shortcut registration failures for enabled bindings", async () => {
+    const registrar = createRegistrar();
+    registrar.register.mockReturnValue(false);
+    const service = new GlobalShortcutService({
+      registrar,
+      preferencesService: {
+        getPreferences: async () =>
+          ({
+            ok: true,
+            data: createPreferences({
+              bindings: [
+                {
+                  id: "preset.4",
+                  label: "Recall preset 4",
+                  group: "presets",
+                  mode: "press",
+                  enabled: true,
+                  keys: ["Alt+Digit4"],
+                },
+              ],
+            }),
+          }) as const,
+      },
+      dispatcher: {
+        dispatch: vi.fn(),
+      },
+    });
+
+    await service.start();
+
+    expect(registrar.register).toHaveBeenCalledWith(
+      "Alt+4",
+      expect.any(Function),
+    );
+    expect(service.getFailedRegistrations()).toEqual(["preset.4"]);
+  });
+
   it("refreshes registered shortcuts after preferences change", async () => {
     const registrar = createRegistrar();
     let preferences = createPreferences({

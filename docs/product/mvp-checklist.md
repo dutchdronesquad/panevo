@@ -99,7 +99,7 @@ Local verification:
 
 - [ ] NDI preview playback backend.
 - [ ] RTSP preview as an in-app mode.
-- [ ] OBS advanced automation and preset-to-scene mapping.
+- [ ] OBS advanced automation and preset-to-scene mapping through automation workflows.
 - [ ] RotorHazard integration.
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
@@ -220,12 +220,12 @@ Phase 2B hardware regression:
 
 ## Phase 2E: VISCA Compatibility
 
-- [ ] Decide whether Panevo keeps its local VISCA implementation for now.
-- [ ] Evaluate whether a third-party VISCA package solves a real current problem.
-- [ ] Document Tenveo VISCA compatibility assumptions.
-- [ ] Decide whether TCP VISCA is useful enough to implement for the tested camera.
-- [ ] Identify any camera-profile compatibility flags needed before adding more camera models.
-- [ ] Keep VISCA live control stable while ONVIF remains the sync/discovery route.
+- [x] Decide whether Panevo keeps its local VISCA implementation for now.
+- [x] Evaluate whether a third-party VISCA package solves a real current problem.
+- [x] Document Tenveo VISCA compatibility assumptions.
+- [x] Decide whether TCP VISCA is useful enough to implement for the tested camera.
+- [x] Identify any camera-profile compatibility flags needed before adding more camera models.
+- [x] Keep VISCA live control stable while ONVIF remains the sync/discovery route.
 
 ## Phase 3: Stream Discovery and External Preview
 
@@ -297,9 +297,10 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [x] Read OBS scene list.
 - [x] Show OBS connected/disconnected/error state in the UI.
 - [x] Add normalized action for switching OBS scenes.
-- [ ] Add optional mapping from Panevo preset/action to OBS scene switch.
 - [x] Ensure OBS disconnect does not affect PTZ control.
 - [x] Document OBS setup and failure modes.
+
+Direct preset-to-scene mapping is intentionally not part of Phase 4C. It belongs in Phase 4H automation.
 
 ### Phase 4D: Companion and Stream Deck Action Bridge
 
@@ -339,6 +340,13 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [x] Document control device safety requirements.
 - [ ] Later: map buttons or switches to active-camera selection and preset recall after feedback/confirmation UX is designed.
 
+Phase 4E close-out:
+
+- [x] Keep preset shortcuts global while PTZ, zoom, and stop shortcuts stay foreground-only.
+- [x] Keep input device setup limited to device selection, with mapping profiles owned by the Control Devices view.
+- [x] Keep input devices routed through normalized Panevo actions.
+- [x] Preserve deadman gating, stop-on-release, app-blur stop, disconnect stop, speed clamps, command queues, and active-camera validation.
+
 ### Phase 4F: RotorHazard Integration
 
 - [ ] Decide RotorHazard API/event strategy.
@@ -367,6 +375,7 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Add manual enable/disable for automation.
 - [ ] Support triggers from manual action bridge, OBS state, RotorHazard state, or control device.
 - [ ] Support actions through the shared Panevo action layer.
+- [ ] Support ordered workflows such as recalling a Panevo preset and switching an OBS scene as separate actions.
 - [ ] Show last-triggered rule and last action result.
 - [ ] Ensure stop overrides automation.
 - [ ] Ensure automation cannot run against an unknown or disconnected active camera.

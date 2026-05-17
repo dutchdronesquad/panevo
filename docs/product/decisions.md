@@ -219,7 +219,7 @@ Implementation constraints:
 - OBS calls are exposed through typed preload IPC.
 - `obs.scene.switch` is a guarded action routed by `ActionDispatcher`.
 - The Control view can expose a standalone OBS Scenes section for manual scene switching when OBS is enabled.
-- Preset-to-scene mapping remains deferred until automation or explicit mapping scope is designed.
+- Preset-to-scene mapping belongs in automation workflows, not in the direct OBS integration phase.
 - OBS connection failures return structured errors and must not affect PTZ control, active-camera validation, or camera command queues.
 - OBS is not used as a preview backend.
 
@@ -263,3 +263,24 @@ Implementation constraints:
 - Pan, tilt, speed-based zoom, zoom buttons, and stop dispatch through `ActionDispatcher`.
 - Absolute zoom position mapping is deferred because current hardware validation was choppy and unreliable.
 - Active-camera selection and preset recall mappings remain future scope.
+
+## ADR-016: Keep Local VISCA for Current Compatibility Scope
+
+Status: accepted for Phase 2E.
+
+Panevo keeps its source-owned VISCA command construction and UDP transport for the current Tenveo workflow. A third-party VISCA package should not be adopted until it solves a concrete problem that the local adapter does not solve.
+
+Rationale:
+
+- The currently validated command surface is narrow and already covered by Panevo's `ViscaClient`, command builders, queueing, speed clamps, and action-dispatch path.
+- Reviewed Node/TypeScript VISCA packages do not provide a clearly lower-risk replacement for the current Tenveo/UDP path.
+- The local implementation is already isolated from renderer, preload, IPC, and integration code.
+- Adding a dependency before there is a protocol gap would increase packaging and maintenance risk without improving operator behavior.
+
+Implementation constraints:
+
+- Renderer and integrations must continue to call Panevo-level actions, not VISCA packets or package APIs.
+- Any future package must stay behind `ViscaClient` or a replacement service with the same Panevo-level behavior.
+- TCP VISCA remains deferred until real hardware validation shows that it works and improves reliability, feedback, or camera compatibility.
+- Vendor-specific behavior should be represented as camera-profile capabilities and service-layer adapter behavior, not UI conditionals.
+- Preset delete remains local-only for VISCA unless a verified vendor-specific delete path is added behind a dedicated provider.

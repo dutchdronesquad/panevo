@@ -80,9 +80,9 @@ Stop commands should never be delayed behind a long backlog of non-critical comm
 
 ## Package Strategy
 
-Panevo currently keeps VISCA packet construction in local code. This is acceptable for the first MVP because the required command surface is small: movement, zoom, stop, preset recall, and preset store.
+Panevo keeps VISCA packet construction in local code for the current Tenveo/UDP scope. The required command surface is still small and hardware-validated: movement, zoom, focus, stop, preset recall, and preset store.
 
-Before expanding the VISCA implementation, the project should evaluate existing packages instead of assuming all protocol behavior must be implemented in-house.
+The current decision is not to adopt a third-party VISCA package until it solves a demonstrated Panevo problem. Candidate packages exist, but the currently reviewed Node/TypeScript options are either old, explicitly experimental, too broad for the current command surface, or not clearly better than the existing source-owned adapter.
 
 Candidate package categories:
 
@@ -90,7 +90,7 @@ Candidate package categories:
 - TypeScript/Node VISCA libraries, such as `@utopian/visca`.
 - ONVIF packages for cameras where ONVIF PTZ support is more reliable than VISCA.
 
-Evaluation criteria:
+Future evaluation criteria:
 
 - Active maintenance and recent releases.
 - TypeScript support and API clarity.
@@ -121,6 +121,15 @@ Known areas of variance:
 - Absolute versus relative movement support.
 
 Camera-specific behavior should eventually live in camera profiles. The first profile is effectively Tenveo-compatible VISCA over IP.
+
+Compatibility flags that may be needed before broad camera support:
+
+- VISCA transport: UDP, TCP, or vendor-specific port.
+- VISCA response behavior: verified inquiry support, transport-only fallback, ACK/completion handling, and retry policy.
+- Movement capability ranges: pan, tilt, zoom, and focus speed limits.
+- Focus behavior: auto/manual support and near/far direction mapping.
+- Preset behavior: numbering base, maximum exposed preset number, store support, delete support, and import support.
+- Stop behavior: whether movement, zoom, and focus require separate stop commands.
 
 ## Tenveo MVP Notes
 
@@ -232,4 +241,4 @@ UDP implications:
 - Failed network paths may appear only when commands have no visible camera effect.
 - Vendor support for inquiry responses can vary. ONVIF can provide a complementary device-level health source where available, but the selected control protocol determines which health path is used.
 
-TCP should be considered later if Tenveo hardware supports it reliably or if ACK/completion handling is easier over TCP.
+TCP VISCA remains deferred for the tested Tenveo camera. It should only be implemented after hardware validation confirms the camera supports it and that TCP provides a concrete benefit over the current UDP path, such as more reliable ACK/completion handling, better command feedback, or compatibility with another validated camera model.
