@@ -30,7 +30,7 @@ UI:
 Integrations:
 
 - `integrations/integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
-- `integrations/integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, physical controls, and automation.
+- `integrations/integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, control devices, and automation.
 - `integrations/preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
 
 Project:
@@ -49,22 +49,22 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4E: Physical Operator Controls.
+The active phase is Phase 4E: Operator Controls.
 
 Current priority:
 
 1. Keep preset shortcuts global, while PTZ, zoom, and stop shortcuts stay foreground-only for reliable key release behavior.
-2. Treat HDZero radio support as a hardware validation spike until it exposes a standard input path.
-3. Keep physical input routed through normalized Panevo actions instead of renderer camera IPC or protocol internals.
-4. Preserve active-camera validation, command queues, speed clamps, key-up stop, app-blur stop, and emergency stop behavior.
+2. Keep input device setup limited to device selection, with mapping profiles owned by the Control Devices view.
+3. Keep input devices routed through normalized Panevo actions instead of renderer camera IPC or protocol internals.
+4. Preserve active-camera validation, command queues, speed clamps, deadman release stop, app-blur stop, and emergency stop behavior.
 
 Still deferred:
 
 - In-app video preview.
 - Multi-camera preview grid.
-- OBS control.
+- Preset-to-OBS scene automation.
 - RotorHazard integration.
-- Stream Deck, Companion, Flexbar, and physical operator control integrations.
+- Stream Deck, Companion, Flexbar, MIDI, custom HID, serial, and Bluetooth device adapters.
 - Automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.

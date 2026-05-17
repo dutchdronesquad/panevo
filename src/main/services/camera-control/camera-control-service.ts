@@ -4,7 +4,7 @@ import type {
   CommandResponse,
   FocusMode,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 import { OnvifPtzClient } from "../onvif/onvif-ptz-client";
 import { ViscaClient } from "../visca/visca-client";
 

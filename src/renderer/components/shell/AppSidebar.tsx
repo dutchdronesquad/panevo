@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   CircleOff,
   Gamepad2,
+  MonitorPlay,
   Plug,
   Settings,
 } from "lucide-react";
@@ -17,13 +18,19 @@ import panevoLogoDark from "@/assets/brand/panevo-logo-color-darkbg.svg";
 import panevoLogoLight from "@/assets/brand/panevo-logo-color-lightbg.svg";
 import type { CameraConnectionStatus, CameraProfile } from "../../types/camera";
 
-export type AppView = "control" | "cameras" | "integrations" | "settings";
+export type AppView =
+  | "control"
+  | "cameras"
+  | "integrations"
+  | "input-devices"
+  | "settings";
 
 interface AppSidebarProps {
   activeView: AppView;
   activeCamera: CameraProfile;
   status: CameraConnectionStatus;
   error: string | null;
+  showInputDevices: boolean;
   onViewChange: (view: AppView) => void;
 }
 
@@ -32,6 +39,7 @@ export const AppSidebar = ({
   activeCamera,
   status,
   error,
+  showInputDevices,
   onViewChange,
 }: AppSidebarProps) => {
   const isError = !!error;
@@ -107,9 +115,11 @@ export const AppSidebar = ({
       <div className="sidebar-separator" />
 
       <nav className="sidebar-nav" aria-label="Panevo views">
-        {navBtn("control", <Gamepad2 size={16} />, "Control")}
+        {navBtn("control", <MonitorPlay size={16} />, "Live")}
         {navBtn("cameras", <Camera size={16} />, "Cameras")}
         {navBtn("integrations", <Plug size={16} />, "Integrations")}
+        {showInputDevices &&
+          navBtn("input-devices", <Gamepad2 size={16} />, "Control Devices")}
         {navBtn("settings", <Settings size={16} />, "Settings")}
       </nav>
 

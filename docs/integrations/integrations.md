@@ -30,7 +30,7 @@ Current Phase 4A implementation:
 
 - The renderer has an `Integrations` sidebar view.
 - The view is backed by a static integration registry in `src/renderer/types/integration.ts`.
-- Initial registry entries exist for OBS, RotorHazard, Companion / Stream Deck, Physical Controls, Flexbar, and Automation Rules.
+- Initial registry entries exist for OBS, RotorHazard, Companion / Stream Deck, Input Device, Flexbar, and Automation Rules.
 - Lifecycle labels and status-chip mapping are centralized in the registry module.
 - The main Integrations page starts empty and only shows integrations the operator has added.
 - Operators choose integrations from an Add Integration dialog backed by the registry.
@@ -73,7 +73,7 @@ Initial integration registry entries:
 - OBS
 - RotorHazard
 - Companion / Stream Deck bridge
-- Physical operator controls
+- Input devices
 - Flexbar
 - Automation
 
@@ -169,14 +169,14 @@ Potential features:
 - Stream Deck plugin investigation
 - Status feedback on hardware keys
 - Flexbar integration investigation
-- Physical input devices such as gamepads, joysticks, MIDI controllers, button boxes, or radio-style controllers
+- Input devices such as gamepads, joysticks, MIDI controllers, button boxes, or radio-style controllers
 - Touch panel pages for camera banks, presets, zoom, and race-aware actions
 
 Panevo should expose stable action concepts before committing to a plugin API.
 
-## Physical Operator Controls
+## Control Devices
 
-Physical operator controls are a broad integration category for devices that let an operator move cameras or trigger production actions without relying on mouse input.
+Input devices are a broad integration category for hardware that lets an operator move cameras or trigger production actions without relying on mouse input.
 
 Potential device classes:
 
@@ -190,7 +190,7 @@ Potential device classes:
 HDZero radio is a useful test idea because it matches drone-racing workflows, but Panevo should not create a direct HDZero-specific camera-control path first. The preferred model is:
 
 ```text
-Physical input device
+Input device
   -> device adapter
   -> normalized Panevo action
   -> CameraControlService / automation / OBS
@@ -198,8 +198,9 @@ Physical input device
 
 Minimum useful behavior:
 
-- Map axes to pan and tilt.
-- Map buttons or switches to zoom, stop, active-camera selection, and preset recall.
+- Map axes to pan, tilt, and speed-based zoom.
+- Map buttons or switches to zoom and stop.
+- Defer active-camera selection and preset recall mappings until feedback/confirmation UX is designed.
 - Support a deadman/enable input before movement commands are sent.
 - Stop movement when the device disconnects, the app loses focus, or input becomes stale.
 - Keep per-device mapping profiles local and optional.
@@ -209,15 +210,15 @@ Safety constraints:
 - Do not assume a flight radio is safe to share with camera operation during an active race.
 - Do not bypass speed clamps, command queues, active-camera checks, or emergency stop handling.
 
-Phase 4E starts with keyboard shortcuts as the first physical input route:
+Phase 4E starts with keyboard shortcuts as the first control device route:
 
 - PTZ movement, zoom, and stop shortcuts work only while Panevo is focused on the Control view, where real keydown/keyup events are available.
 - Preset shortcuts are registered globally in the main process and can work while Panevo is in the tray, another app is focused, or any Panevo screen is open.
 - Shortcuts are configured from Settings and stored in local Panevo preferences.
 - Shortcuts can be turned off completely from Settings.
 - Global preset shortcut bindings must include Alt or Ctrl. Foreground Control-view bindings may use direct keys.
-- WASD sends held PTZ movement actions through `ActionDispatcher`.
-- Q/E sends held zoom actions through `ActionDispatcher`.
+- Arrow keys send held PTZ movement actions through `ActionDispatcher`.
+- Plus and minus send held zoom actions through `ActionDispatcher`.
 - Alt + number keys 1 through 9 recall presets globally through `ActionDispatcher`.
 - X sends a foreground stop-all action.
 - Key release, app blur, or visibility loss stops held foreground movement or zoom.
@@ -226,6 +227,14 @@ Keyboard shortcuts are intentionally not modeled as an integration because they 
 
 HDZero radio support should follow only after local hardware validation confirms that the radio appears as a standard Gamepad, HID, MIDI, serial, or Bluetooth input device.
 
+- Phase 4E.2 provides setup-time discovery/status for devices exposed through the standard browser Gamepad API.
+- The current input setup selects a device only; live axis values, button states, and mapping profiles live in the Control Devices view.
+- The Control Devices view stores local mapping profiles for axes, buttons, deadzone, inversion, and speed limits.
+- Live control requires an active deadman input before movement or zoom commands are dispatched.
+- Live control dispatches pan, tilt, speed-based zoom, stop-all, and zoom buttons through `ActionDispatcher`.
+- Absolute zoom position mapping is deferred because current validation showed choppy and unreliable behavior.
+- Movement and zoom stop when the deadman is released, the device disconnects, the app loses focus, or the Control Devices view is left.
+- The integration dialog should only select the input device. Mapping, calibration, deadman assignment, and action bindings belong in the dedicated Control Devices sidebar view after the integration is configured.
 - Unknown devices should start unmapped.
 - Device disconnect must result in stop where a movement command may be active.
 

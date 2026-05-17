@@ -5,7 +5,7 @@ import type {
   OnvifProbeInput,
   OnvifProbeResult,
   PanevoResult,
-} from "../../shared/types";
+} from "@/shared/types";
 import { OnvifService } from "../services/onvif/onvif-service";
 
 export const registerOnvifIpc = (): void => {

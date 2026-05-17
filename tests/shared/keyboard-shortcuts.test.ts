@@ -6,7 +6,7 @@ import {
   isKeyboardShortcutModifierCode,
   normalizeKeyboardShortcutKey,
   toKeyboardShortcutKey,
-} from "../../src/shared/keyboard-shortcuts";
+} from "@/shared/keyboard-shortcuts";
 
 describe("normalizeKeyboardShortcutKey", () => {
   it("returns null for empty string", () => {

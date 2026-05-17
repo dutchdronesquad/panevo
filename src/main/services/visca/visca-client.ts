@@ -5,7 +5,7 @@ import type {
   CommandResponse,
   FocusMode,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 import {
   buildFocusCommand,
   buildFocusModeInquiryCommand,

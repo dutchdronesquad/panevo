@@ -22,7 +22,7 @@ External system or device
 
 Panevo state
   -> feedback layer
-  -> UI / Companion / Stream Deck / Flexbar / physical controls
+  -> UI / Companion / Stream Deck / Flexbar / control devices
 ```
 
 The first useful action set should include:
@@ -162,9 +162,9 @@ Flexbar can act as a compact touch strip for camera banks, preset recall, zoom a
 - Flexbar disconnect should leave Panevo local controls unchanged.
 - Dynamic labels should fall back to static action labels when feedback is unavailable.
 
-## Physical Operator Controls
+## Control Devices
 
-This category covers physical input devices that can drive Panevo without mouse interaction.
+This category covers external input devices that can drive Panevo without mouse interaction.
 
 Examples:
 
@@ -184,8 +184,9 @@ The operator wants a physical control surface for PTZ movement, zoom, presets, a
 ### Minimum Useful Behavior
 
 - Detect a connected input device through a standard OS/browser path where possible.
-- Map axes to pan/tilt.
-- Map buttons or switches to zoom, stop, and preset recall.
+- Map axes to pan, tilt, and speed-based zoom.
+- Map buttons or switches to zoom and stop.
+- Defer preset recall and active-camera selection until feedback/confirmation UX is designed.
 - Support a deadman/enable button for movement.
 - Stop movement on disconnect, lost focus, or stale input.
 - Store per-device mapping profiles locally.
@@ -200,7 +201,7 @@ Prefer devices that expose themselves as a standard HID, gamepad, joystick, keyb
 - Movement must require an explicit enable/deadman condition.
 - Input timeout must send stop.
 - Disconnect must send stop.
-- Active camera must be visible before physical input can move a camera.
+- Active camera must be visible before device input can move a camera.
 - Axis curves, inversion, deadzone, and speed limits must be configurable.
 
 ### Not First Scope
@@ -208,6 +209,7 @@ Prefer devices that expose themselves as a standard HID, gamepad, joystick, keyb
 - Proprietary HDZero protocol reverse engineering.
 - Multi-controller conflict resolution.
 - Full controller calibration UI.
+- Absolute zoom position mapping until target hardware supports it smoothly and reliably.
 - Wireless reliability guarantees.
 
 ### Failure Behavior
@@ -251,7 +253,7 @@ The operator wants repeatable production behavior: race events, camera presets, 
 2. Add OBS connection and scene-list read-only state.
 3. Add simple OBS scene switch action.
 4. Add external action endpoint or Companion-friendly bridge for core camera actions.
-5. Add physical input spike using standard Gamepad/HID or MIDI APIs.
+5. Add control device support using standard Gamepad/HID or MIDI APIs.
 6. Add RotorHazard read-only race state.
 7. Add first guarded trigger/action automation.
 8. Investigate Flexbar once the shared action and feedback model exists.

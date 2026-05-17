@@ -190,7 +190,7 @@ Rationale:
 
 - Integrations need one stable action vocabulary for cameras, presets, stop, focus, OBS, and automation.
 - Live-control safety depends on preserving the existing active-camera validation, speed clamps, stop behavior, and command queues.
-- External controls such as Companion, Stream Deck, Flexbar, physical controls, and automation need feedback state without coupling to React component state.
+- External controls such as Companion, Stream Deck, Flexbar, control devices, and automation need feedback state without coupling to React component state.
 - OBS and automation actions can be named before their adapters exist; `obs.scene.switch` becomes active in Phase 4C.
 
 Implementation constraints:
@@ -227,7 +227,7 @@ Implementation constraints:
 
 Status: accepted for Phase 4E.
 
-Panevo treats built-in keyboard shortcuts as local operator preferences instead of integration entries. External devices such as HDZero radios, gamepads, joysticks, MIDI controllers, and HID button boxes remain future integrations or device adapters.
+Panevo treats built-in keyboard shortcuts as local operator preferences instead of integration entries. External devices such as HDZero radios, gamepads, joysticks, MIDI controllers, and HID button boxes remain optional integrations or device adapters.
 
 Rationale:
 
@@ -243,3 +243,23 @@ Implementation constraints:
 - Settings provides a kill switch to disable all keyboard shortcut handling.
 - Preset shortcuts are registered globally in the main process and dispatch normalized Panevo actions through `ActionDispatcher`.
 - PTZ movement, zoom, and stop remain foreground Control-view shortcuts because they need reliable keydown/keyup behavior.
+
+## ADR-015: Input Devices Use Control Devices Mapping Profiles
+
+Status: accepted for Phase 4E.2.
+
+Panevo treats gamepad/joystick-style devices as optional Input Device integrations. The integration setup only selects the device. Mapping, deadman assignment, live input monitoring, and profile management happen in the dedicated Control Devices view.
+
+Rationale:
+
+- Device selection and mapping are different operator tasks. Keeping setup limited to device selection makes the integration dialog calmer and avoids pretending every device can be fully configured up front.
+- Browser Gamepad API devices can expose live axes and buttons in the renderer, but camera commands must still route through normalized Panevo actions.
+- Continuous PTZ and zoom control needs a deadman gate and reliable stop behavior on release, disconnect, blur, and view unmount.
+
+Implementation constraints:
+
+- Input-device mappings are stored locally on the integration entry as mapping profiles.
+- Unknown devices start inert until the operator assigns axes/buttons and a deadman input.
+- Pan, tilt, speed-based zoom, zoom buttons, and stop dispatch through `ActionDispatcher`.
+- Absolute zoom position mapping is deferred because current hardware validation was choppy and unreliable.
+- Active-camera selection and preset recall mappings remain future scope.

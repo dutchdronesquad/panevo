@@ -1,4 +1,4 @@
-import type { PanevoResult } from "../../../shared/types";
+import type { PanevoResult } from "@/shared/types";
 
 interface QueueItem<T> {
   name: string;

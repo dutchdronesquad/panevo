@@ -5,9 +5,11 @@ import { TooltipProvider } from "@/renderer/components/ui/tooltip";
 import { MainLayout } from "./layouts/MainLayout";
 import { CamerasView } from "./views/CamerasView";
 import { ControlView } from "./views/ControlView";
+import { InputDevicesView } from "./views/InputDevicesView";
 import { IntegrationsView } from "./views/IntegrationsView";
 import { SettingsView, type Theme } from "./views/SettingsView";
 import { useControlKeyboardShortcuts } from "./hooks/useControlKeyboardShortcuts";
+import { Toaster } from "@/renderer/components/ui/sonner";
 import { defaultPanevoPreferences } from "@/shared/keyboard-shortcuts";
 import type {
   CameraConfig,
@@ -17,6 +19,7 @@ import type {
   CommandResponse,
   FocusMode,
   IntegrationConfig,
+  IntegrationConfigEntry,
   OnvifProbeState,
   OnvifProbeResult,
   PanevoResult,
@@ -176,6 +179,15 @@ export const App = () => {
       ),
     [integrationConfig],
   );
+  const inputDevicesIntegration = useMemo(
+    () =>
+      integrationConfig.integrations.find(
+        (integration) =>
+          integration.integrationId === "input-devices" &&
+          ["enabled", "connected"].includes(integration.lifecycleState),
+      ),
+    [integrationConfig],
+  );
 
   const saveConfigState = useCallback(async (nextConfig: CameraConfig) => {
     setConfig(nextConfig);
@@ -214,6 +226,32 @@ export const App = () => {
       return true;
     },
     [],
+  );
+
+  const saveIntegrationEntry = useCallback(
+    async (nextEntry: IntegrationConfigEntry): Promise<boolean> => {
+      const nextConfig: IntegrationConfig = {
+        integrations: integrationConfig.integrations.some(
+          (entry) => entry.id === nextEntry.id,
+        )
+          ? integrationConfig.integrations.map((entry) =>
+              entry.id === nextEntry.id ? nextEntry : entry,
+            )
+          : [...integrationConfig.integrations, nextEntry],
+      };
+
+      setIntegrationConfig(nextConfig);
+      const result = await window.panevo.saveIntegrationConfig(nextConfig);
+      if (!result.ok) {
+        setError(`${result.error.code}: ${result.error.message}`);
+        return false;
+      }
+
+      setIntegrationConfig(result.data);
+      setError(null);
+      return true;
+    },
+    [integrationConfig],
   );
 
   const probeOnvifCamera = useCallback(
@@ -1009,16 +1047,24 @@ export const App = () => {
     localStorage.setItem("panevo-theme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (activeView === "input-devices" && !inputDevicesIntegration) {
+      setActiveView("integrations");
+    }
+  }, [activeView, inputDevicesIntegration]);
+
   const viewTitle =
     activeView === "control"
       ? hasActiveCamera
         ? activeCamera.label
-        : "Control"
+        : "Live"
       : activeView === "cameras"
         ? "Camera Profiles"
         : activeView === "integrations"
           ? "Integrations"
-          : "Settings";
+          : activeView === "input-devices"
+            ? "Control Devices"
+            : "Settings";
 
   return (
     <TooltipProvider>
@@ -1029,6 +1075,7 @@ export const App = () => {
             activeCamera={activeCamera}
             status={status}
             error={error}
+            showInputDevices={Boolean(inputDevicesIntegration)}
             onViewChange={setActiveView}
           />
 
@@ -1070,6 +1117,13 @@ export const App = () => {
                 onIntegrationConfigChange={setIntegrationConfig}
               />
             )}
+            {activeView === "input-devices" && (
+              <InputDevicesView
+                integration={inputDevicesIntegration}
+                onOpenIntegrations={() => setActiveView("integrations")}
+                onSaveIntegration={saveIntegrationEntry}
+              />
+            )}
             {activeView === "settings" && (
               <SettingsView
                 theme={theme}
@@ -1081,6 +1135,7 @@ export const App = () => {
           </div>
         </div>
       </MainLayout>
+      <Toaster theme={theme} />
     </TooltipProvider>
   );
 };

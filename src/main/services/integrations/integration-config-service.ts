@@ -6,7 +6,7 @@ import type {
   IntegrationConfigEntry,
   IntegrationLifecycleState,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 
 const DEFAULT_CONFIG: IntegrationConfig = {
   integrations: [],

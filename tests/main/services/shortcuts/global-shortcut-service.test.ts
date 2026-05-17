@@ -2,14 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import {
   GlobalShortcutService,
   keyboardShortcutKeyToAccelerator,
-} from "../../../../src/main/services/shortcuts/global-shortcut-service";
-import { defaultPanevoPreferences } from "../../../../src/shared/keyboard-shortcuts";
+} from "@/main/services/shortcuts/global-shortcut-service";
+import { defaultPanevoPreferences } from "@/shared/keyboard-shortcuts";
 import type {
   PanevoAction,
   PanevoActionDispatchResult,
   PanevoPreferences,
   PanevoResult,
-} from "../../../../src/shared/types";
+} from "@/shared/types";
 
 vi.mock("electron", () => ({
   globalShortcut: {

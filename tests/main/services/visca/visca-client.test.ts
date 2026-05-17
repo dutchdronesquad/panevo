@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CameraProfile } from "../../../../src/shared/types";
+import type { CameraProfile } from "@/shared/types";
 
 type SendCall = {
   packet: Buffer;
@@ -50,8 +50,7 @@ vi.mock("node:dgram", () => ({
   createSocket: dgramMock.createSocket,
 }));
 
-const { ViscaClient } =
-  await import("../../../../src/main/services/visca/visca-client");
+const { ViscaClient } = await import("@/main/services/visca/visca-client");
 
 const bytes = (buffer: Buffer): number[] => Array.from(buffer);
 

@@ -6,7 +6,7 @@ import type {
   CameraPreset,
   CameraProfile,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 
 const DEFAULT_CAMERA: CameraProfile = {
   id: "camera-default",

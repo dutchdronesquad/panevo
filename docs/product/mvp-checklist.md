@@ -104,7 +104,7 @@ Local verification:
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
 - [ ] Flexbar integration.
-- [ ] Physical operator controls such as HDZero radio, gamepad, joystick, MIDI, and HID button boxes.
+- [ ] Input devices such as HDZero radio, gamepad, joystick, MIDI, and HID button boxes.
 - [ ] Automation workflows.
 - [ ] TCP VISCA support.
 - [ ] Replacing VISCA internals with an npm package.
@@ -265,7 +265,7 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 ### Phase 4A: Integration Management UI
 
 - [x] Add `Integrations` sidebar view.
-- [x] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Physical Controls, Flexbar, and Automation.
+- [x] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Input Device, Flexbar, and Automation.
 - [x] Define integration lifecycle states: not configured, configured, enabled, connected, error, disabled.
 - [x] Add integration cards/list rows with name, description, status, and primary action.
 - [x] Add shared configure dialog pattern.
@@ -313,23 +313,31 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 - [ ] Prevent external triggers from bypassing safety checks.
 - [ ] Document setup and supported action IDs.
 
-### Phase 4E: Physical Operator Controls
+### Phase 4E.1: Keyboard Shortcuts
 
-- [x] Decide first physical input path: keyboard shortcuts before hardware-specific adapters.
-- [x] Treat HDZero radio as a concrete test case only if it exposes a standard input path.
+- [x] Decide first control device path: keyboard shortcuts before hardware-specific adapters.
 - [x] Add configurable keyboard shortcut mappings in Settings.
 - [x] Persist keyboard shortcut preferences locally.
 - [x] Add a Settings kill switch and require modifier-based bindings for global preset shortcuts.
 - [x] Register preset shortcuts globally from the main process.
 - [x] Keep PTZ, zoom, and stop shortcuts foreground-only for reliable key release behavior.
-- [ ] Add input-device discovery/status.
-- [ ] Add local device mapping profiles.
-- [ ] Map axes to pan/tilt with deadzone, inversion, curves, and speed limits.
-- [ ] Map buttons or switches to zoom, stop, active-camera selection, and preset recall.
-- [ ] Require deadman/enable input before movement commands are sent.
 - [x] Send stop on key release, app blur, or visibility loss for keyboard movement and zoom.
+- [x] Ensure keyboard input routes through the shared Panevo action layer.
+
+### Phase 4E.2: Input Device Controls
+
+- [x] Treat HDZero radio as a concrete test case only if it exposes a standard input path.
+- [x] Add input-device discovery/status.
+- [x] Keep integration setup limited to device selection and move mapping work to a dedicated Control Devices view.
+- [x] Add local device mapping profiles.
+- [x] Add mapping capture UI for axes and buttons without sending camera commands.
+- [x] Map axes to pan/tilt/zoom with deadzone, inversion, and speed limits.
+- [x] Add live camera dispatch with deadman gating and stop-on-exit behavior.
+- [x] Map buttons to zoom and stop.
+- [x] Require deadman/enable input before movement commands are sent.
 - [x] Ensure device input routes through the shared Panevo action layer.
-- [x] Document physical control safety requirements.
+- [x] Document control device safety requirements.
+- [ ] Later: map buttons or switches to active-camera selection and preset recall after feedback/confirmation UX is designed.
 
 ### Phase 4F: RotorHazard Integration
 
@@ -357,7 +365,7 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the
 
 - [ ] Define minimal trigger/action rule schema.
 - [ ] Add manual enable/disable for automation.
-- [ ] Support triggers from manual action bridge, OBS state, RotorHazard state, or physical input.
+- [ ] Support triggers from manual action bridge, OBS state, RotorHazard state, or control device.
 - [ ] Support actions through the shared Panevo action layer.
 - [ ] Show last-triggered rule and last action result.
 - [ ] Ensure stop overrides automation.

@@ -4,7 +4,7 @@ import type {
   CameraProfile,
   CommandResponse,
   PanevoResult,
-} from "../../../../src/shared/types";
+} from "@/shared/types";
 
 const mocks = vi.hoisted(() => {
   const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
@@ -75,20 +75,20 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../../../../src/main/services/visca/visca-client", () => ({
+vi.mock("@/main/services/visca/visca-client", () => ({
   ViscaClient: vi.fn(function ViscaClient() {
     return mocks.viscaClient;
   }),
 }));
 
-vi.mock("../../../../src/main/services/onvif/onvif-ptz-client", () => ({
+vi.mock("@/main/services/onvif/onvif-ptz-client", () => ({
   OnvifPtzClient: vi.fn(function OnvifPtzClient() {
     return mocks.onvifPtzClient;
   }),
 }));
 
 const { CameraControlService } =
-  await import("../../../../src/main/services/camera-control/camera-control-service");
+  await import("@/main/services/camera-control/camera-control-service");
 
 const createCamera = (
   overrides: Partial<CameraProfile> = {},

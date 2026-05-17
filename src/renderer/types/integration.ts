@@ -7,13 +7,13 @@ import {
   Timer,
   Workflow,
 } from "lucide-react";
-import type { IntegrationLifecycleState } from "../../shared/types";
+import type { IntegrationLifecycleState } from "@/shared/types";
 
 export type IntegrationCategory =
   | "production"
   | "race"
   | "control-surface"
-  | "physical-input"
+  | "input-device"
   | "automation";
 
 export interface IntegrationDefinition {
@@ -22,8 +22,8 @@ export interface IntegrationDefinition {
   category: IntegrationCategory;
   description: string;
   lifecycleState: IntegrationLifecycleState;
-  phase: string;
   primaryAction: string;
+  setupState: "available" | "planned";
   testActionLabel: string;
   settings: IntegrationSettingDefinition[];
   capabilities: string[];
@@ -72,8 +72,8 @@ export const integrationRegistry: IntegrationDefinition[] = [
     description:
       "Scene switching and live production state from an OBS websocket connection.",
     lifecycleState: "not-configured",
-    phase: "Phase 4C",
     primaryAction: "Configure OBS",
+    setupState: "available",
     testActionLabel: "Test OBS",
     settings: [
       {
@@ -94,7 +94,7 @@ export const integrationRegistry: IntegrationDefinition[] = [
         key: "password",
         label: "WebSocket password",
         type: "password",
-        helperText: "Stored locally in panevo-integrations.json for now.",
+        helperText: "Saved locally on this machine.",
       },
     ],
     capabilities: [
@@ -111,8 +111,8 @@ export const integrationRegistry: IntegrationDefinition[] = [
     description:
       "Race timing, active heat, pilot, lane, and race-state events for race-aware production.",
     lifecycleState: "not-configured",
-    phase: "Phase 4F",
     primaryAction: "Configure RotorHazard",
+    setupState: "planned",
     testActionLabel: "Test RotorHazard",
     settings: [
       {
@@ -143,8 +143,8 @@ export const integrationRegistry: IntegrationDefinition[] = [
     description:
       "External button surfaces for safe camera actions, preset recall, and emergency stop.",
     lifecycleState: "not-configured",
-    phase: "Phase 4D",
     primaryAction: "Configure bridge",
+    setupState: "planned",
     testActionLabel: "Test bridge",
     settings: [
       {
@@ -169,33 +169,40 @@ export const integrationRegistry: IntegrationDefinition[] = [
     icon: Blocks,
   },
   {
-    id: "physical-controls",
-    name: "Physical Controls",
-    category: "physical-input",
+    id: "input-devices",
+    name: "Input Device",
+    category: "input-device",
     description:
-      "Operator input from gamepads, HID devices, MIDI controls, keyboard shortcuts, or radio-style controllers.",
+      "Operator input from gamepads, HID devices, MIDI controls, or radio-style controllers.",
     lifecycleState: "not-configured",
-    phase: "Phase 4E",
     primaryAction: "Configure input",
+    setupState: "available",
     testActionLabel: "Test input",
     settings: [
+      {
+        key: "selectedDeviceKey",
+        label: "Device",
+        type: "text",
+        placeholder: "No device selected",
+        required: true,
+      },
+      {
+        key: "selectedDeviceName",
+        label: "Device name",
+        type: "text",
+        placeholder: "Standard gamepad / joystick",
+      },
       {
         key: "inputProfile",
         label: "Input profile",
         type: "text",
-        placeholder: "Gamepad, MIDI, HID, keyboard",
-        required: true,
-      },
-      {
-        key: "deadmanAction",
-        label: "Deadman action",
-        type: "text",
-        placeholder: "Hold assigned button before movement",
+        defaultValue: "Default profile",
+        placeholder: "Default profile",
       },
     ],
     capabilities: [
-      "Map axes to pan and tilt",
-      "Map buttons to presets, zoom, and stop",
+      "Map axes to pan, tilt, and zoom",
+      "Map buttons to zoom and stop",
       "Require deadman input before movement",
     ],
     icon: Gamepad2,
@@ -207,8 +214,8 @@ export const integrationRegistry: IntegrationDefinition[] = [
     description:
       "Compact touch-panel actions and feedback for camera, preset, OBS, and race cues.",
     lifecycleState: "not-configured",
-    phase: "Phase 4G",
     primaryAction: "Investigate Flexbar",
+    setupState: "planned",
     testActionLabel: "Validate Flexbar",
     settings: [
       {
@@ -239,8 +246,8 @@ export const integrationRegistry: IntegrationDefinition[] = [
     description:
       "Guarded trigger/action rules that connect race, production, control-surface, and camera events.",
     lifecycleState: "disabled",
-    phase: "Phase 4H",
     primaryAction: "Configure rules",
+    setupState: "planned",
     testActionLabel: "Validate rules",
     settings: [
       {

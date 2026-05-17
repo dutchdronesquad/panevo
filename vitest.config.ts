@@ -12,7 +12,11 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html", "lcov", "json", "json-summary"],
       reportsDirectory: "coverage",
-      include: ["src/main/services/**/*.ts"],
+      include: [
+        "src/main/services/**/*.ts",
+        "src/shared/**/*.ts",
+        "src/renderer/components/input/view-model.ts",
+      ],
       exclude: ["src/**/*.d.ts"],
     },
     environment: "node",

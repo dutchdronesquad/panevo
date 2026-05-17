@@ -10,7 +10,7 @@ import type {
   OnvifProfileInfo,
   OnvifStreamUriInfo,
   PanevoResult,
-} from "../../../shared/types";
+} from "@/shared/types";
 
 const DEFAULT_ONVIF_PORT = 80;
 const DEFAULT_TIMEOUT_MS = 5000;

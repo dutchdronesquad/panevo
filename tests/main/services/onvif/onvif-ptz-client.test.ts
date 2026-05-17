@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CameraProfile } from "../../../../src/shared/types";
+import type { CameraProfile } from "@/shared/types";
 
 type Callback = (error?: Error | false | null) => void;
 
@@ -74,7 +74,7 @@ vi.mock("onvif", () => ({
 }));
 
 const { OnvifPtzClient } =
-  await import("../../../../src/main/services/onvif/onvif-ptz-client");
+  await import("@/main/services/onvif/onvif-ptz-client");
 
 const createCamera = (
   overrides: Partial<CameraProfile> = {},

@@ -4,7 +4,7 @@ import type {
   PanevoActionDispatchResult,
   PanevoFeedbackState,
   PanevoResult,
-} from "../../shared/types";
+} from "@/shared/types";
 import { getActionDispatcher } from "../services/actions/action-dispatcher-instance";
 
 export const registerActionIpc = (): void => {
