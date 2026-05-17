@@ -303,8 +303,9 @@ Implementation constraints:
 
 - Panevo's Electron main process owns the `services/rotorhazard` connection boundary.
 - Renderer code must consume Panevo-level race state and integration status, not RotorHazard Socket.IO payloads.
-- Automation rules must consume Panevo race events such as `race.staging`, `race.started`, `race.finished`, `race.done`, `race.lap-recorded`, `race.active-heat-changed`, and `race.data-stale`.
+- Automation rules must consume Panevo race events such as `race.ready`, `race.staging`, `race.started`, `race.finished`, `race.done`, `race.lap-recorded`, `race.active-heat-changed`, and `race.data-stale`.
 - The Phase 4F scope is read-only: current race state, active heat, pilot/lane/channel metadata, lifecycle events, and stale/disconnect state.
+- Phase 4F keeps normalized lifecycle events as runtime monitor state; durable automation history and rule execution belong to Phase 4H.
 - RotorHazard disconnect or stale data should pause future race-aware automation but must not block manual PTZ, presets, stop, OBS, or camera configuration.
 - HTTP polling is not a fallback path for RotorHazard race state or lifecycle events.
 - A RotorHazard plugin remains the explicit next design option if the built-in Socket.IO surface is not stable or complete enough for Panevo's normalized race event model.

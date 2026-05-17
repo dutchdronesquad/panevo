@@ -483,10 +483,13 @@ Data flow:
 ```text
 RotorHazard Socket.IO
   -> main/services/rotorhazard transport adapter
-  -> Panevo race state and race events
+  -> Panevo race state monitor
+  -> Panevo race events
   -> renderer integration status
   -> future automation triggers
 ```
+
+Current Phase 4F implementation reads RotorHazard `race_status`, `frequency_data`, and `current_heat` with Socket.IO `load_data`, keeps a runtime monitor while the integration is enabled, retries Socket.IO after disconnects, and exposes connected, connecting, stale, disconnected, or error state over typed preload IPC. The monitor maps RotorHazard `READY` to Panevo `ready`, normalizes status and active-heat changes into recent `PanevoRaceEvent` records, and exposes an `automationPaused` flag for future automation, but Phase 4F does not execute automation rules.
 
 If the built-in RotorHazard Socket.IO surface is not stable or complete enough, the next option is an optional RotorHazard plugin. That plugin would use RHAPI inside RotorHazard and publish Panevo-namespaced Socket.IO events from the RotorHazard server. The desktop app should still connect outbound to RotorHazard; Panevo should not require RotorHazard to push into a listener opened by the desktop app.
 

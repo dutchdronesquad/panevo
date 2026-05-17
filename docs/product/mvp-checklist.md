@@ -100,7 +100,6 @@ Local verification:
 - [ ] NDI preview playback backend.
 - [ ] RTSP preview as an in-app mode.
 - [ ] OBS advanced automation and preset-to-scene mapping through automation workflows.
-- [ ] RotorHazard integration.
 - [ ] Stream Deck integration.
 - [ ] Companion integration.
 - [ ] Flexbar integration.
@@ -353,14 +352,16 @@ Phase 4E close-out:
 - [x] Keep RotorHazard transport behind a Panevo race-state/event adapter so future automation does not depend on RotorHazard payloads.
 - [x] Add isolated RotorHazard service boundary in the main process.
 - [x] Add RotorHazard host and port connection settings with default port `5000`.
-- [ ] Read current race state.
-- [ ] Read active heat, pilot, lane, and channel metadata where available.
-- [ ] Normalize race lifecycle events into Panevo events.
+- [x] Read current race state.
+- [x] Read active heat, pilot, and lane metadata where available.
+- [x] Map channel metadata when RotorHazard exposes it through the selected live data surface.
+- [x] Normalize race lifecycle events into Panevo events.
 - [x] Define the normalized Panevo race-state and race-event types used by Phase 4H automation.
-- [ ] Show RotorHazard connected/disconnected/stale state.
-- [ ] Keep RotorHazard assumptions generic and not Dutch Drone Squad specific.
-- [ ] Ensure RotorHazard disconnect pauses race-aware automation.
-- [ ] Document RotorHazard setup and failure modes.
+- [x] Show RotorHazard connected/disconnected/stale state.
+- [x] Keep RotorHazard assumptions generic and not Dutch Drone Squad specific.
+- [x] Ensure RotorHazard disconnect pauses race-aware automation.
+- [x] Document RotorHazard setup and failure modes.
+- [x] Validate live RotorHazard heat changes and restart/reconnect behavior.
 
 ### Phase 4G: Flexbar Investigation
 

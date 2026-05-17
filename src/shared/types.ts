@@ -97,8 +97,31 @@ export interface RotorHazardConnectionStatus {
   socketId?: string;
 }
 
+export type RotorHazardMonitorStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "stale"
+  | "disconnected"
+  | "error";
+
+export interface RotorHazardMonitorState {
+  status: RotorHazardMonitorStatus;
+  connected: boolean;
+  stale: boolean;
+  automationPaused: boolean;
+  message: string;
+  updatedAt: string;
+  baseUrl?: string;
+  socketId?: string;
+  raceState?: PanevoRaceState;
+  recentEvents: PanevoRaceEvent[];
+  error?: string;
+}
+
 export type PanevoRaceStatus =
   | "unknown"
+  | "ready"
   | "staging"
   | "racing"
   | "finished"
@@ -128,6 +151,7 @@ export interface PanevoRaceState {
 }
 
 export type PanevoRaceEventType =
+  | "race.ready"
   | "race.staging"
   | "race.started"
   | "race.finished"
@@ -469,6 +493,18 @@ export interface PanevoApi {
   testRotorHazardConnection: (
     input: RotorHazardConnectionInput,
   ) => Promise<PanevoResult<RotorHazardConnectionStatus>>;
+  getRotorHazardRaceState: (
+    input: RotorHazardConnectionInput,
+  ) => Promise<PanevoResult<PanevoRaceState>>;
+  startRotorHazardRaceMonitor: (
+    input: RotorHazardConnectionInput,
+  ) => Promise<PanevoResult<RotorHazardMonitorState>>;
+  stopRotorHazardRaceMonitor: () => Promise<
+    PanevoResult<RotorHazardMonitorState>
+  >;
+  getRotorHazardMonitorState: () => Promise<
+    PanevoResult<RotorHazardMonitorState>
+  >;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;
