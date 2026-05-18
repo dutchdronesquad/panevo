@@ -23,6 +23,8 @@ export type {
   OnvifProfileInfo,
   PanevoPreferences,
   PanevoResult,
+  RotorHazardConnectionInput,
+  RotorHazardConnectionStatus,
 } from "@/shared/types";
 
 export type OnvifProbeStatus = "unknown" | "verified" | "failed";

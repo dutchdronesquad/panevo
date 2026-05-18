@@ -38,6 +38,7 @@ import type {
   IntegrationConfig,
   IntegrationConfigEntry,
 } from "../types/camera";
+import type { PanevoRaceState, RotorHazardMonitorState } from "@/shared/types";
 
 const categoryLabels: Record<IntegrationCategory, string> = {
   production: "Production",
@@ -60,11 +61,13 @@ type ConfigurationDialogState = {
 type SetupStep = "details" | "setup" | "review";
 
 type IntegrationSettingsDraft = Record<string, string>;
-type ObsTestState = {
+type IntegrationTestState = {
   status: "loading" | "success" | "error";
   message: string;
   currentProgramSceneName?: string;
+  details?: string[];
   scenes?: string[];
+  socketId?: string;
 };
 
 const setupSteps: { id: SetupStep; label: string }[] = [
@@ -82,6 +85,10 @@ const getSetupHeading = (integration: IntegrationDefinition): string => {
     return "Input device";
   }
 
+  if (integration.id === "rotorhazard") {
+    return "Race state";
+  }
+
   return categoryLabels[integration.category];
 };
 
@@ -92,6 +99,10 @@ const getSetupSubtext = (integration: IntegrationDefinition): string => {
 
   if (integration.id === "input-devices") {
     return "Select a device here. Configure mappings from Control Devices in the sidebar.";
+  }
+
+  if (integration.id === "rotorhazard") {
+    return "Connect to RotorHazard over Socket.IO. Race events stay read-only in this phase.";
   }
 
   return "This integration is planned but not configurable in this build.";
@@ -116,6 +127,19 @@ const getSetupSummaryCards = (
 
   if (integration.id === "input-devices") {
     return [];
+  }
+
+  if (integration.id === "rotorhazard") {
+    return [
+      {
+        label: "Transport",
+        value: "Socket.IO websocket",
+      },
+      {
+        label: "Scope",
+        value: "Read-only race state",
+      },
+    ];
   }
 
   return [
@@ -236,6 +260,76 @@ const getObsInputFromDraft = (
 ): { host: string; port: number; password?: string } | null =>
   getObsInputFromSettings(draft);
 
+const getRotorHazardInputFromSettings = (
+  settings: Record<string, unknown>,
+): { host: string; port: number } | null => {
+  const host = typeof settings.host === "string" ? settings.host.trim() : "";
+  const port = Number(settings.port ?? 5000);
+
+  if (!host || !Number.isFinite(port)) {
+    return null;
+  }
+
+  return {
+    host,
+    port,
+  };
+};
+
+const getRotorHazardInputFromDraft = (
+  draft: IntegrationSettingsDraft,
+): { host: string; port: number } | null =>
+  getRotorHazardInputFromSettings(draft);
+
+const formatRotorHazardRaceState = (
+  raceState: PanevoRaceState,
+): IntegrationTestState => {
+  const heatLabel = raceState.activeHeat?.id
+    ? `heat ${raceState.activeHeat.id}`
+    : "no active heat";
+  const roundLabel = raceState.activeHeat?.round
+    ? `round ${raceState.activeHeat.round}`
+    : null;
+  const pilotCount = raceState.pilots.length;
+
+  return {
+    status: "success",
+    message: `RotorHazard race state: ${raceState.status}, ${heatLabel}${roundLabel ? `, ${roundLabel}` : ""}.`,
+    details: [
+      `${pilotCount} pilot${pilotCount === 1 ? "" : "s"} available`,
+      `Updated ${new Date(raceState.updatedAt).toLocaleTimeString()}`,
+    ],
+  };
+};
+
+const formatRotorHazardMonitorState = (
+  monitorState: RotorHazardMonitorState,
+): IntegrationTestState => {
+  const raceState = monitorState.raceState;
+  const heatDetail = raceState?.activeHeat?.id
+    ? `heat ${raceState.activeHeat.id}${raceState.activeHeat.round ? `, round ${raceState.activeHeat.round}` : ""}`
+    : null;
+  const pilotDetail = raceState
+    ? `${raceState.pilots.length} pilot${raceState.pilots.length === 1 ? "" : "s"}`
+    : null;
+
+  return {
+    status:
+      monitorState.status === "connected"
+        ? "success"
+        : monitorState.status === "connecting"
+          ? "loading"
+          : "error",
+    message: monitorState.message,
+    details: [
+      monitorState.baseUrl,
+      heatDetail,
+      pilotDetail,
+      monitorState.automationPaused ? "automation paused" : null,
+    ].filter((detail): detail is string => Boolean(detail)),
+  };
+};
+
 interface IntegrationsViewProps {
   onIntegrationConfigChange?: (config: IntegrationConfig) => void;
 }
@@ -257,10 +351,22 @@ export const IntegrationsView = ({
   >([]);
   const [configError, setConfigError] = useState<string | null>(null);
   const [obsTestStates, setObsTestStates] = useState<
-    Record<string, ObsTestState>
+    Record<string, IntegrationTestState>
   >({});
   const [configurationObsTestState, setConfigurationObsTestState] =
-    useState<ObsTestState | null>(null);
+    useState<IntegrationTestState | null>(null);
+  const [rotorHazardTestStates, setRotorHazardTestStates] = useState<
+    Record<string, IntegrationTestState>
+  >({});
+  const [rotorHazardMonitorState, setRotorHazardMonitorState] =
+    useState<RotorHazardMonitorState | null>(null);
+  const [rotorHazardMonitorError, setRotorHazardMonitorError] = useState<
+    string | null
+  >(null);
+  const [
+    configurationRotorHazardTestState,
+    setConfigurationRotorHazardTestState,
+  ] = useState<IntegrationTestState | null>(null);
 
   const configuredIntegrations = useMemo(
     () =>
@@ -357,6 +463,72 @@ export const IntegrationsView = ({
     };
   }, [onIntegrationConfigChange]);
 
+  useEffect(() => {
+    let cancelled = false;
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    const rotorHazardEntry = configuredEntries.find(
+      (entry) =>
+        entry.integrationId === "rotorhazard" &&
+        ["enabled", "connected"].includes(entry.lifecycleState),
+    );
+    const input = rotorHazardEntry
+      ? getRotorHazardInputFromSettings(rotorHazardEntry.settings)
+      : null;
+
+    if (!input) {
+      setRotorHazardMonitorState(null);
+      setRotorHazardMonitorError(null);
+      void window.panevo.stopRotorHazardRaceMonitor();
+      return;
+    }
+
+    const refreshMonitorState = async (): Promise<void> => {
+      const result = await window.panevo.getRotorHazardMonitorState();
+      if (cancelled) {
+        return;
+      }
+
+      if (result.ok) {
+        setRotorHazardMonitorState(result.data);
+        setRotorHazardMonitorError(null);
+        return;
+      }
+
+      setRotorHazardMonitorError(
+        `${result.error.code}: ${result.error.message}`,
+      );
+    };
+
+    void (async () => {
+      const result = await window.panevo.startRotorHazardRaceMonitor(input);
+      if (cancelled) {
+        return;
+      }
+
+      if (result.ok) {
+        setRotorHazardMonitorState(result.data);
+        setRotorHazardMonitorError(null);
+      } else {
+        setRotorHazardMonitorState(null);
+        setRotorHazardMonitorError(
+          `${result.error.code}: ${result.error.message}`,
+        );
+      }
+
+      pollInterval = setInterval(() => {
+        void refreshMonitorState();
+      }, 2000);
+    })();
+
+    return () => {
+      cancelled = true;
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+      void window.panevo.stopRotorHazardRaceMonitor();
+    };
+  }, [configuredEntries]);
+
   const saveIntegrationEntries = async (
     entries: IntegrationConfigEntry[],
   ): Promise<boolean> => {
@@ -386,6 +558,7 @@ export const IntegrationsView = ({
 
     setSettingsDraft(createSettingsDraft(integration, entry));
     setConfigurationObsTestState(null);
+    setConfigurationRotorHazardTestState(null);
     setConfigurationDialog({ integration, mode });
     setSetupStep(mode === "create" ? "details" : "setup");
   };
@@ -501,6 +674,7 @@ export const IntegrationsView = ({
     if (configurationDialog?.integration.id === integrationId) {
       setConfigurationDialog(null);
       setConfigurationObsTestState(null);
+      setConfigurationRotorHazardTestState(null);
     }
     setIntegrationToRemove(null);
   };
@@ -532,6 +706,36 @@ export const IntegrationsView = ({
               currentProgramSceneName: result.data.currentProgramSceneName,
               scenes: result.data.scenes.map((scene) => scene.name).slice(0, 6),
             }
+          : {
+              status: "error",
+              message: `${result.error.code}: ${result.error.message}`,
+            },
+      );
+    })();
+  };
+
+  const testRotorHazardDraft = () => {
+    void (async () => {
+      const input = getRotorHazardInputFromDraft(settingsDraft);
+
+      if (!input) {
+        setConfigurationRotorHazardTestState({
+          status: "error",
+          message: "RotorHazard host and port are required.",
+        });
+        return;
+      }
+
+      setConfigurationRotorHazardTestState({
+        status: "loading",
+        message: "Reading RotorHazard race state...",
+      });
+
+      const result = await window.panevo.getRotorHazardRaceState(input);
+
+      setConfigurationRotorHazardTestState(
+        result.ok
+          ? formatRotorHazardRaceState(result.data)
           : {
               status: "error",
               message: `${result.error.code}: ${result.error.message}`,
@@ -574,6 +778,43 @@ export const IntegrationsView = ({
               currentProgramSceneName: result.data.currentProgramSceneName,
               scenes: result.data.scenes.map((scene) => scene.name).slice(0, 4),
             }
+          : {
+              status: "error",
+              message: `${result.error.code}: ${result.error.message}`,
+            },
+      }));
+    })();
+  };
+
+  const testRotorHazardIntegration = (entry: IntegrationConfigEntry) => {
+    void (async () => {
+      const input = getRotorHazardInputFromSettings(entry.settings);
+
+      if (!input) {
+        setRotorHazardTestStates((states) => ({
+          ...states,
+          [entry.id]: {
+            status: "error",
+            message: "RotorHazard host and port are required.",
+          },
+        }));
+        return;
+      }
+
+      setRotorHazardTestStates((states) => ({
+        ...states,
+        [entry.id]: {
+          status: "loading",
+          message: "Reading RotorHazard race state...",
+        },
+      }));
+
+      const result = await window.panevo.getRotorHazardRaceState(input);
+
+      setRotorHazardTestStates((states) => ({
+        ...states,
+        [entry.id]: result.ok
+          ? formatRotorHazardRaceState(result.data)
           : {
               status: "error",
               message: `${result.error.code}: ${result.error.message}`,
@@ -642,9 +883,20 @@ export const IntegrationsView = ({
               entry.lifecycleState,
             );
             const settingsSummary = getSettingsSummary(integration, entry);
-            const obsTestState = obsTestStates[entry.id];
+            const testState =
+              integration.id === "rotorhazard"
+                ? rotorHazardTestStates[entry.id]
+                : obsTestStates[entry.id];
+            const runtimeState =
+              integration.id === "rotorhazard" && rotorHazardMonitorState
+                ? formatRotorHazardMonitorState(rotorHazardMonitorState)
+                : null;
             const canTestObs =
-              integration.id === "obs" && obsTestState?.status !== "loading";
+              integration.id === "obs" && testState?.status !== "loading";
+            const canTestRotorHazard =
+              integration.id === "rotorhazard" &&
+              testState?.status !== "loading";
+            const canTestIntegration = canTestObs || canTestRotorHazard;
 
             return (
               <article
@@ -669,17 +921,39 @@ export const IntegrationsView = ({
                       {settingsSummary}
                     </div>
                   )}
-                  {obsTestState && (
+                  {testState && (
                     <div
-                      className={`integration-test-result integration-test-result-${obsTestState.status}`}
+                      className={`integration-test-result integration-test-result-${testState.status}`}
                     >
-                      <span>{obsTestState.message}</span>
-                      {obsTestState.scenes &&
-                        obsTestState.scenes.length > 0 && (
-                          <small>{obsTestState.scenes.join(" / ")}</small>
+                      <span>{testState.message}</span>
+                      {testState.scenes && testState.scenes.length > 0 && (
+                        <small>{testState.scenes.join(" / ")}</small>
+                      )}
+                      {testState.details && testState.details.length > 0 && (
+                        <small>{testState.details.join(" / ")}</small>
+                      )}
+                      {testState.socketId && (
+                        <small>Socket.IO session {testState.socketId}</small>
+                      )}
+                    </div>
+                  )}
+                  {runtimeState && (
+                    <div
+                      className={`integration-test-result integration-test-result-${runtimeState.status}`}
+                    >
+                      <span>{runtimeState.message}</span>
+                      {runtimeState.details &&
+                        runtimeState.details.length > 0 && (
+                          <small>{runtimeState.details.join(" / ")}</small>
                         )}
                     </div>
                   )}
+                  {integration.id === "rotorhazard" &&
+                    rotorHazardMonitorError && (
+                      <div className="integration-test-result integration-test-result-error">
+                        <span>{rotorHazardMonitorError}</span>
+                      </div>
+                    )}
                 </div>
 
                 <div className="integration-actions">
@@ -704,11 +978,18 @@ export const IntegrationsView = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    disabled={!canTestObs}
-                    onClick={() => testObsIntegration(entry)}
+                    disabled={!canTestIntegration}
+                    onClick={() => {
+                      if (integration.id === "rotorhazard") {
+                        testRotorHazardIntegration(entry);
+                        return;
+                      }
+
+                      testObsIntegration(entry);
+                    }}
                   >
                     <PlugZap />
-                    {obsTestState?.status === "loading"
+                    {testState?.status === "loading"
                       ? "Testing..."
                       : integration.testActionLabel}
                   </Button>
@@ -782,6 +1063,7 @@ export const IntegrationsView = ({
           if (!open) {
             setConfigurationDialog(null);
             setConfigurationObsTestState(null);
+            setConfigurationRotorHazardTestState(null);
             setSetupStep("details");
           }
         }}
@@ -902,6 +1184,14 @@ export const IntegrationsView = ({
                                     ) {
                                       setConfigurationObsTestState(null);
                                     }
+                                    if (
+                                      configurationDialog.integration.id ===
+                                      "rotorhazard"
+                                    ) {
+                                      setConfigurationRotorHazardTestState(
+                                        null,
+                                      );
+                                    }
 
                                     setSettingsDraft((currentDraft) => ({
                                       ...currentDraft,
@@ -962,6 +1252,62 @@ export const IntegrationsView = ({
                                 configurationObsTestState.scenes.length > 0 && (
                                   <small>
                                     {configurationObsTestState.scenes.join(
+                                      " / ",
+                                    )}
+                                  </small>
+                                )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {configurationDialog.integration.id === "rotorhazard" && (
+                        <div className="integration-obs-check">
+                          <div className="integration-detail-heading">
+                            <div>
+                              <strong>RotorHazard Socket.IO check</strong>
+                              <span>
+                                Reads RotorHazard's current race status and
+                                active heat over Socket.IO.
+                              </span>
+                            </div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={
+                              configurationRotorHazardTestState?.status ===
+                              "loading"
+                            }
+                            onClick={testRotorHazardDraft}
+                          >
+                            <PlugZap />
+                            {configurationRotorHazardTestState?.status ===
+                            "loading"
+                              ? "Testing..."
+                              : "Read race state"}
+                          </Button>
+
+                          {configurationRotorHazardTestState && (
+                            <div
+                              className={`integration-test-result integration-test-result-${configurationRotorHazardTestState.status}`}
+                            >
+                              <span>
+                                {configurationRotorHazardTestState.message}
+                              </span>
+                              {configurationRotorHazardTestState.socketId && (
+                                <small>
+                                  Socket.IO session{" "}
+                                  {configurationRotorHazardTestState.socketId}
+                                </small>
+                              )}
+                              {configurationRotorHazardTestState.details &&
+                                configurationRotorHazardTestState.details
+                                  .length > 0 && (
+                                  <small>
+                                    {configurationRotorHazardTestState.details.join(
                                       " / ",
                                     )}
                                   </small>
@@ -1041,6 +1387,19 @@ export const IntegrationsView = ({
                           <div>
                             <span>Scene switching</span>
                             <strong>Manual click-to-switch</strong>
+                          </div>
+                        </div>
+                      )}
+
+                      {configurationDialog.integration.id === "rotorhazard" && (
+                        <div className="integration-dialog-grid">
+                          <div>
+                            <span>Transport</span>
+                            <strong>Socket.IO websocket</strong>
+                          </div>
+                          <div>
+                            <span>Scope</span>
+                            <strong>Read-only race state</strong>
                           </div>
                         </div>
                       )}

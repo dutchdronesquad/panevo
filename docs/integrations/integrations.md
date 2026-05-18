@@ -158,6 +158,78 @@ RotorHazard integration should avoid hard-coding Dutch Drone Squad assumptions i
 
 RotorHazard concepts should be translated into generic race/event concepts before they affect core Panevo architecture.
 
+Phase 4F direction:
+
+- Use RotorHazard's existing Socket.IO server as the first transport.
+- Keep the Panevo desktop app connected through an isolated main-process `services/rotorhazard` boundary.
+- Treat Socket.IO as a protocol dependency; do not use a raw browser-style WebSocket client unless RotorHazard exposes a separate raw websocket endpoint.
+- Define a Panevo race-event contract before automation work starts, and keep it independent from RotorHazard event names and payload shapes.
+- Normalize RotorHazard lifecycle events into Panevo race events such as ready, staging, race started, race finished, race done, lap recorded, active heat changed, and race data stale.
+- Read active race, heat, pilot, lane, and channel information from stable Socket.IO events and request/response calls where available, but keep missing fields optional.
+- Consider an optional RotorHazard plugin only if the existing Socket.IO surface does not expose the events or normalized payloads Panevo needs. If added, the plugin should use RHAPI inside RotorHazard and publish Panevo-namespaced Socket.IO events from RotorHazard so Panevo remains the connecting client.
+- Do not use HTTP polling as a fallback path for Phase 4F.
+- Do not edit RotorHazard races, pilots, heats, rounds, formats, or timing data from Panevo in this phase.
+- RotorHazard stale/disconnected state should pause future race-aware automation while leaving manual camera and OBS operation available.
+
+Long-term transport model:
+
+```text
+RotorHazard built-in Socket.IO events
+  -> RotorHazardTransportAdapter
+  -> PanevoRaceEvent / PanevoRaceState
+  -> renderer status + Phase 4H automation
+
+Optional future RotorHazard plugin
+  -> Panevo-namespaced Socket.IO events on RotorHazard
+  -> same RotorHazardTransportAdapter contract
+  -> PanevoRaceEvent / PanevoRaceState
+```
+
+The key boundary is the Panevo race-event contract, not the first transport. Automation should depend only on normalized events and state, so switching from built-in RotorHazard Socket.IO events to an optional RotorHazard plugin later does not rewrite automation rules.
+
+Current Phase 4F implementation:
+
+- Adds `socket.io-client` as the RotorHazard transport dependency.
+- Adds an isolated main-process `RotorHazardService` under `services/rotorhazard`.
+- Exposes typed preload IPC actions for RotorHazard Socket.IO connection checks and current race-state reads.
+- Makes the RotorHazard integration configurable from the Integrations view with host and port fields.
+- Defaults the RotorHazard port to `5000`, matching the standard RotorHazard server port.
+- Does not include an API-key setting because RotorHazard does not expose a supported API-key auth path for this integration.
+- Tests the Socket.IO connection using websocket transport only; Panevo does not add HTTP polling as a fallback.
+- Defines the first `PanevoRaceState` and `PanevoRaceEvent` shared types for Phase 4H automation.
+- Reads current race status, frequency data, and active heat data by sending RotorHazard `load_data` for `race_status`, `frequency_data`, and `current_heat`, then normalizes the response into `PanevoRaceState`.
+- Maps channel metadata from RotorHazard node frequency data when that payload is available.
+- Shows the current RotorHazard race-state snapshot from the Integrations test action.
+- Maintains a runtime RotorHazard race-state monitor while the configured RotorHazard integration is enabled.
+- Shows monitor status in the Integrations view as connected, connecting, stale, disconnected, or error.
+- Marks the monitor as automation-paused when RotorHazard is disconnected, stale, or still waiting for initial race state.
+- Retries the RotorHazard Socket.IO monitor after disconnects or connection errors while the integration remains enabled, starting after 5 seconds and backing off to 10, 20, and 30 seconds.
+- Normalizes runtime race lifecycle changes into recent `PanevoRaceEvent` records on the monitor, including ready, staging, race started, race done, active heat changed, and data stale.
+- Does not yet persist `PanevoRaceEvent` records or render live race state in the Control view.
+
+RotorHazard setup:
+
+1. Start RotorHazard and confirm the web UI is reachable from the Panevo machine.
+2. Add the RotorHazard integration in Panevo.
+3. Enter the RotorHazard host as a hostname or IP address. For most local race setups this is the RotorHazard machine's LAN IP address.
+4. Keep the port at `5000` unless RotorHazard is running on a custom port.
+5. Save and enable the integration. Panevo starts the runtime monitor while the integration is enabled.
+6. Use the Integrations test action to read a race-state snapshot.
+
+Failure modes:
+
+- Missing or invalid host/port settings keep the monitor idle and show a configuration error.
+- Connection errors set the monitor to `error`, keep `automationPaused` true, schedule a Socket.IO retry, and leave manual PTZ, presets, stop, OBS, and camera configuration available.
+- If Socket.IO connects but RotorHazard does not return initial race state before the timeout, Panevo marks the monitor `stale` and keeps future race-aware automation paused.
+- If RotorHazard disconnects after a live state was received, Panevo marks the last race state stale, emits a `race.data-stale` event, keeps future race-aware automation paused, and retries Socket.IO while the integration remains enabled.
+- Panevo does not retry through HTTP polling and does not use an API key for RotorHazard.
+
+Validation notes:
+
+- Live RotorHazard testing confirmed that changing the active heat updates the Panevo Integrations view without restarting Panevo.
+- Live RotorHazard testing confirmed that stopping RotorHazard marks the monitor disconnected/stale and pauses future race-aware automation.
+- Live RotorHazard testing confirmed that restarting RotorHazard restores the monitor to live state through the Socket.IO reconnect backoff without toggling the integration.
+
 ## Operator Surfaces
 
 Panevo should support external operator surfaces over time. These integrations should map hardware or companion controls to Panevo actions rather than duplicating camera protocol logic.

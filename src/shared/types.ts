@@ -82,6 +82,93 @@ export interface ObsSceneListResult extends ObsConnectionStatus {
   scenes: ObsSceneInfo[];
 }
 
+export interface RotorHazardConnectionInput {
+  host: string;
+  port?: number;
+  timeoutMs?: number;
+}
+
+export interface RotorHazardConnectionStatus {
+  connected: boolean;
+  baseUrl: string;
+  transport: "socket.io";
+  message: string;
+  checkedAt: string;
+  socketId?: string;
+}
+
+export type RotorHazardMonitorStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "stale"
+  | "disconnected"
+  | "error";
+
+export interface RotorHazardMonitorState {
+  status: RotorHazardMonitorStatus;
+  connected: boolean;
+  stale: boolean;
+  automationPaused: boolean;
+  message: string;
+  updatedAt: string;
+  baseUrl?: string;
+  socketId?: string;
+  raceState?: PanevoRaceState;
+  recentEvents: PanevoRaceEvent[];
+  error?: string;
+}
+
+export type PanevoRaceStatus =
+  | "unknown"
+  | "ready"
+  | "staging"
+  | "racing"
+  | "finished"
+  | "done"
+  | "stale";
+
+export interface PanevoRaceHeat {
+  id?: string;
+  name?: string;
+  round?: number;
+}
+
+export interface PanevoRacePilot {
+  id?: string;
+  callsign?: string;
+  lane?: number;
+  channel?: string;
+}
+
+export interface PanevoRaceState {
+  source: "rotorhazard";
+  status: PanevoRaceStatus;
+  activeHeat?: PanevoRaceHeat;
+  pilots: PanevoRacePilot[];
+  stale: boolean;
+  updatedAt: string;
+}
+
+export type PanevoRaceEventType =
+  | "race.ready"
+  | "race.staging"
+  | "race.started"
+  | "race.finished"
+  | "race.done"
+  | "race.lap-recorded"
+  | "race.active-heat-changed"
+  | "race.data-stale";
+
+export interface PanevoRaceEvent {
+  id: string;
+  type: PanevoRaceEventType;
+  source: "rotorhazard";
+  occurredAt: string;
+  raceState: PanevoRaceState;
+  payload?: Record<string, unknown>;
+}
+
 export type KeyboardShortcutGroup = "movement" | "zoom" | "presets" | "safety";
 
 export type KeyboardShortcutMode = "hold" | "press";
@@ -403,6 +490,21 @@ export interface PanevoApi {
   getObsSceneList: (
     input: ObsConnectionInput,
   ) => Promise<PanevoResult<ObsSceneListResult>>;
+  testRotorHazardConnection: (
+    input: RotorHazardConnectionInput,
+  ) => Promise<PanevoResult<RotorHazardConnectionStatus>>;
+  getRotorHazardRaceState: (
+    input: RotorHazardConnectionInput,
+  ) => Promise<PanevoResult<PanevoRaceState>>;
+  startRotorHazardRaceMonitor: (
+    input: RotorHazardConnectionInput,
+  ) => Promise<PanevoResult<RotorHazardMonitorState>>;
+  stopRotorHazardRaceMonitor: () => Promise<
+    PanevoResult<RotorHazardMonitorState>
+  >;
+  getRotorHazardMonitorState: () => Promise<
+    PanevoResult<RotorHazardMonitorState>
+  >;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;

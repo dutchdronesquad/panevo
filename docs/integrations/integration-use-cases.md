@@ -91,7 +91,7 @@ The race producer wants Panevo to react to race state. Examples include recallin
 
 ### Minimum Useful Behavior
 
-- Connect to a RotorHazard instance.
+- Connect to a RotorHazard instance through its existing Socket.IO server.
 - Read current race state.
 - Read active heat, pilots, and lane/channel metadata where available.
 - Receive race lifecycle events such as staging, race start, race finish, and race done.
@@ -103,12 +103,17 @@ The race producer wants Panevo to react to race state. Examples include recallin
 - Editing pilots, heats, rounds, or timing data.
 - Hard-coding Dutch Drone Squad race assumptions into core Panevo models.
 - Automatically moving cameras on race events without explicit operator configuration.
+- Scraping RotorHazard frontend internals as the primary integration path.
 
 ### Failure Behavior
 
 - RotorHazard disconnect should pause race-aware automation.
 - Manual PTZ and preset control must remain available.
 - Stale race data must be labelled as stale or unavailable.
+
+### Integration Strategy
+
+The first RotorHazard implementation should use RotorHazard's existing Socket.IO server, not a custom plugin. Panevo should subscribe to read-only race updates and request current race data through the same live channel used by the RotorHazard UI where those events are stable enough. RHAPI remains relevant if Panevo later needs a dedicated RotorHazard-side plugin for events or normalized payloads that are not available over the public Socket.IO surface.
 
 ## Companion And Stream Deck
 
