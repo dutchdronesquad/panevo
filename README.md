@@ -47,6 +47,7 @@ Current focus:
 - VISCA live control
 - ONVIF discovery and preset sync
 - Optional OBS scene control
+- Read-only RotorHazard race-state monitoring
 - Configurable operator shortcuts
 - Control Device mapping for standard gamepad/joystick-style inputs
 
@@ -60,6 +61,7 @@ Video preview is intentionally handled outside Panevo for now.
 - 🔎 **Probe cameras with ONVIF** - discover camera metadata, media profiles, RTSP stream URIs, and numeric presets where supported
 - ⚡ **Use VISCA for responsive movement** - keep VISCA as the default live control route for the tested Tenveo workflow
 - 🎬 **Switch OBS scenes** - connect to OBS websocket, show the active scene, and switch scenes from the Control view
+- 🏁 **Monitor RotorHazard race state** - connect to RotorHazard over Socket.IO, show active heat and race status, and keep race-aware automation paused when timing data is stale
 - ⌨️ **Configure operator shortcuts** - use foreground PTZ/zoom shortcuts in Control and global preset shortcuts while Panevo runs in the background
 - 🎮 **Map control devices** - select a standard gamepad/joystick-style input device, map axes and buttons, and gate live camera movement behind a deadman input
 
@@ -84,13 +86,14 @@ Control device support currently targets devices exposed through the standard br
 2. **Probe ONVIF when available** to discover metadata, stream URIs, media profiles, and numeric presets.
 3. **Select the active camera** before moving or recalling shots.
 4. **Operate the camera live** with PTZ, zoom, focus, stop, and preset controls.
-5. **Configure integrations, shortcuts, and control devices** when you want OBS scene switching, keyboard-based controls, or mapped gamepad/joystick-style input.
+5. **Configure integrations, shortcuts, and control devices** when you want OBS scene switching, RotorHazard race-state monitoring, keyboard-based controls, or mapped gamepad/joystick-style input.
 6. **Keep preview external** through OBS, NDI Studio Monitor, camera-native tools, or another confidence monitor.
 
 ## Useful links
 
 - [`docs/product/roadmap.md`](docs/product/roadmap.md)
 - [`docs/product/mvp-checklist.md`](docs/product/mvp-checklist.md)
+- [`docs/integrations/integrations.md`](docs/integrations/integrations.md)
 - [`docs/integrations/integration-use-cases.md`](docs/integrations/integration-use-cases.md)
 
 ## Sponsors
