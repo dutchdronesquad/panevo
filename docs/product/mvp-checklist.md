@@ -104,7 +104,7 @@ Local verification:
 - [ ] Companion integration.
 - [ ] Flexbar integration.
 - [ ] Input devices such as HDZero radio, gamepad, joystick, MIDI, and HID button boxes.
-- [ ] Automation workflows.
+- [ ] Advanced automation workflow editor.
 - [ ] TCP VISCA support.
 - [ ] Replacing VISCA internals with an npm package.
 
@@ -257,14 +257,14 @@ Phase 2B hardware regression:
 - [x] Add `CODE_OF_CONDUCT.md` or document why it is deferred.
 - [x] Document release process and versioning expectations.
 
-## Phase 4: Production Integrations
+## Phase 4: Production Integrations and Core Automation
 
-Phase 4 should be driven by `docs/integrations/integration-use-cases.md` and the integration management UX in `docs/integrations/integrations.md`. Do not start with a device-specific or protocol-specific implementation before integrations have a shared lifecycle and the shared Panevo action/event layer exists.
+Phase 4 should be driven by `docs/integrations/integration-use-cases.md`, the integration management UX in `docs/integrations/integrations.md`, and the shared Panevo action/event layer. Do not start with a device-specific or protocol-specific implementation before integrations have a shared lifecycle. Automation is a core Panevo capability, not an integration entry.
 
 ### Phase 4A: Integration Management UI
 
 - [x] Add `Integrations` sidebar view.
-- [x] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Input Device, Flexbar, and Automation.
+- [x] Define integration registry entries for OBS, RotorHazard, Companion/Stream Deck bridge, Input Device, and Flexbar.
 - [x] Define integration lifecycle states: not configured, configured, enabled, connected, error, disabled.
 - [x] Add integration cards/list rows with name, description, status, and primary action.
 - [x] Add shared configure dialog pattern.
@@ -374,12 +374,27 @@ Phase 4E close-out:
 
 ### Phase 4H: First Automation Rules
 
-- [ ] Define minimal trigger/action rule schema.
-- [ ] Add manual enable/disable for automation.
-- [ ] Support triggers from manual action bridge, OBS state, RotorHazard state, or control device.
-- [ ] Support actions through the shared Panevo action layer.
-- [ ] Support ordered workflows such as recalling a Panevo preset and switching an OBS scene as separate actions.
-- [ ] Show last-triggered rule and last action result.
+- [x] Define minimal trigger/action rule schema.
+- [x] Keep automation as a core Panevo service, not an integration registry entry.
+- [x] Persist automation rules locally.
+- [x] Add manual enable/disable for automation.
+- [x] Support RotorHazard race-event triggers.
+- [ ] Support triggers from manual action bridge, OBS state, or control device.
+- [x] Support actions through the shared Panevo action layer.
+- [x] Support ordered workflows such as recalling a Panevo preset and switching an OBS scene as separate actions.
+- [x] Show last-triggered rule and last action result.
 - [ ] Ensure stop overrides automation.
 - [ ] Ensure automation cannot run against an unknown or disconnected active camera.
 - [ ] Document automation safety rules.
+
+Phase 4H current implementation:
+
+- Adds shared automation rule, trigger, condition, action, event, and run-result types.
+- Adds an in-memory main-process `AutomationService` that is disabled by default.
+- Stores normalized automation rules in local `panevo-automation.json`.
+- Exposes automation runtime state and enable/disable control through typed IPC and a dedicated Automation view.
+- Bridges live RotorHazard monitor events into `AutomationService` as normalized race events.
+- Evaluates RotorHazard race-event triggers and dispatches matching rule actions through `ActionDispatcher` with `source: "automation"`.
+- Runs multiple actions in rule order and stops a rule on the first failed action.
+- Pauses race-aware automation when RotorHazard race state is stale.
+- Does not yet bridge manual/OBS/control-device events into the evaluator or provide a rule editor.

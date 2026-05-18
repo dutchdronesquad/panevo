@@ -43,6 +43,12 @@ const panevo: PanevoApi = {
     ipcRenderer.invoke("panevo:stop-rotorhazard-race-monitor"),
   getRotorHazardMonitorState: () =>
     ipcRenderer.invoke("panevo:get-rotorhazard-monitor-state"),
+  getAutomationState: () => ipcRenderer.invoke("panevo:get-automation-state"),
+  setAutomationEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke("panevo:set-automation-enabled", enabled),
+  getAutomationConfig: () => ipcRenderer.invoke("panevo:get-automation-config"),
+  saveAutomationConfig: (config) =>
+    ipcRenderer.invoke("panevo:save-automation-config", config),
   importConfig: () => ipcRenderer.invoke("panevo:import-config"),
   exportConfig: () => ipcRenderer.invoke("panevo:export-config"),
   testConnection: () => ipcRenderer.invoke("panevo:test-connection"),

@@ -4,6 +4,8 @@ Panevo's MVP only implements PTZ control. Future integrations should be added as
 
 Use `docs/integrations/integration-use-cases.md` as the product guardrail before implementing any integration. This file describes integration categories and architecture direction; the use-case document defines the minimum useful operator workflows.
 
+Automation is not an integration. It is a core Panevo capability that consumes normalized Panevo events and dispatches normalized Panevo actions. Integrations such as OBS, RotorHazard, input devices, Companion, Stream Deck, or Flexbar can provide inputs or action targets for automation, but the automation engine itself should live in Panevo core services and have its own operator surface.
+
 ## Integration Principles
 
 - Integrations should be managed from a dedicated Integrations page before individual integrations add bespoke settings screens.
@@ -30,7 +32,7 @@ Current Phase 4A implementation:
 
 - The renderer has an `Integrations` sidebar view.
 - The view is backed by a static integration registry in `src/renderer/types/integration.ts`.
-- Initial registry entries exist for OBS, RotorHazard, Companion / Stream Deck, Input Device, Flexbar, and Automation Rules.
+- Initial registry entries exist for OBS, RotorHazard, Companion / Stream Deck, Input Device, and Flexbar.
 - Lifecycle labels and status-chip mapping are centralized in the registry module.
 - The main Integrations page starts empty and only shows integrations the operator has added.
 - Operators choose integrations from an Add Integration dialog backed by the registry.
@@ -47,7 +49,7 @@ Current Phase 4A implementation:
 - Integration read/write errors are shown on the Integrations page and do not block PTZ control.
 - Phase 4B adds a main-process `ActionDispatcher` and shared action/feedback types for future integration adapters.
 - Camera and preset actions dispatched by integrations route through `ConfigService` and `CameraControlService`.
-- Phase 4C adds the first OBS adapter. `obs.scene.switch` now routes through the enabled OBS websocket connection; automation actions remain unsupported until their implementation phase.
+- Phase 4C adds the first OBS adapter. `obs.scene.switch` now routes through the enabled OBS websocket connection; automation actions remain unsupported until their core implementation phase.
 - OBS is the only integration that currently connects to external software.
 - No integration currently affects PTZ control.
 
@@ -75,7 +77,8 @@ Initial integration registry entries:
 - Companion / Stream Deck bridge
 - Input devices
 - Flexbar
-- Automation
+
+Automation should not be an integration registry entry. It should use a dedicated core service, persisted automation settings, and a dedicated operator surface when Phase 4H starts.
 
 Integration configuration should be stored separately from camera profiles. Camera configuration should stay focused on cameras, control protocols, sync protocols, credentials, and presets.
 
@@ -205,6 +208,7 @@ Current Phase 4F implementation:
 - Marks the monitor as automation-paused when RotorHazard is disconnected, stale, or still waiting for initial race state.
 - Retries the RotorHazard Socket.IO monitor after disconnects or connection errors while the integration remains enabled, starting after 5 seconds and backing off to 10, 20, and 30 seconds.
 - Normalizes runtime race lifecycle changes into recent `PanevoRaceEvent` records on the monitor, including ready, staging, race started, race done, active heat changed, and data stale.
+- Forwards normalized RotorHazard monitor events to core `AutomationService`; automation remains disabled until the operator enables it from the Automation view.
 - Does not yet persist `PanevoRaceEvent` records or render live race state in the Control view.
 
 RotorHazard setup:
@@ -416,17 +420,18 @@ Important constraints:
 - ONVIF passwords are stored in local plain JSON during Phase 2C so probing/control survive restart. Production hardening should move them to OS keychain or encrypted storage.
 - The current `onvif` npm package remains behind adapters so it can be replaced with Panevo-owned SOAP calls later.
 
-## Automation
+## Automation Inputs
 
-Potential features:
+Automation is a core Panevo capability, not an external integration. This section exists here only to describe how integrations should interact with automation.
 
-- Trigger/action workflows
-- Race event automation
-- Scheduled camera moves
-- Conditional actions
-- Manual override controls
+Potential automation inputs and targets from integrations:
 
-Automation must include operator safety constraints, clear state visibility, and quick cancellation.
+- RotorHazard race-state and race-event triggers.
+- OBS scene/state triggers and OBS scene-switch actions.
+- Control device, Companion, Stream Deck, or Flexbar manual triggers.
+- Panevo camera, preset, stop, and focus actions.
+
+The automation engine itself belongs in Panevo core. It must include operator safety constraints, clear state visibility, and quick cancellation.
 
 Automation should be built only after stable action concepts exist. Early automation should be simple trigger/action mapping, not a full workflow engine.
 

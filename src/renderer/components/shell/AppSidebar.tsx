@@ -7,6 +7,7 @@ import {
   MonitorPlay,
   Plug,
   Settings,
+  Workflow,
 } from "lucide-react";
 import {
   Tooltip,
@@ -22,6 +23,7 @@ export type AppView =
   | "control"
   | "cameras"
   | "integrations"
+  | "automation"
   | "input-devices"
   | "settings";
 
@@ -118,6 +120,7 @@ export const AppSidebar = ({
         {navBtn("control", <MonitorPlay size={16} />, "Live")}
         {navBtn("cameras", <Camera size={16} />, "Cameras")}
         {navBtn("integrations", <Plug size={16} />, "Integrations")}
+        {navBtn("automation", <Workflow size={16} />, "Automation")}
         {showInputDevices &&
           navBtn("input-devices", <Gamepad2 size={16} />, "Control Devices")}
         {navBtn("settings", <Settings size={16} />, "Settings")}

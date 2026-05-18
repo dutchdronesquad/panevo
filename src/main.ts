@@ -6,6 +6,7 @@ import {
   registerAppLifecycle,
 } from "./main/app/lifecycle";
 import { registerActionIpc } from "./main/ipc/action-ipc";
+import { registerAutomationIpc } from "./main/ipc/automation-ipc";
 import { registerCameraIpc } from "./main/ipc/camera-ipc";
 import { registerIntegrationIpc } from "./main/ipc/integration-ipc";
 import { registerObsIpc } from "./main/ipc/obs-ipc";
@@ -27,6 +28,7 @@ registerAppLifecycle();
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   registerActionIpc();
+  registerAutomationIpc();
   registerCameraIpc();
   registerIntegrationIpc();
   registerObsIpc();

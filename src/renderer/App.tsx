@@ -3,6 +3,7 @@ import { AppSidebar, type AppView } from "./components/shell/AppSidebar";
 import { WorkspaceHeader } from "./components/shell/WorkspaceHeader";
 import { TooltipProvider } from "@/renderer/components/ui/tooltip";
 import { MainLayout } from "./layouts/MainLayout";
+import { AutomationView } from "./views/AutomationView";
 import { CamerasView } from "./views/CamerasView";
 import { ControlView } from "./views/ControlView";
 import { InputDevicesView } from "./views/InputDevicesView";
@@ -1062,9 +1063,11 @@ export const App = () => {
         ? "Camera Profiles"
         : activeView === "integrations"
           ? "Integrations"
-          : activeView === "input-devices"
-            ? "Control Devices"
-            : "Settings";
+          : activeView === "automation"
+            ? "Automation"
+            : activeView === "input-devices"
+              ? "Control Devices"
+              : "Settings";
 
   return (
     <TooltipProvider>
@@ -1117,6 +1120,7 @@ export const App = () => {
                 onIntegrationConfigChange={setIntegrationConfig}
               />
             )}
+            {activeView === "automation" && <AutomationView />}
             {activeView === "input-devices" && (
               <InputDevicesView
                 integration={inputDevicesIntegration}

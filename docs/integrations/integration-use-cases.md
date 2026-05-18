@@ -224,7 +224,9 @@ Prefer devices that expose themselves as a standard HID, gamepad, joystick, keyb
 - Unknown devices start unmapped.
 - Device input must never bypass Panevo's speed clamps or command queue.
 
-## Automation Workflows
+## Core Automation Workflows
+
+Automation is not an integration. It is a Panevo core workflow engine that consumes normalized events from Panevo and optional integrations, then dispatches normalized Panevo actions.
 
 ### Operator Workflow
 

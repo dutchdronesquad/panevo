@@ -616,6 +616,66 @@ h1 {
   align-content: start;
 }
 
+.automation-view {
+  display: grid;
+  gap: 24px;
+  align-content: start;
+}
+
+.automation-overview .camera-metric strong {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.automation-run-panel {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--panevo-border-subtle);
+  border-radius: 8px;
+}
+
+.automation-run-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.45fr) minmax(0, 1fr) minmax(
+      110px,
+      auto
+    );
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--panevo-border-subtle);
+}
+
+.automation-run-row:last-child {
+  border-bottom: 0;
+}
+
+.automation-run-row span {
+  color: var(--panevo-text-subtle);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.automation-run-row strong {
+  overflow: hidden;
+  color: var(--panevo-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.automation-run-row small {
+  overflow: hidden;
+  color: var(--panevo-text-muted);
+  font-size: 12px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .integration-overview .camera-metric strong {
   font-family: "JetBrains Mono", monospace;
 }
@@ -3262,11 +3322,16 @@ input:disabled {
   }
 
   .camera-overview,
+  .automation-run-row,
   .integration-row,
   .integration-picker-row,
   .field-row,
   .onvif-result-grid {
     grid-template-columns: 1fr;
+  }
+
+  .automation-run-row small {
+    text-align: left;
   }
 
   .camera-table-header,
