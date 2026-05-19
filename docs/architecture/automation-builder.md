@@ -321,7 +321,7 @@ Currently the dialog receives only `presetOptions` (from the active camera). The
 export interface AutomationBuilderAction {
   id: string;
   type: AutomationBuilderActionType;
-  cameraId: string;        // "active" sentinel OR a real camera ID
+  cameraId: string; // "active" sentinel OR a real camera ID
   presetNumber: string;
   sceneName: string;
   stopTarget: AutomationBuilderStopTarget;
