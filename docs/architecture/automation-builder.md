@@ -242,6 +242,143 @@ Before `AutomationService` dispatches any rule that contains camera-dependent ac
 
 In the production singleton (`automation-service-instance.ts`) this check calls `ConfigService.getActiveCameraConfig()`. If the camera becomes disconnected mid-rule, the camera control layer returns a connection error, the action dispatcher returns a failure result, and `runRule` stops the rule with `status: "failed"`.
 
+## Multi-Camera Action Targeting
+
+Status: deferred post-MVP. See ADR-019.
+
+Phase 4H automation always targets the operator's active camera. This section documents the full intended design so it can be implemented as a self-contained slice after MVP.
+
+### Problem
+
+With multiple camera profiles, operators may want rules that control specific cameras regardless of which one is currently active. For example:
+
+- Race start: Camera A recalls its wide-angle preset and Camera B recalls its chase preset in a single rule.
+- Race finish: Camera A moves to finish-line position regardless of which camera the operator switched to during the heat.
+
+The current model cannot express this. All camera and preset actions silently route to whatever camera happens to be active at dispatch time.
+
+### Intended data model
+
+Add an optional `cameraId` field to `PanevoActionBase` in `src/shared/types.ts`:
+
+```ts
+interface PanevoActionBase {
+  id?: string;
+  source?: PanevoActionSource;
+  requestedAt?: string;
+  cameraId?: string; // absent = target active camera (current behavior)
+}
+```
+
+When absent the dispatcher retains its current behavior (falls back to `getActiveCameraConfig()`). Existing persisted rules need no migration.
+
+The `PanevoPresetRecallAction`, `PanevoPtzMoveAction`, `PanevoZoomMoveAction`, `PanevoStopAction`, `PanevoFocusModeAction`, `PanevoFocusMoveAction`, `PanevoPresetStoreAction`, and `PanevoPresetRemoveAction` interfaces all inherit this from `PanevoActionBase`.
+
+### ActionDispatcher changes
+
+Replace the `getActiveCameraConfig()` fallback path in `executeAction` with a two-step resolver:
+
+```ts
+private async resolveCameraForAction(
+  action: PanevoAction,
+): Promise<PanevoResult<CameraProfile>> {
+  if (action.cameraId) {
+    const configResult = await this.configService.getConfig();
+    if (!configResult.ok) return configResult;
+    const camera = configResult.data.cameras.find(
+      (c) => c.id === action.cameraId,
+    );
+    if (!camera) {
+      return failure(
+        "ACTION_CAMERA_NOT_FOUND",
+        `Camera profile '${action.cameraId}' does not exist.`,
+      );
+    }
+    return success(camera);
+  }
+  return this.configService.getActiveCameraConfig();
+}
+```
+
+`executeAction` calls `resolveCameraForAction` instead of `getActiveCameraConfig` directly. No other dispatch paths change.
+
+### Builder UI changes
+
+The `AutomationRuleBuilderDialog` and `AutomationBuilderAction` draft model need to carry an optional `cameraId` per action. The "Then" card gains a camera selector that appears before the preset selector for camera-dependent action types.
+
+**Props change to `AutomationRuleBuilderDialog`:**
+
+```ts
+cameraOptions: Array<{ value: string; label: string }>; // full camera list
+presetOptionsByCamera: Record<string, Array<{ value: string; label: string }>>;
+```
+
+Currently the dialog receives only `presetOptions` (from the active camera). The expanded props replace this with a per-camera map.
+
+**Builder draft model change (`automation-builder-model.ts`):**
+
+```ts
+export interface AutomationBuilderAction {
+  id: string;
+  type: AutomationBuilderActionType;
+  cameraId: string;        // "active" sentinel OR a real camera ID
+  presetNumber: string;
+  sceneName: string;
+  stopTarget: AutomationBuilderStopTarget;
+}
+```
+
+The sentinel value `"active"` means "use the active camera at dispatch time" and serializes as an absent `cameraId` on the persisted `PanevoAction`. Any other value is a literal camera profile ID.
+
+`createAutomationBuilderAction` initializes `cameraId` to `"active"`.
+
+`automationRuleFromDraft` maps `cameraId === "active"` → omit `cameraId` on the action; any other value → set `action.cameraId`.
+
+**Selector layout in "Then" card (for `preset.recall` actions):**
+
+```
+[Camera ▾ | Active camera]  [Preset ▾ | Select preset]  [↑] [↓] [🗑]
+```
+
+When a specific camera is chosen the preset selector re-populates with that camera's presets from `presetOptionsByCamera`. When `"Active camera"` is selected the preset selector shows the active camera's presets (current behavior).
+
+For `camera.stop` and future move actions, the camera selector still appears but no preset selector follows.
+
+For `obs.scene.switch` no camera selector is shown (OBS is not camera-scoped).
+
+### AutomationService guard changes
+
+`ruleHasCameraActions` does not need to change. The `isCameraConfigured` guard does:
+
+- When a camera-dependent action has a `cameraId` other than absent, the guard should verify that specific profile exists in config, not just that some active camera exists.
+- A possible approach: `isCameraConfigured` becomes `getCameraForAction(action)` and returns the resolved profile or null, letting the evaluator produce a per-action skip reason when a targeted profile is missing.
+
+### Rule list display
+
+When a rule's actions reference explicit camera IDs, the rule list row should name those cameras (e.g. "Camera A, Camera B") so the operator can see at a glance which hardware a rule touches without opening the editor.
+
+### Safety constraints
+
+- `"active"` is always the default. The operator must explicitly opt in to per-camera targeting. The builder must present `"Active camera"` as the first option, not just an empty selector.
+- If a targeted camera profile is deleted, rules that reference it fail at action dispatch with `ACTION_CAMERA_NOT_FOUND`. No silent re-targeting to the active camera.
+- Stop-overrides-automation still applies globally: `interruptCurrentRun()` fires on every `panevo:stop` regardless of which camera a rule targets.
+- Automation targeting a non-active camera means it may control a camera the operator is not watching. Future UI work should make this explicit, for example with a warning badge on the rule or a confirmation step in the builder.
+
+### Backward compatibility
+
+All existing persisted rules serialize without a `cameraId` on their actions. The dispatcher falls back to the active camera for these. No config migration is needed at any point in this transition.
+
+### Implementation slice order
+
+1. Add `cameraId?: string` to `PanevoActionBase` in shared types. Type-check passes with no behavior change.
+2. Add `resolveCameraForAction` to `ActionDispatcher`. Update `executeAction` to use it. Existing tests pass unchanged.
+3. Update `AutomationBuilderAction` draft model with `cameraId` field and `"active"` sentinel. Update `automationRuleFromDraft` and `draftFromAutomationRule`.
+4. Extend `AutomationRuleBuilderDialog` props with `cameraOptions` and `presetOptionsByCamera`. Wire camera selector into "Then" card for camera-dependent actions.
+5. Update `AutomationView` to supply the new props from live camera config state.
+6. Update `isCameraConfigured` guard to validate per-action camera IDs.
+7. Update rule list row to surface targeted camera names.
+8. Update tests for each slice.
+
 ## Explicit Non-Goals
 
 - Node-based workflow editor.

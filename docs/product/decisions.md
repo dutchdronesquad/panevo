@@ -341,3 +341,32 @@ Implementation constraints:
 - Race-aware automation must pause when RotorHazard state is stale, disconnected, or still waiting for initial race state.
 - Stop and manual camera control must remain available regardless of automation state.
 - Phase 4H starts with simple trigger/action rules and in-memory evaluation. Manual/OBS/control-device event bridges, freeform rule editing, and advanced workflow editing are separate follow-up slices.
+
+## ADR-019: Automation Actions Target the Active Camera in Phase 4H; Per-Camera Targeting Is Deferred
+
+Status: accepted for Phase 4H; explicit camera targeting deferred to post-MVP.
+
+Phase 4H automation actions always operate on the operator's current active camera. No `cameraId` is stored on camera or preset actions. The `ActionDispatcher` resolves the target camera at dispatch time via `getActiveCameraConfig()`.
+
+Rationale for deferring per-camera targeting:
+
+- Phase 4H rules are created in a constrained builder that already scopes preset selection to the active camera. Supporting named presets from multiple cameras at build time requires the builder to carry the full camera list and a per-camera preset index, which is more UI complexity than the MVP justifies.
+- The active-camera model is safe and predictable: the operator always knows which camera is live. Explicit targeting lets automation control cameras the operator is not watching, which requires additional safety thinking before implementation.
+- Existing `PanevoPresetRecallAction`, `PanevoPtzMoveAction`, and related types have no `cameraId` field. Adding it is a non-breaking forward-compatible change, so deferral does not create migration debt.
+
+Intended future model:
+
+- Camera and preset actions gain an optional `cameraId?: string` field on `PanevoActionBase` or on the affected action interfaces.
+- When `cameraId` is absent the dispatcher falls back to the active camera (current behavior, fully backward-compatible).
+- When `cameraId` is present the dispatcher looks up that profile in config and routes the command there, independent of the active camera.
+- The automation builder gains a camera selector per action in the "Then" section. The default value is a sentinel such as `"active"` which maps to the current behavior. When the operator picks an explicit camera, the preset selector re-populates with that camera's preset list.
+- `AutomationService.ruleHasCameraActions` and the `isCameraConfigured` guard need to account for per-action camera IDs: each camera-dependent action should be checked against its own target profile, not just whether any active camera exists.
+- The rule list should surface any cameras referenced by a rule's actions so the operator can see at a glance which hardware a rule touches.
+
+Implementation constraints for the future slice:
+
+- The `cameraId` field on actions must be optional throughout so that all existing persisted rules continue to work without migration.
+- The builder must present `"Active camera"` as an explicit first option, not just the absence of a `cameraId`, so the operator makes a deliberate choice.
+- If a targeted camera profile is deleted, rules that reference it must degrade gracefully: the action should fail with a clear `ACTION_CAMERA_NOT_FOUND` error rather than silently targeting a different camera.
+- Stop-overrides-automation and the camera availability guard must both respect per-action `cameraId` values when they are introduced.
+- The full design is documented in `docs/architecture/automation-builder.md` under "Multi-Camera Action Targeting".
