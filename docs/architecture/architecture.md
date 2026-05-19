@@ -215,10 +215,19 @@ Current implementation:
 
 - Phase 4H currently has an in-memory service, shared types, typed preload IPC, and a dedicated Automation view.
 - Automation rule definitions are stored locally in `panevo-automation.json` and normalized before they reach the runtime service.
-- The Automation view exposes runtime enable/disable state, pause reason, last-triggered rule, and last run result.
+- The Automation view exposes runtime enable/disable state, pause reason, last-triggered rule, last run result, constrained `When / If / Then` rule creation/editing, per-rule enable/disable, and rule deletion.
 - The RotorHazard monitor forwards normalized `PanevoRaceEvent` records into `AutomationService`.
-- Manual/OBS/control-device event-source bridges and a rule editor are not implemented yet.
+- Manual/OBS/control-device event-source bridges and a freeform rule editor are not implemented yet.
 - Early automation should stay simple trigger/action mapping, not a node-based workflow engine.
+
+Next builder direction:
+
+- Replace the template rule creator with a constrained `When / If / Then` builder.
+- Keep the existing `AutomationRule` runtime shape; the builder should edit a renderer-only draft and convert to/from `AutomationRule`.
+- Keep initial trigger choices limited to RotorHazard race events.
+- Keep initial action choices limited to preset recall, OBS scene switch, and camera stop.
+- Implement the builder in small slices: draft model, dialog shell, Automation view wiring, CSS, then verification/docs.
+- See `docs/architecture/automation-builder.md` for the detailed implementation plan.
 
 ### PreferencesService
 

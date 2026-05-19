@@ -14,6 +14,7 @@ Product:
 Architecture:
 
 - `architecture/architecture.md`: process boundaries, source layout, IPC, services, and extension points.
+- `architecture/automation-builder.md`: Phase 4H constrained automation builder plan and implementation slices.
 - `architecture/development.md`: local development workflow, commands, conventions, and repo practices.
 - `architecture/testing.md`: manual and technical validation strategy for the MVP.
 

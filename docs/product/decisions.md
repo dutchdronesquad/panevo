@@ -329,8 +329,15 @@ Implementation constraints:
 - Automation starts disabled by default.
 - Runtime enable/disable state belongs to `AutomationService` and is exposed through dedicated typed IPC and the Automation view.
 - Rule definitions are stored in local `panevo-automation.json` and normalized before runtime use.
+- The first operator UI should use constrained templates for RotorHazard race-event rules instead of a freeform workflow editor.
+- The next operator UI step should evolve templates into a constrained `When / If / Then` builder, inspired by Home Assistant's mental model but scoped to Panevo's existing `AutomationRule` shape.
+- The builder should use a renderer-only draft model and convert to/from `AutomationRule`; runtime types should not be changed just to support editor state.
+- The builder should keep per-rule enable/disable control in the rule list, not inside the edit dialog.
+- The builder should prefer named selectors over raw identifiers: presets come from the active Panevo camera, and OBS scenes come from the enabled OBS integration.
+- The builder should only offer new trigger/action choices when the related source or target is available; persisted RotorHazard triggers, presets, and OBS scenes remain visible as stored fallback values when temporarily unavailable.
+- The first builder implementation should be split into draft-model, dialog-shell, Automation view wiring, styling, and verification slices.
 - RotorHazard monitor events are forwarded into `AutomationService` as normalized race events.
 - Rule actions must dispatch through `ActionDispatcher` with `source: "automation"`.
 - Race-aware automation must pause when RotorHazard state is stale, disconnected, or still waiting for initial race state.
 - Stop and manual camera control must remain available regardless of automation state.
-- Phase 4H starts with simple trigger/action rules and in-memory evaluation. Manual/OBS/control-device event bridges, rule editing, and advanced workflow editing are separate follow-up slices.
+- Phase 4H starts with simple trigger/action rules and in-memory evaluation. Manual/OBS/control-device event bridges, freeform rule editing, and advanced workflow editing are separate follow-up slices.

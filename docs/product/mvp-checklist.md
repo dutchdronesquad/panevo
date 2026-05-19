@@ -377,6 +377,11 @@ Phase 4E close-out:
 - [x] Define minimal trigger/action rule schema.
 - [x] Keep automation as a core Panevo service, not an integration registry entry.
 - [x] Persist automation rules locally.
+- [x] Add template-based automation rule management UI.
+- [x] Document constrained `When / If / Then` automation builder direction.
+- [x] Add constrained `When / If / Then` automation builder draft model.
+- [x] Add constrained automation rule builder dialog.
+- [x] Wire builder dialog into Automation view for new/edit rule.
 - [x] Add manual enable/disable for automation.
 - [x] Support RotorHazard race-event triggers.
 - [ ] Support triggers from manual action bridge, OBS state, or control device.
@@ -386,15 +391,19 @@ Phase 4E close-out:
 - [ ] Ensure stop overrides automation.
 - [ ] Ensure automation cannot run against an unknown or disconnected active camera.
 - [ ] Document automation safety rules.
+- [ ] Add advanced/freeform automation rule editor.
 
 Phase 4H current implementation:
 
 - Adds shared automation rule, trigger, condition, action, event, and run-result types.
 - Adds an in-memory main-process `AutomationService` that is disabled by default.
 - Stores normalized automation rules in local `panevo-automation.json`.
-- Exposes automation runtime state and enable/disable control through typed IPC and a dedicated Automation view.
+- Exposes automation runtime state, enable/disable control, constrained builder rule creation/editing, per-rule enable/disable, and rule deletion through typed IPC and a dedicated Automation view.
+- Documents the next builder as a constrained `When / If / Then` UI in `docs/architecture/automation-builder.md`.
+- Adds a renderer-only builder draft model that converts to and from persisted `AutomationRule` values.
+- Adds a standalone constrained builder dialog component for new/edit rule flows with source-aware RotorHazard triggers, condition state rows, action items, and named active-camera preset and OBS scene selectors.
 - Bridges live RotorHazard monitor events into `AutomationService` as normalized race events.
 - Evaluates RotorHazard race-event triggers and dispatches matching rule actions through `ActionDispatcher` with `source: "automation"`.
 - Runs multiple actions in rule order and stops a rule on the first failed action.
 - Pauses race-aware automation when RotorHazard race state is stale.
-- Does not yet bridge manual/OBS/control-device events into the evaluator or provide a rule editor.
+- Does not yet bridge manual/OBS/control-device events into the evaluator or provide a freeform rule editor.
