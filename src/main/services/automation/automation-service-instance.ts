@@ -1,13 +1,21 @@
 import type { AutomationConfig, PanevoResult } from "@/shared/types";
+import { ConfigService } from "../config/config-service";
 import { AutomationConfigService } from "./automation-config-service";
 import { AutomationService } from "./automation-service";
+
+const configService = new ConfigService();
 
 let automationService: AutomationService | null = null;
 let automationConfigService: AutomationConfigService | null = null;
 let automationRulesLoaded = false;
 
 export const getAutomationService = (): AutomationService => {
-  automationService ??= new AutomationService();
+  automationService ??= new AutomationService({
+    isCameraConfigured: async () => {
+      const result = await configService.getActiveCameraConfig();
+      return result.ok;
+    },
+  });
   return automationService;
 };
 

@@ -400,7 +400,7 @@ export interface AutomationActionRunResult {
 export interface AutomationRuleRunResult {
   ruleId: string;
   ruleLabel: string;
-  status: "completed" | "failed" | "skipped";
+  status: "completed" | "failed" | "skipped" | "interrupted";
   message: string;
   actions: AutomationActionRunResult[];
 }

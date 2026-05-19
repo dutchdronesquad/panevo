@@ -230,6 +230,18 @@ These safety rules apply to the builder and runtime:
 - A failed rule action must stop the current rule run and surface the failure in last-run state.
 - Automation must not bypass active-camera validation, speed clamps, command queues, stop behavior, or OBS configuration checks.
 
+### Stop overrides automation
+
+A `panevo:stop` IPC call (operator emergency stop or movement stop) immediately sets the abort flag on `AutomationService`. Any rule that is currently mid-run checks this flag before dispatching its next action and returns with `status: "interrupted"` if it is set. Actions that have already completed are not reversed. The flag is cleared at the start of each new evaluation cycle so subsequent events are not suppressed.
+
+The interrupt fires from `registerCameraIpc` → `getAutomationService().interruptCurrentRun()` on every `panevo:stop` handler invocation.
+
+### No active camera guard
+
+Before `AutomationService` dispatches any rule that contains camera-dependent actions (`camera.*` or `preset.*` action types), it calls the injected `isCameraConfigured` function. If no active camera profile is configured in Panevo, the rule is skipped with `status: "skipped"` and a clear message. Rules that contain only non-camera actions (e.g. `obs.scene.switch`) are not blocked by this check.
+
+In the production singleton (`automation-service-instance.ts`) this check calls `ConfigService.getActiveCameraConfig()`. If the camera becomes disconnected mid-rule, the camera control layer returns a connection error, the action dispatcher returns a failure result, and `runRule` stops the rule with `status: "failed"`.
+
 ## Explicit Non-Goals
 
 - Node-based workflow editor.

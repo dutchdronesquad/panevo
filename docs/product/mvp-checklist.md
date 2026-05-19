@@ -388,9 +388,9 @@ Phase 4E close-out:
 - [x] Support actions through the shared Panevo action layer.
 - [x] Support ordered workflows such as recalling a Panevo preset and switching an OBS scene as separate actions.
 - [x] Show last-triggered rule and last action result.
-- [ ] Ensure stop overrides automation.
-- [ ] Ensure automation cannot run against an unknown or disconnected active camera.
-- [ ] Document automation safety rules.
+- [x] Ensure stop overrides automation.
+- [x] Ensure automation cannot run against an unknown or disconnected active camera.
+- [x] Document automation safety rules.
 - [ ] Add advanced/freeform automation rule editor.
 
 Phase 4H current implementation:

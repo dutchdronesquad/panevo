@@ -253,6 +253,169 @@ describe("AutomationService", () => {
     });
   });
 
+  it("interrupts a running rule when interruptCurrentRun is called between actions", async () => {
+    let signalFirstStarted!: () => void;
+    let allowFirstToComplete!: () => void;
+    const firstActionStarted = new Promise<void>(
+      (r) => (signalFirstStarted = r),
+    );
+    const firstActionCanComplete = new Promise<void>(
+      (r) => (allowFirstToComplete = r),
+    );
+
+    const dispatch = vi.fn(
+      async (
+        action: PanevoAction,
+      ): Promise<PanevoResult<PanevoActionDispatchResult>> => {
+        if (action.type === "obs.scene.switch") {
+          signalFirstStarted();
+          await firstActionCanComplete;
+        }
+        return success({
+          actionId: action.id ?? action.type,
+          actionType: action.type,
+          source: action.source ?? "automation",
+          safety: "guarded",
+          status: "completed",
+          requestedAt: action.requestedAt ?? "2026-05-18T10:00:00.000Z",
+          completedAt: "2026-05-18T10:00:01.000Z",
+          message: "done",
+          feedback: {
+            activeCamera: null,
+            connection: { status: "unknown", message: "Unknown" },
+            presets: [],
+            integrations: [],
+            updatedAt: "2026-05-18T10:00:01.000Z",
+          },
+        });
+      },
+    );
+
+    const service = new AutomationService({
+      actionDispatcher: { dispatch },
+      enabled: true,
+      rules: [
+        createRule({
+          actions: [
+            {
+              id: "scene",
+              type: "panevo.action",
+              action: { type: "obs.scene.switch", sceneName: "Race" },
+            },
+            {
+              id: "preset",
+              type: "panevo.action",
+              action: { type: "preset.recall", presetNumber: 3 },
+            },
+          ],
+        }),
+      ],
+    });
+
+    const evaluatePromise = service.evaluate({
+      type: "race.event",
+      event: createRaceEvent(),
+    });
+
+    // wait until the first action is executing, then interrupt before it completes
+    await firstActionStarted;
+    service.interruptCurrentRun();
+    allowFirstToComplete();
+
+    const result = await evaluatePromise;
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.runs[0]).toMatchObject({
+      status: "interrupted",
+      message: expect.stringContaining("stop command"),
+    });
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips camera-dependent rules when no active camera is configured", async () => {
+    const dispatch = vi.fn();
+    const service = new AutomationService({
+      actionDispatcher: { dispatch },
+      enabled: true,
+      rules: [
+        createRule({
+          actions: [
+            {
+              id: "preset",
+              type: "panevo.action",
+              action: { type: "preset.recall", presetNumber: 1 },
+            },
+          ],
+        }),
+      ],
+      isCameraConfigured: async () => false,
+    });
+
+    const result = await service.evaluate({
+      type: "race.event",
+      event: createRaceEvent(),
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.runs[0]).toMatchObject({
+      status: "skipped",
+      message: expect.stringContaining("no active camera"),
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("runs camera-dependent rules when a camera is configured", async () => {
+    const dispatch = vi.fn(
+      async (
+        action: PanevoAction,
+      ): Promise<PanevoResult<PanevoActionDispatchResult>> =>
+        success({
+          actionId: action.id ?? action.type,
+          actionType: action.type,
+          source: action.source ?? "automation",
+          safety: "guarded",
+          status: "completed",
+          requestedAt: action.requestedAt ?? "2026-05-18T10:00:00.000Z",
+          completedAt: "2026-05-18T10:00:01.000Z",
+          message: "done",
+          feedback: {
+            activeCamera: null,
+            connection: { status: "unknown", message: "Unknown" },
+            presets: [],
+            integrations: [],
+            updatedAt: "2026-05-18T10:00:01.000Z",
+          },
+        }),
+    );
+    const service = new AutomationService({
+      actionDispatcher: { dispatch },
+      enabled: true,
+      rules: [
+        createRule({
+          actions: [
+            {
+              id: "preset",
+              type: "panevo.action",
+              action: { type: "preset.recall", presetNumber: 1 },
+            },
+          ],
+        }),
+      ],
+      isCameraConfigured: async () => true,
+    });
+
+    const result = await service.evaluate({
+      type: "race.event",
+      event: createRaceEvent(),
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.runs[0]).toMatchObject({ status: "completed" });
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+
   it("dispatches rule actions in order", async () => {
     const dispatch = vi.fn(
       async (

@@ -21,6 +21,7 @@ interface AutomationServiceDependencies {
   actionDispatcher?: ActionDispatcherLike;
   enabled?: boolean;
   rules?: AutomationRule[];
+  isCameraConfigured?: () => Promise<boolean>;
 }
 
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
@@ -33,6 +34,8 @@ export class AutomationService {
   private pausedReason?: string;
   private updatedAt: string;
   private readonly actionDispatcher: ActionDispatcherLike;
+  private readonly isCameraConfigured?: () => Promise<boolean>;
+  private currentRunAborted = false;
 
   constructor(dependencies: AutomationServiceDependencies = {}) {
     this.enabled = dependencies.enabled ?? false;
@@ -40,6 +43,11 @@ export class AutomationService {
     this.updatedAt = new Date().toISOString();
     this.actionDispatcher =
       dependencies.actionDispatcher ?? getActionDispatcher();
+    this.isCameraConfigured = dependencies.isCameraConfigured;
+  }
+
+  interruptCurrentRun(): void {
+    this.currentRunAborted = true;
   }
 
   getState(): AutomationState {
@@ -86,6 +94,8 @@ export class AutomationService {
     }
 
     this.pausedReason = undefined;
+    this.currentRunAborted = false;
+
     const matchingRules = this.rules.filter(
       (rule) => rule.enabled && this.triggerMatches(rule, event),
     );
@@ -101,6 +111,21 @@ export class AutomationService {
           actions: [],
         });
         continue;
+      }
+
+      if (this.ruleHasCameraActions(rule) && this.isCameraConfigured) {
+        const cameraReady = await this.isCameraConfigured();
+        if (!cameraReady) {
+          runs.push({
+            ruleId: rule.id,
+            ruleLabel: rule.label,
+            status: "skipped",
+            message:
+              "Automation skipped: no active camera is configured in Panevo.",
+            actions: [],
+          });
+          continue;
+        }
       }
 
       const run = await this.runRule(rule);
@@ -202,6 +227,16 @@ export class AutomationService {
     const actionResults: AutomationRuleRunResult["actions"] = [];
 
     for (const automationAction of rule.actions) {
+      if (this.currentRunAborted) {
+        return {
+          ruleId: rule.id,
+          ruleLabel: rule.label,
+          status: "interrupted",
+          message: "Automation run interrupted by a stop command.",
+          actions: actionResults,
+        };
+      }
+
       const action: PanevoAction = {
         ...automationAction.action,
         id:
@@ -242,6 +277,13 @@ export class AutomationService {
       message: "Automation rule completed.",
       actions: actionResults,
     };
+  }
+
+  private ruleHasCameraActions(rule: AutomationRule): boolean {
+    return rule.actions.some(
+      ({ action }) =>
+        action.type.startsWith("camera.") || action.type.startsWith("preset."),
+    );
   }
 
   private touch(): void {

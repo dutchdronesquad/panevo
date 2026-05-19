@@ -10,6 +10,7 @@ import type {
 } from "@/shared/types";
 import { CameraControlService } from "../services/camera-control/camera-control-service";
 import { ConfigService } from "../services/config/config-service";
+import { getAutomationService } from "../services/automation/automation-service-instance";
 
 const failure = <T = never>(
   code: string,
@@ -247,9 +248,10 @@ export const registerCameraIpc = (): void => {
   ipcMain.handle("panevo:zoom-out", async (_event, speed: number) =>
     withClient((camera) => cameraControlService.zoomOut(camera, speed)),
   );
-  ipcMain.handle("panevo:stop", async () =>
-    withClient((camera) => cameraControlService.stop(camera)),
-  );
+  ipcMain.handle("panevo:stop", async () => {
+    getAutomationService().interruptCurrentRun();
+    return withClient((camera) => cameraControlService.stop(camera));
+  });
   ipcMain.handle("panevo:zoom-stop", async () =>
     withClient((camera) => cameraControlService.zoomStop(camera)),
   );
