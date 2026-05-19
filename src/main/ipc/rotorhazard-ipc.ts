@@ -6,10 +6,27 @@ import type {
   RotorHazardConnectionStatus,
   RotorHazardMonitorState,
 } from "@/shared/types";
+import {
+  ensureAutomationRulesLoaded,
+  getAutomationService,
+} from "../services/automation/automation-service-instance";
 import { RotorHazardService } from "../services/rotorhazard/rotorhazard-service";
 
 export const registerRotorHazardIpc = (): void => {
-  const rotorHazardService = new RotorHazardService();
+  const rotorHazardService = new RotorHazardService(
+    undefined,
+    async (event) => {
+      const configResult = await ensureAutomationRulesLoaded();
+      if (!configResult.ok) {
+        return configResult;
+      }
+
+      return getAutomationService().evaluate({
+        type: "race.event",
+        event,
+      });
+    },
+  );
 
   ipcMain.handle(
     "panevo:test-rotorhazard-connection",

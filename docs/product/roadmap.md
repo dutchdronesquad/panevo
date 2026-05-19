@@ -116,9 +116,8 @@ The PTZ MVP is complete when:
 
 - RTSP or NDI preview.
 - OBS preview/source automation beyond manual scene switching.
-- RotorHazard integration.
 - Stream Deck, Companion, Flexbar, or additional control device adapters.
-- Automation workflows.
+- Advanced automation workflow editor beyond first guarded rules.
 - TCP VISCA, unless UDP proves insufficient for the target camera.
 - Replacing the VISCA internals with an npm package.
 - Broad UI framework migration, unless it directly resolves MVP blockers.
@@ -317,7 +316,7 @@ Exit criteria:
 - Release notes can be drafted consistently.
 - Pull request guidance supports useful contributions.
 
-## Phase 4: Production Integrations
+## Phase 4: Production Integrations and Core Automation
 
 - OBS scene and source integration
 - RotorHazard race state integration
@@ -327,7 +326,7 @@ Exit criteria:
 - Race-aware shot presets
 - Event-triggered camera actions
 
-Phase 4 should start with integration management UX and then define a shared Panevo action/event layer. Integrations should emit normalized Panevo actions and consume normalized Panevo state instead of talking directly to VISCA, ONVIF, renderer components, or camera sockets.
+Phase 4 should start with integration management UX and then define a shared Panevo action/event layer. Integrations should emit normalized Panevo actions and consume normalized Panevo state instead of talking directly to VISCA, ONVIF, renderer components, or camera sockets. Automation is a core Panevo capability on top of that action/event layer, not an integration.
 
 Recommended Phase 4 order:
 
@@ -337,7 +336,7 @@ Recommended Phase 4 order:
 4. Add OBS scene switch action.
 5. Add a control device spike using standard Gamepad/HID or MIDI behavior.
 6. Add RotorHazard read-only race state through RotorHazard's existing Socket.IO server.
-7. Add first guarded trigger/action automation.
+7. Add first guarded trigger/action automation as a core Panevo service.
 8. Add Companion/Stream Deck friendly action bridge for core camera actions once the Stream Deck UX and feedback model are concrete.
 9. Investigate Flexbar once the shared action and feedback model exists.
 
@@ -345,7 +344,7 @@ Direct preset-to-OBS scene mapping is intentionally not part of the OBS integrat
 
 RotorHazard should be integrated through its existing Socket.IO server first. A RotorHazard-side RHAPI plugin should only be added if the built-in Socket.IO events and request/response calls do not expose the race state, lifecycle events, or normalized payloads Panevo needs. HTTP polling is not a fallback path for Phase 4F.
 
-## Phase 5: Automation Platform
+## Phase 5: Advanced Automation Platform
 
 - Workflow editor
 - Trigger/action system

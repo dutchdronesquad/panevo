@@ -16,7 +16,7 @@ The long-term platform should support:
 - OBS integration
 - RotorHazard integration
 - Stream Deck and Companion support
-- Automation workflows
+- Core automation workflows
 - Race-aware production controls
 - Event triggers and operator workspaces
 
@@ -51,13 +51,13 @@ The product should eventually feel like a control room surface:
 ## Product Principles
 
 - Operator-first: controls must be fast, readable, and reliable during a live show.
-- Modular architecture: UI, integrations, networking, and protocol details must remain separated.
+- Modular architecture: UI, core automation, integrations, networking, and protocol details must remain separated.
 - Hardware-tolerant: camera vendors vary, so protocol code should be isolated and adjustable.
 - Local-first MVP: the initial app should run without cloud services and store configuration locally.
 - Extensible by design: the MVP should not overbuild future features, but it must leave clear paths for them.
 - Manual override always wins: automation and integrations must never trap the operator.
 - Tested behavior beats assumptions: hardware observations should be recorded in docs.
-- Stable user intent API: UI and integrations should speak in actions, not protocol bytes.
+- Stable user intent API: UI, core automation, and integrations should speak in actions, not protocol bytes.
 
 ## MVP Scope
 

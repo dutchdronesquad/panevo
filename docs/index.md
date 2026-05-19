@@ -14,6 +14,7 @@ Product:
 Architecture:
 
 - `architecture/architecture.md`: process boundaries, source layout, IPC, services, and extension points.
+- `architecture/automation-builder.md`: Phase 4H constrained automation builder plan and implementation slices.
 - `architecture/development.md`: local development workflow, commands, conventions, and repo practices.
 - `architecture/testing.md`: manual and technical validation strategy for the MVP.
 
@@ -29,8 +30,8 @@ UI:
 
 Integrations:
 
-- `integrations/integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and automation integrations.
-- `integrations/integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, control devices, and automation.
+- `integrations/integrations.md`: future OBS, RotorHazard, operator-surface, stream discovery, and control-device integrations. Automation is covered there only where integrations feed core automation.
+- `integrations/integration-use-cases.md`: minimum useful operator workflows for OBS, RotorHazard, Companion, Stream Deck, Flexbar, control devices, and core automation.
 - `integrations/preview.md`: current no-in-app-preview decision and ONVIF RTSP discovery scope.
 
 Project:
@@ -49,24 +50,22 @@ Project:
 
 ## Current Active Phase
 
-The active phase is Phase 4F: RotorHazard Integration.
+The active phase is Phase 4H: Automation Core.
 
 Current priority:
 
-1. Use RotorHazard's existing Socket.IO connection as the first integration route.
-2. Keep RotorHazard integration read-only in Phase 4F: race state, active heat, pilot/lane/channel metadata, and lifecycle events.
-3. Normalize RotorHazard concepts into Panevo race events before they can trigger automation.
-4. Keep RotorHazard disconnect or stale state from affecting manual PTZ, presets, stop, OBS, or camera configuration.
+1. Build automation on normalized Panevo actions, race events, OBS state, and integration status.
+2. Keep direct preset-to-OBS scene mapping out of preset behavior; scene changes should go through explicit automation rules.
+3. Keep RotorHazard stale or disconnected state from blocking manual PTZ, presets, stop, OBS, or camera configuration.
+4. Pause race-aware automation when RotorHazard monitor state is stale, disconnected, or still waiting for initial race state.
 5. Defer Companion/Stream Deck bridge work until the target Stream Deck UX and feedback model are concrete enough.
-6. Start Phase 4H automation only after RotorHazard can provide a stable normalized race-state/event source.
+6. Keep automation disabled-by-default until rule safety, feedback, and operator control are explicit.
 
 Still deferred:
 
 - In-app video preview.
 - Multi-camera preview grid.
 - Direct preset-to-OBS scene mapping outside automation workflows.
-- RotorHazard integration.
 - Stream Deck, Companion, Flexbar, MIDI, custom HID, serial, and Bluetooth device adapters.
-- Automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.

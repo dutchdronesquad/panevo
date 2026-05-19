@@ -326,6 +326,106 @@ export interface PanevoActionDispatchResult {
   feedback: PanevoFeedbackState;
 }
 
+export type AutomationTrigger =
+  | {
+      type: "race.event";
+      eventType?: PanevoRaceEventType;
+    }
+  | {
+      type: "manual.action";
+      actionType?: PanevoAction["type"];
+    }
+  | {
+      type: "obs.state";
+      sceneName?: string;
+    }
+  | {
+      type: "control-device.input";
+      inputId?: string;
+    };
+
+export type AutomationCondition =
+  | {
+      type: "race.status";
+      status: PanevoRaceStatus;
+    }
+  | {
+      type: "race.not-stale";
+    };
+
+export interface AutomationAction {
+  id?: string;
+  type: "panevo.action";
+  action: PanevoAction;
+}
+
+export interface AutomationRule {
+  id: string;
+  label: string;
+  enabled: boolean;
+  trigger: AutomationTrigger;
+  conditions: AutomationCondition[];
+  actions: AutomationAction[];
+}
+
+export interface AutomationConfig {
+  rules: AutomationRule[];
+}
+
+export type AutomationEvent =
+  | {
+      type: "race.event";
+      event: PanevoRaceEvent;
+    }
+  | {
+      type: "manual.action";
+      action: PanevoAction;
+    }
+  | {
+      type: "obs.state";
+      sceneName?: string;
+    }
+  | {
+      type: "control-device.input";
+      inputId: string;
+    };
+
+export interface AutomationActionRunResult {
+  actionId: string;
+  status: "completed" | "failed";
+  result?: PanevoActionDispatchResult;
+  error?: PanevoError;
+}
+
+export interface AutomationRuleRunResult {
+  ruleId: string;
+  ruleLabel: string;
+  status: "completed" | "failed" | "skipped" | "interrupted";
+  message: string;
+  actions: AutomationActionRunResult[];
+}
+
+export interface AutomationEvaluationResult {
+  enabled: boolean;
+  matchedRuleCount: number;
+  skippedReason?: string;
+  runs: AutomationRuleRunResult[];
+  evaluatedAt: string;
+}
+
+export interface AutomationState {
+  enabled: boolean;
+  ruleCount: number;
+  lastTriggeredRule?: {
+    id: string;
+    label: string;
+    triggeredAt: string;
+  };
+  lastRunResult?: AutomationRuleRunResult;
+  pausedReason?: string;
+  updatedAt: string;
+}
+
 export interface PanevoCameraFeedback {
   id: string;
   label: string;
@@ -505,6 +605,14 @@ export interface PanevoApi {
   getRotorHazardMonitorState: () => Promise<
     PanevoResult<RotorHazardMonitorState>
   >;
+  getAutomationState: () => Promise<PanevoResult<AutomationState>>;
+  setAutomationEnabled: (
+    enabled: boolean,
+  ) => Promise<PanevoResult<AutomationState>>;
+  getAutomationConfig: () => Promise<PanevoResult<AutomationConfig>>;
+  saveAutomationConfig: (
+    config: AutomationConfig,
+  ) => Promise<PanevoResult<AutomationConfig>>;
   importConfig: () => Promise<PanevoResult<CameraConfig>>;
   exportConfig: () => Promise<PanevoResult<ConfigFileResponse>>;
   testConnection: () => Promise<PanevoResult<CameraConnectionStatus>>;

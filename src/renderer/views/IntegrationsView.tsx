@@ -45,7 +45,6 @@ const categoryLabels: Record<IntegrationCategory, string> = {
   race: "Race",
   "control-surface": "Control surface",
   "input-device": "Input device",
-  automation: "Automation",
 };
 
 const setupStateLabels: Record<IntegrationDefinition["setupState"], string> = {
@@ -868,7 +867,7 @@ export const IntegrationsView = ({
               <strong>No integrations configured</strong>
               <span>
                 Add an integration when you want Panevo to talk to external
-                software, hardware, or automation surfaces.
+                software or hardware surfaces.
               </span>
             </div>
           )}

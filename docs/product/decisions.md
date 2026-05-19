@@ -102,7 +102,7 @@ Implementation constraints:
 
 Status: accepted.
 
-OBS, RotorHazard, Stream Deck, Companion, Flexbar, and automation remain documented but not active implementation scope during Phase 2B stabilization. Camera discovery and ONVIF investigation are the next planned scope for Phase 2C after the Phase 2B hardware regression pass.
+OBS, RotorHazard, Stream Deck, Companion, Flexbar, and core automation remain documented but not active implementation scope during Phase 2B stabilization. Camera discovery and ONVIF investigation are the next planned scope for Phase 2C after the Phase 2B hardware regression pass.
 
 Rationale:
 
@@ -180,17 +180,17 @@ Implementation constraints:
 - ONVIF preset delete is camera-native. VISCA preset delete removes only Panevo's local mapping because CAM_Memory Reset did not work on the tested camera.
 - Preset behavior must remain explicit because ONVIF preset tokens may not match Panevo's numeric preset entries.
 
-## ADR-012: Route Integrations Through a Shared Panevo Action Dispatcher
+## ADR-012: Route Integrations and Automation Through a Shared Panevo Action Dispatcher
 
 Status: accepted for Phase 4B.
 
-Panevo uses a main-process `ActionDispatcher` as the shared boundary for future integrations, automation, and external operator surfaces. Integrations emit normalized Panevo actions and consume Panevo feedback snapshots instead of calling renderer components, camera IPC handlers, VISCA, ONVIF, or future OBS services directly.
+Panevo uses a main-process `ActionDispatcher` as the shared boundary for integrations, core automation, and external operator surfaces. Integrations and automation emit normalized Panevo actions and consume Panevo feedback snapshots instead of calling renderer components, camera IPC handlers, VISCA, ONVIF, or future OBS services directly.
 
 Rationale:
 
-- Integrations need one stable action vocabulary for cameras, presets, stop, focus, OBS, and automation.
+- Integrations and core automation need one stable action vocabulary for cameras, presets, stop, focus, OBS, and automation control.
 - Live-control safety depends on preserving the existing active-camera validation, speed clamps, stop behavior, and command queues.
-- External controls such as Companion, Stream Deck, Flexbar, control devices, and automation need feedback state without coupling to React component state.
+- External controls such as Companion, Stream Deck, Flexbar, control devices, and core automation need feedback state without coupling to React component state.
 - OBS and automation actions can be named before their adapters exist; `obs.scene.switch` becomes active in Phase 4C.
 
 Implementation constraints:
@@ -198,7 +198,7 @@ Implementation constraints:
 - Camera and preset actions route through `ConfigService` and `CameraControlService`.
 - `camera.stop` supports movement, zoom, focus, and all live motion channels.
 - `preset.store` and `preset.remove` are destructive action classes because they can overwrite or remove camera-native state.
-- `obs.scene.switch` routes through the Phase 4C OBS adapter when OBS is enabled; `automation.profile.set-enabled` returns structured unsupported results until Phase 4H.
+- `obs.scene.switch` routes through the Phase 4C OBS adapter when OBS is enabled; `automation.profile.set-enabled` returns structured unsupported results until the core automation service is implemented in Phase 4H.
 - Feedback snapshots include active camera, connection snapshot, active-camera presets, integration lifecycle states, and last action status.
 
 ## ADR-013: OBS Uses an Isolated Main-Process Websocket Adapter
@@ -310,3 +310,63 @@ Implementation constraints:
 - HTTP polling is not a fallback path for RotorHazard race state or lifecycle events.
 - A RotorHazard plugin remains the explicit next design option if the built-in Socket.IO surface is not stable or complete enough for Panevo's normalized race event model.
 - If a RotorHazard plugin is added, it should use RHAPI inside RotorHazard and publish Panevo-namespaced Socket.IO events from the RotorHazard server. Panevo should remain the connecting client instead of requiring inbound connections to the Panevo desktop app.
+
+## ADR-018: Automation Is a Core Panevo Service
+
+Status: accepted for Phase 4H.
+
+Automation should be implemented as a core Panevo service that consumes normalized Panevo events and dispatches normalized Panevo actions. It should not be modeled as an integration entry in the Integrations registry.
+
+Rationale:
+
+- Automation composes Panevo capabilities; it is not an external system with a connection lifecycle.
+- Integrations such as RotorHazard, OBS, input devices, Companion, Stream Deck, and Flexbar can provide events or action targets, but the rule evaluator belongs inside Panevo.
+- Keeping automation in core prevents direct preset-to-OBS scene behavior from leaking into camera presets or OBS integration code.
+- A core service can enforce shared safety gates before any rule action reaches cameras or production tools.
+
+Implementation constraints:
+
+- Automation starts disabled by default.
+- Runtime enable/disable state belongs to `AutomationService` and is exposed through dedicated typed IPC and the Automation view.
+- Rule definitions are stored in local `panevo-automation.json` and normalized before runtime use.
+- The first operator UI should use constrained templates for RotorHazard race-event rules instead of a freeform workflow editor.
+- The next operator UI step should evolve templates into a constrained `When / If / Then` builder, inspired by Home Assistant's mental model but scoped to Panevo's existing `AutomationRule` shape.
+- The builder should use a renderer-only draft model and convert to/from `AutomationRule`; runtime types should not be changed just to support editor state.
+- The builder should keep per-rule enable/disable control in the rule list, not inside the edit dialog.
+- The builder should prefer named selectors over raw identifiers: presets come from the active Panevo camera, and OBS scenes come from the enabled OBS integration.
+- The builder should only offer new trigger/action choices when the related source or target is available; persisted RotorHazard triggers, presets, and OBS scenes remain visible as stored fallback values when temporarily unavailable.
+- The first builder implementation should be split into draft-model, dialog-shell, Automation view wiring, styling, and verification slices.
+- RotorHazard monitor events are forwarded into `AutomationService` as normalized race events.
+- Rule actions must dispatch through `ActionDispatcher` with `source: "automation"`.
+- Race-aware automation must pause when RotorHazard state is stale, disconnected, or still waiting for initial race state.
+- Stop and manual camera control must remain available regardless of automation state.
+- Phase 4H starts with simple trigger/action rules and in-memory evaluation. Manual/OBS/control-device event bridges, freeform rule editing, and advanced workflow editing are separate follow-up slices.
+
+## ADR-019: Automation Actions Target the Active Camera in Phase 4H; Per-Camera Targeting Is Deferred
+
+Status: accepted for Phase 4H; explicit camera targeting deferred to post-MVP.
+
+Phase 4H automation actions always operate on the operator's current active camera. No `cameraId` is stored on camera or preset actions. The `ActionDispatcher` resolves the target camera at dispatch time via `getActiveCameraConfig()`.
+
+Rationale for deferring per-camera targeting:
+
+- Phase 4H rules are created in a constrained builder that already scopes preset selection to the active camera. Supporting named presets from multiple cameras at build time requires the builder to carry the full camera list and a per-camera preset index, which is more UI complexity than the MVP justifies.
+- The active-camera model is safe and predictable: the operator always knows which camera is live. Explicit targeting lets automation control cameras the operator is not watching, which requires additional safety thinking before implementation.
+- Existing `PanevoPresetRecallAction`, `PanevoPtzMoveAction`, and related types have no `cameraId` field. Adding it is a non-breaking forward-compatible change, so deferral does not create migration debt.
+
+Intended future model:
+
+- Camera and preset actions gain an optional `cameraId?: string` field on `PanevoActionBase` or on the affected action interfaces.
+- When `cameraId` is absent the dispatcher falls back to the active camera (current behavior, fully backward-compatible).
+- When `cameraId` is present the dispatcher looks up that profile in config and routes the command there, independent of the active camera.
+- The automation builder gains a camera selector per action in the "Then" section. The default value is a sentinel such as `"active"` which maps to the current behavior. When the operator picks an explicit camera, the preset selector re-populates with that camera's preset list.
+- `AutomationService.ruleHasCameraActions` and the `isCameraConfigured` guard need to account for per-action camera IDs: each camera-dependent action should be checked against its own target profile, not just whether any active camera exists.
+- The rule list should surface any cameras referenced by a rule's actions so the operator can see at a glance which hardware a rule touches.
+
+Implementation constraints for the future slice:
+
+- The `cameraId` field on actions must be optional throughout so that all existing persisted rules continue to work without migration.
+- The builder must present `"Active camera"` as an explicit first option, not just the absence of a `cameraId`, so the operator makes a deliberate choice.
+- If a targeted camera profile is deleted, rules that reference it must degrade gracefully: the action should fail with a clear `ACTION_CAMERA_NOT_FOUND` error rather than silently targeting a different camera.
+- Stop-overrides-automation and the camera availability guard must both respect per-action `cameraId` values when they are introduced.
+- The full design is documented in `docs/architecture/automation-builder.md` under "Multi-Camera Action Targeting".

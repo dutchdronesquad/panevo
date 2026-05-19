@@ -5,7 +5,6 @@ import {
   MonitorPlay,
   RadioReceiver,
   Timer,
-  Workflow,
 } from "lucide-react";
 import type { IntegrationLifecycleState } from "@/shared/types";
 
@@ -13,8 +12,7 @@ export type IntegrationCategory =
   | "production"
   | "race"
   | "control-surface"
-  | "input-device"
-  | "automation";
+  | "input-device";
 
 export interface IntegrationDefinition {
   id: string;
@@ -239,37 +237,5 @@ export const integrationRegistry: IntegrationDefinition[] = [
       "Avoid Flexbar-specific core concepts",
     ],
     icon: RadioReceiver,
-  },
-  {
-    id: "automation",
-    name: "Automation Rules",
-    category: "automation",
-    description:
-      "Guarded trigger/action rules that connect race, production, control-surface, and camera events.",
-    lifecycleState: "disabled",
-    primaryAction: "Configure rules",
-    setupState: "planned",
-    testActionLabel: "Validate rules",
-    settings: [
-      {
-        key: "ruleSetName",
-        label: "Rule set name",
-        type: "text",
-        defaultValue: "Default rules",
-        required: true,
-      },
-      {
-        key: "safetyMode",
-        label: "Safety mode",
-        type: "text",
-        defaultValue: "Manual review before automation",
-      },
-    ],
-    capabilities: [
-      "Trigger through normalized Panevo events",
-      "Run actions through the shared dispatcher",
-      "Always let emergency stop override automation",
-    ],
-    icon: Workflow,
   },
 ];

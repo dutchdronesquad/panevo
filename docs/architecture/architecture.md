@@ -58,6 +58,7 @@ src/
       platform.ts
       tray.ts
     ipc/
+      automation-ipc.ts
       camera-ipc.ts
       onvif-ipc.ts
     services/
@@ -74,6 +75,9 @@ src/
         onvif-ptz-client.ts
       config/
         config-service.ts
+      automation/
+        automation-config-service.ts
+        automation-service.ts
 
   preload.ts
 
@@ -175,7 +179,7 @@ Future responsibilities:
 
 ### ActionDispatcher
 
-Owns the shared Panevo action and feedback boundary for integrations and future external operator surfaces.
+Owns the shared Panevo action and feedback boundary for integrations, core automation, and future external operator surfaces.
 
 Responsibilities:
 
@@ -184,14 +188,46 @@ Responsibilities:
 - Route `obs.scene.switch` through the enabled OBS adapter without requiring an active camera.
 - Return structured action results with action id, source, safety class, command result, and a feedback snapshot.
 - Expose feedback state for active camera, connection snapshot, active-camera presets, integration lifecycle states, and last action status.
-- Treat automation actions as defined but unsupported until their dedicated adapter phase exists.
+- Treat automation profile actions as defined but unsupported until they are wired to `AutomationService`; the current operator toggle uses dedicated automation IPC.
 
 Current constraints:
 
 - The renderer's existing camera IPC remains available for the operator UI.
 - Future integration adapters should use `ActionDispatcher` instead of calling renderer components, VISCA, ONVIF, or camera IPC directly.
+- Core automation should also use `ActionDispatcher` so rule actions cannot bypass active-camera validation, speed clamps, command queues, stop behavior, OBS configuration checks, or feedback snapshots.
 - Keyboard shortcuts are treated as a Phase 4E operator input route and dispatch normalized Panevo actions instead of calling renderer camera IPC directly.
 - The Phase 4B feedback connection state is a snapshot and does not replace explicit camera health checks.
+
+### AutomationService
+
+Owns the first core automation rule evaluator.
+
+Responsibilities:
+
+- Keep automation as a Panevo core service, not an integration registry entry.
+- Evaluate normalized `AutomationRule` definitions against normalized Panevo events.
+- Keep automation disabled by default until an operator explicitly enables it.
+- Pause race-aware automation when RotorHazard race state is stale or disconnected.
+- Dispatch rule actions through `ActionDispatcher` with `source: "automation"`.
+- Stop a rule run on the first failed action so failures are visible and manual control remains available.
+
+Current implementation:
+
+- Phase 4H currently has an in-memory service, shared types, typed preload IPC, and a dedicated Automation view.
+- Automation rule definitions are stored locally in `panevo-automation.json` and normalized before they reach the runtime service.
+- The Automation view exposes runtime enable/disable state, pause reason, last-triggered rule, last run result, constrained `When / If / Then` rule creation/editing, per-rule enable/disable, and rule deletion.
+- The RotorHazard monitor forwards normalized `PanevoRaceEvent` records into `AutomationService`.
+- Manual/OBS/control-device event-source bridges and a freeform rule editor are not implemented yet.
+- Early automation should stay simple trigger/action mapping, not a node-based workflow engine.
+
+Next builder direction:
+
+- Replace the template rule creator with a constrained `When / If / Then` builder.
+- Keep the existing `AutomationRule` runtime shape; the builder should edit a renderer-only draft and convert to/from `AutomationRule`.
+- Keep initial trigger choices limited to RotorHazard race events.
+- Keep initial action choices limited to preset recall, OBS scene switch, and camera stop.
+- Implement the builder in small slices: draft model, dialog shell, Automation view wiring, CSS, then verification/docs.
+- See `docs/architecture/automation-builder.md` for the detailed implementation plan.
 
 ### PreferencesService
 
@@ -476,7 +512,7 @@ The renderer should display these states differently. `Verified` is suitable for
 
 ## Race Event Architecture
 
-RotorHazard race state is a Phase 4F input to future automation. Panevo should treat RotorHazard as an external event source and normalize it before renderer or automation code sees it.
+RotorHazard race state is a Phase 4F input to core automation. Panevo treats RotorHazard as an external event source and normalizes it before renderer or automation code sees it.
 
 Data flow:
 
@@ -486,10 +522,10 @@ RotorHazard Socket.IO
   -> Panevo race state monitor
   -> Panevo race events
   -> renderer integration status
-  -> future automation triggers
+  -> AutomationService race-event evaluation
 ```
 
-Current Phase 4F implementation reads RotorHazard `race_status`, `frequency_data`, and `current_heat` with Socket.IO `load_data`, keeps a runtime monitor while the integration is enabled, retries Socket.IO after disconnects, and exposes connected, connecting, stale, disconnected, or error state over typed preload IPC. The monitor maps RotorHazard `READY` to Panevo `ready`, normalizes status and active-heat changes into recent `PanevoRaceEvent` records, and exposes an `automationPaused` flag for future automation, but Phase 4F does not execute automation rules.
+Current implementation reads RotorHazard `race_status`, `frequency_data`, and `current_heat` with Socket.IO `load_data`, keeps a runtime monitor while the integration is enabled, retries Socket.IO after disconnects, and exposes connected, connecting, stale, disconnected, or error state over typed preload IPC. The monitor maps RotorHazard `READY` to Panevo `ready`, normalizes status and active-heat changes into recent `PanevoRaceEvent` records, exposes an `automationPaused` flag, and forwards those race events to `AutomationService` for enabled in-memory rule evaluation.
 
 If the built-in RotorHazard Socket.IO surface is not stable or complete enough, the next option is an optional RotorHazard plugin. That plugin would use RHAPI inside RotorHazard and publish Panevo-namespaced Socket.IO events from the RotorHazard server. The desktop app should still connect outbound to RotorHazard; Panevo should not require RotorHazard to push into a listener opened by the desktop app.
 

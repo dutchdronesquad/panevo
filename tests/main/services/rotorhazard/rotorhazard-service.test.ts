@@ -334,6 +334,51 @@ describe("RotorHazardService", () => {
     });
   });
 
+  it("forwards normalized race events to the automation event sink", async () => {
+    const raceEventSink = vi.fn();
+    const service = new RotorHazardService(
+      () =>
+        new FakeRotorHazardSocket((socket) => {
+          socket.emit("connect");
+          socket.emitServer("race_status", {
+            race_status: 1,
+            race_heat_id: 8,
+            next_round: 1,
+          });
+          socket.emitServer("current_heat", {
+            current_heat: 8,
+            next_round: 1,
+            heatNodes: {},
+          });
+        }),
+      raceEventSink,
+    );
+
+    await service.startRaceStateMonitor({
+      host: "127.0.0.1",
+    });
+
+    expect(raceEventSink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "race.active-heat-changed",
+        source: "rotorhazard",
+        raceState: expect.objectContaining({
+          status: "racing",
+          activeHeat: {
+            id: "8",
+            round: 1,
+          },
+        }),
+      }),
+    );
+    expect(raceEventSink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "race.started",
+        source: "rotorhazard",
+      }),
+    );
+  });
+
   it("marks the monitor stale when RotorHazard connects without race state", async () => {
     vi.useFakeTimers();
     const service = new RotorHazardService(

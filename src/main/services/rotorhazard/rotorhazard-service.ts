@@ -43,6 +43,10 @@ export type RotorHazardSocketFactory = (
   input: NormalizedRotorHazardConnectionInput,
 ) => RotorHazardSocket;
 
+export type RotorHazardRaceEventSink = (
+  event: PanevoRaceEvent,
+) => Promise<unknown> | unknown;
+
 const success = <T>(data: T): PanevoResult<T> => ({ ok: true, data });
 
 const failure = <T = never>(
@@ -79,6 +83,7 @@ export class RotorHazardService {
 
   constructor(
     private readonly socketFactory = defaultRotorHazardSocketFactory,
+    private readonly raceEventSink: RotorHazardRaceEventSink = () => undefined,
   ) {}
 
   async testConnection(
@@ -548,6 +553,10 @@ export class RotorHazardService {
     this.setMonitorState({
       recentEvents: this.monitorEvents,
     });
+
+    for (const event of events) {
+      void Promise.resolve(this.raceEventSink(event)).catch(() => undefined);
+    }
   }
 
   private createRaceEvents(
