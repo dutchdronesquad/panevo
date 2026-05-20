@@ -8,8 +8,9 @@ This checklist tracks the work needed to complete the Panevo PTZ MVP. It should 
 - If an item is partially true, leave it unchecked and add detail in the relevant doc.
 - When hardware behavior is verified, update `docs/hardware/tenveo-hardware.md`.
 - When a technical direction changes, update `docs/product/decisions.md`.
-- When a task becomes intentionally deferred, move or duplicate it under Explicitly Deferred with context.
+- When a task becomes intentionally deferred, move it to `docs/product/post-mvp.md` with context.
 - Keep this checklist focused on completed MVP and near-term Phase 2 stabilization work. Larger future features belong in `docs/product/roadmap.md`.
+- Keep detailed post-MVP candidate work in `docs/product/post-mvp.md`.
 - Verification commands are not repeated per phase. Run the standard checks from `AGENTS.md` after code, workflow, dependency, or formatting changes.
 
 ## Phase 1.1: Foundation
@@ -94,19 +95,6 @@ Local verification:
 - `npm start` was verified outside the Codex sandbox.
 - `npm run package` was verified outside the Codex sandbox.
 - Hardware regression was verified against the Tenveo camera after the preset and safety changes.
-
-## Explicitly Deferred
-
-- [ ] NDI preview playback backend.
-- [ ] RTSP preview as an in-app mode.
-- [ ] OBS advanced automation and preset-to-scene mapping through automation workflows.
-- [ ] Stream Deck integration.
-- [ ] Companion integration.
-- [ ] Flexbar integration.
-- [ ] Input devices such as HDZero radio, gamepad, joystick, MIDI, and HID button boxes.
-- [ ] Advanced automation workflow editor.
-- [ ] TCP VISCA support.
-- [ ] Replacing VISCA internals with an npm package.
 
 ## Phase 2A: UI Foundation
 
@@ -244,7 +232,6 @@ Phase 2B hardware regression:
 - [x] Add screenshots or screenshot placeholders.
 - [x] Link the docs index clearly from the README.
 - [x] Add `CONTRIBUTING.md`.
-- [ ] Add pull request template.
 - [x] Add GitHub label taxonomy.
 - [x] Add Renovate configuration.
 - [x] Add Release Drafter configuration.
@@ -253,7 +240,6 @@ Phase 2B hardware regression:
 - [x] Add Vitest unit test foundation for config and VISCA command builders.
 - [x] Add GitHub Actions workflow for `npm run test`.
 - [x] Add package/build smoke workflow where practical.
-- [ ] Add `SECURITY.md` or document why it is deferred.
 - [x] Add `CODE_OF_CONDUCT.md` or document why it is deferred.
 - [x] Document release process and versioning expectations.
 
@@ -301,18 +287,6 @@ Phase 4 should be driven by `docs/integrations/integration-use-cases.md`, the in
 
 Direct preset-to-scene mapping is intentionally not part of Phase 4C. It belongs in Phase 4H automation.
 
-### Phase 4D: Companion and Stream Deck Action Bridge
-
-- [ ] Decide whether first support is a local HTTP/WebSocket action bridge, a Companion module, a Stream Deck plugin, or documented keyboard shortcuts.
-- [ ] Expose safe Panevo actions for external triggering.
-- [ ] Support active camera selection.
-- [ ] Support preset recall.
-- [ ] Support emergency stop.
-- [ ] Support guarded preset store.
-- [ ] Provide basic feedback for active camera and connection state.
-- [ ] Prevent external triggers from bypassing safety checks.
-- [ ] Document setup and supported action IDs.
-
 ### Phase 4E.1: Keyboard Shortcuts
 
 - [x] Decide first control device path: keyboard shortcuts before hardware-specific adapters.
@@ -337,7 +311,6 @@ Direct preset-to-scene mapping is intentionally not part of Phase 4C. It belongs
 - [x] Require deadman/enable input before movement commands are sent.
 - [x] Ensure device input routes through the shared Panevo action layer.
 - [x] Document control device safety requirements.
-- [ ] Later: map buttons or switches to active-camera selection and preset recall after feedback/confirmation UX is designed.
 
 Phase 4E close-out:
 
@@ -363,15 +336,6 @@ Phase 4E close-out:
 - [x] Document RotorHazard setup and failure modes.
 - [x] Validate live RotorHazard heat changes and restart/reconnect behavior.
 
-### Phase 4G: Flexbar Investigation
-
-- [ ] Confirm whether Flexbar exposes an SDK, plugin API, local protocol, shortcut bridge, or macro bridge.
-- [ ] Decide whether Panevo integrates directly or through generic action triggers.
-- [ ] Define a compact touch-strip action layout for active camera, presets, stop, zoom, OBS actions, and race cues.
-- [ ] Define feedback requirements for labels, colors, active camera, and connection state.
-- [ ] Document macOS and Windows packaging or permission implications.
-- [ ] Avoid Flexbar-specific concepts in Panevo core.
-
 ### Phase 4H: First Automation Rules
 
 - [x] Define minimal trigger/action rule schema.
@@ -384,14 +348,12 @@ Phase 4E close-out:
 - [x] Wire builder dialog into Automation view for new/edit rule.
 - [x] Add manual enable/disable for automation.
 - [x] Support RotorHazard race-event triggers.
-- [ ] Support triggers from manual action bridge, OBS state, or control device.
 - [x] Support actions through the shared Panevo action layer.
 - [x] Support ordered workflows such as recalling a Panevo preset and switching an OBS scene as separate actions.
 - [x] Show last-triggered rule and last action result.
 - [x] Ensure stop overrides automation.
 - [x] Ensure automation cannot run against an unknown or disconnected active camera.
 - [x] Document automation safety rules.
-- [ ] Add advanced/freeform automation rule editor.
 
 Phase 4H current implementation:
 
@@ -406,4 +368,4 @@ Phase 4H current implementation:
 - Evaluates RotorHazard race-event triggers and dispatches matching rule actions through `ActionDispatcher` with `source: "automation"`.
 - Runs multiple actions in rule order and stops a rule on the first failed action.
 - Pauses race-aware automation when RotorHazard race state is stale.
-- Does not yet bridge manual/OBS/control-device events into the evaluator or provide a freeform rule editor.
+- Post-MVP follow-ups for multi-camera targeting, manual/OBS/control-device event triggers, and the advanced automation editor are tracked in `docs/product/post-mvp.md`.

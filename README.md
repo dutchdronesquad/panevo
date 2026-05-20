@@ -34,24 +34,9 @@
   reliable PTZ camera control during live events.
 </p>
 
-> Product screenshots will be added after the first public visual QA pass.
-
-## Project status
-
-Panevo is in early active development. The PTZ control MVP is functional and has been tested with a Tenveo PTZ camera.
-
-Current focus:
-
-- Reliable PTZ operation
-- Camera profiles
-- VISCA live control
-- ONVIF discovery and preset sync
-- Optional OBS scene control
-- Read-only RotorHazard race-state monitoring
-- Configurable operator shortcuts
-- Control Device mapping for standard gamepad/joystick-style inputs
-
-Video preview is intentionally handled outside Panevo for now.
+<p align="center">
+  <img alt="Panevo showcase" src="https://raw.githubusercontent.com/dutchdronesquad/panevo/main/public/assets/screenshot.png" width="800">
+</p>
 
 ## What you can do
 

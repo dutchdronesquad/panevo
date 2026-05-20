@@ -320,8 +320,6 @@ Exit criteria:
 
 - OBS scene and source integration
 - RotorHazard race state integration
-- Stream Deck and Companion support
-- Flexbar touch panel integration investigation
 - Operator controls such as keyboard shortcuts and input devices including HDZero radio, gamepad, joystick, MIDI, and HID button boxes
 - Race-aware shot presets
 - Event-triggered camera actions
@@ -337,8 +335,8 @@ Recommended Phase 4 order:
 5. Add a control device spike using standard Gamepad/HID or MIDI behavior.
 6. Add RotorHazard read-only race state through RotorHazard's existing Socket.IO server.
 7. Add first guarded trigger/action automation as a core Panevo service.
-8. Add Companion/Stream Deck friendly action bridge for core camera actions once the Stream Deck UX and feedback model are concrete.
-9. Investigate Flexbar once the shared action and feedback model exists.
+
+Post-MVP candidates are tracked in priority order in `docs/product/post-mvp.md`, starting with multi-camera automation targeting, then automation event inputs and OBS workflows, expanded control-device adapters, the Companion/Stream Deck action bridge, the advanced automation editor, preview backends, Flexbar investigation, and VISCA transport/library reassessment. Move them back into active roadmap scope only after the target operator UX, hardware or integration path, feedback model, and validation plan are concrete.
 
 Direct preset-to-OBS scene mapping is intentionally not part of the OBS integration phase. That behavior belongs in automation, where trigger source, action ordering, failure behavior, and manual override can be represented explicitly.
 
