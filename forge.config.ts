@@ -31,6 +31,7 @@ const config: ForgeConfig = {
   packagerConfig: {
     appBundleId: "nl.dutchdronesquad.panevo",
     asar: true,
+    executableName: "panevo",
     icon: appIconBase,
   },
   rebuildConfig: {},
