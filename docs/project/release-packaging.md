@@ -154,6 +154,7 @@ Run before tagging a release:
 - `npm run lint`
 - `npm run format:check`
 - `rm -rf out && npm run package`
+- Update `CHANGELOG.md` for the release.
 - Launch the packaged app on the target OS.
 - Confirm icon, app name, menu name, and window title.
 - Confirm Windows close-to-tray behavior and tray quit behavior.

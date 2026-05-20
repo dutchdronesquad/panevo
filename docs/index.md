@@ -9,6 +9,7 @@ Product:
 - `product/overview.md`: product vision, scope, principles, and MVP discipline.
 - `product/roadmap.md`: phased delivery plan and MVP completion criteria.
 - `product/mvp-checklist.md`: operational checklist for tracking progress.
+- `product/post-mvp.md`: deferred post-MVP work that should not be treated as active MVP scope.
 - `product/decisions.md`: architectural decisions and deferred choices.
 
 Architecture:
@@ -58,7 +59,7 @@ Current priority:
 2. Keep direct preset-to-OBS scene mapping out of preset behavior; scene changes should go through explicit automation rules.
 3. Keep RotorHazard stale or disconnected state from blocking manual PTZ, presets, stop, OBS, or camera configuration.
 4. Pause race-aware automation when RotorHazard monitor state is stale, disconnected, or still waiting for initial race state.
-5. Defer Companion/Stream Deck bridge work until the target Stream Deck UX and feedback model are concrete enough.
+5. Keep multi-camera automation targeting, automation event inputs, expanded control-device adapters, Companion/Stream Deck bridge, advanced automation editor, preview backends, Flexbar, and VISCA transport/library reassessment in `product/post-mvp.md` until their target UX, hardware path, and feedback model are concrete enough.
 6. Keep automation disabled-by-default until rule safety, feedback, and operator control are explicit.
 
 Still deferred:
@@ -66,6 +67,8 @@ Still deferred:
 - In-app video preview.
 - Multi-camera preview grid.
 - Direct preset-to-OBS scene mapping outside automation workflows.
+- Multi-camera automation targeting beyond the active camera.
 - Stream Deck, Companion, Flexbar, MIDI, custom HID, serial, and Bluetooth device adapters.
+- Advanced automation editor and advanced OBS automation workflows.
 - TCP VISCA, unless UDP is insufficient for the target camera.
 - Replacing the local VISCA implementation with an npm package.

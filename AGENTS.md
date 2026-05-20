@@ -11,6 +11,7 @@ Read these docs before architectural work:
 - `docs/index.md`
 - `docs/product/roadmap.md`
 - `docs/product/mvp-checklist.md`
+- `docs/product/post-mvp.md`
 - `docs/architecture/architecture.md`
 
 ## Standard Verification
@@ -42,7 +43,12 @@ Use judgment:
 
 ## Documentation Rules
 
+- AI-assisted sessions are expected to keep project docs current without waiting for a separate reminder when their work changes scope, status, architecture, validation state, or deferred work.
+- Update `AGENTS.md` itself when repository working rules, required context, verification expectations, or documentation maintenance expectations change.
+- Update `CHANGELOG.md` when shipped user-facing behavior or release scope changes.
 - Update `docs/product/mvp-checklist.md` when checklist scope changes.
+- Update `docs/product/post-mvp.md` when work is intentionally deferred, reprioritized, renumbered, or moved out of active MVP/current-phase scope.
+- Keep deferred work out of the MVP checklist once it has a home in `docs/product/post-mvp.md`.
 - Update `docs/product/decisions.md` for architectural decisions.
 - Update `docs/hardware/tenveo-hardware.md` after real hardware validation.
 - Keep README end-user focused; put development details in `docs/architecture/development.md`.
