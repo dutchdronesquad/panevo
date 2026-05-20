@@ -35,7 +35,7 @@
 </p>
 
 <p align="center">
-  <img alt="Panevo showcase" src="https://raw.githubusercontent.com/dutchdronesquad/panevo/main/public/assets/screenshot.png" width="800">
+  <img alt="Panevo showcase" src="https://raw.githubusercontent.com/dutchdronesquad/panevo/main/assets/screenshot.png" width="800">
 </p>
 
 ## What you can do
