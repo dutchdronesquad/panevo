@@ -60,6 +60,7 @@ Panevo uses Electron Forge with:
 The package identity is configured in `forge.config.ts`:
 
 - `packagerConfig.appBundleId`: macOS bundle identifier.
+- `packagerConfig.executableName`: packaged executable name used by Linux makers.
 - `packagerConfig.icon`: base icon path without extension.
 - DMG `icon`: macOS installer icon.
 - Squirrel `setupIcon`: Windows installer icon.
