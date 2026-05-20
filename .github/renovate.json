@@ -14,9 +14,12 @@
     {
       "groupName": "Radix UI",
       "groupSlug": "radix-ui",
-      "matchPackageNames": [
-        "@radix-ui/{/,}**"
-      ]
+      "matchPackageNames": ["@radix-ui/{/,}**"]
+    },
+    {
+      "groupName": "Electron Forge",
+      "groupSlug": "electron-forge",
+      "matchPackageNames": ["/^@electron-forge\\//"]
     },
     {
       "matchManagers": ["github-actions"],
