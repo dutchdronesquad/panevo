@@ -98,12 +98,7 @@ export interface RotorHazardConnectionStatus {
 }
 
 export type RotorHazardMonitorStatus =
-  | "idle"
-  | "connecting"
-  | "connected"
-  | "stale"
-  | "disconnected"
-  | "error";
+  "idle" | "connecting" | "connected" | "stale" | "disconnected" | "error";
 
 export interface RotorHazardMonitorState {
   status: RotorHazardMonitorStatus;
@@ -120,13 +115,7 @@ export interface RotorHazardMonitorState {
 }
 
 export type PanevoRaceStatus =
-  | "unknown"
-  | "ready"
-  | "staging"
-  | "racing"
-  | "finished"
-  | "done"
-  | "stale";
+  "unknown" | "ready" | "staging" | "racing" | "finished" | "done" | "stale";
 
 export interface PanevoRaceHeat {
   id?: string;
@@ -214,10 +203,7 @@ export interface PanevoPreferences {
 }
 
 export type PanevoActionSource =
-  | "operator"
-  | "integration"
-  | "automation"
-  | "system";
+  "operator" | "integration" | "automation" | "system";
 
 export type PanevoActionSafety = "safe" | "guarded" | "destructive";
 
@@ -550,8 +536,7 @@ export interface PanevoError {
 }
 
 export type PanevoResult<T = void> =
-  | { ok: true; data: T }
-  | { ok: false; error: PanevoError };
+  { ok: true; data: T } | { ok: false; error: PanevoError };
 
 export interface CommandResponse {
   command: string;
