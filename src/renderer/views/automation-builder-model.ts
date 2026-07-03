@@ -7,9 +7,7 @@ import type {
 } from "@/shared/types";
 
 export type AutomationBuilderActionType =
-  | "preset.recall"
-  | "obs.scene.switch"
-  | "camera.stop";
+  "preset.recall" | "obs.scene.switch" | "camera.stop";
 
 export type AutomationBuilderStopTarget = "movement" | "zoom" | "focus" | "all";
 

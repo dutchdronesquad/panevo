@@ -9,10 +9,7 @@ import {
 import type { IntegrationLifecycleState } from "@/shared/types";
 
 export type IntegrationCategory =
-  | "production"
-  | "race"
-  | "control-surface"
-  | "input-device";
+  "production" | "race" | "control-surface" | "input-device";
 
 export interface IntegrationDefinition {
   id: string;
