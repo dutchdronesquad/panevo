@@ -18,7 +18,7 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v7.0.1
       - name: 🏗 Set up Node.js ${{ env.DEFAULT_NODE }}
-        uses: actions/setup-node@v6.5.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.DEFAULT_NODE }}
       - name: 🏗 Install dependencies
@@ -33,7 +33,7 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v7.0.1
       - name: 🏗 Set up Node.js ${{ env.DEFAULT_NODE }}
-        uses: actions/setup-node@v6.5.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.DEFAULT_NODE }}
       - name: 🏗 Install dependencies
@@ -48,7 +48,7 @@ jobs:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v7.0.1
       - name: 🏗 Set up Node.js ${{ env.DEFAULT_NODE }}
-        uses: actions/setup-node@v6.5.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.DEFAULT_NODE }}
       - name: 🏗 Install dependencies
